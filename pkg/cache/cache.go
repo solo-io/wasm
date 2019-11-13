@@ -1,0 +1,108 @@
+package cache
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"net/http"
+	"path"
+	"strconv"
+	"sync"
+	"time"
+
+	"github.com/opencontainers/go-digest"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+
+	"github.com/containerd/containerd/remotes"
+	"github.com/solo-io/extend-envoy/pkg/pull"
+)
+
+type Cache interface {
+	Add(ctx context.Context, image string) (digest.Digest, error)
+	Get(ctx context.Context, digest digest.Digest) (io.ReadCloser, error)
+	http.Handler
+}
+
+type CacheImpl struct {
+	Puller  pull.Puller
+	Fetcher remotes.Fetcher
+
+	cacheState cacheState
+}
+
+type cacheState struct {
+	descriptors     []ocispec.Descriptor
+	descriptorsLock sync.RWMutex
+}
+
+func (c *cacheState) add(d ocispec.Descriptor) {
+	c.descriptorsLock.Lock()
+	c.descriptors = append(c.descriptors, d)
+	c.descriptorsLock.Unlock()
+}
+
+func (c *cacheState) find(digest digest.Digest) *ocispec.Descriptor {
+	c.descriptorsLock.RLock()
+	defer c.descriptorsLock.RUnlock()
+	for _, d := range c.descriptors {
+		if d.Digest == digest {
+			d := d
+			return &d
+		}
+	}
+	return nil
+}
+
+func (c *CacheImpl) Add(ctx context.Context, image string) (digest.Digest, error) {
+	desc, err := c.Puller.PullCodeDescriptor(ctx, image)
+	if err != nil {
+		return digest.Digest(""), err
+	}
+
+	c.cacheState.add(desc)
+
+	return desc.Digest, err
+}
+
+func (c *CacheImpl) Get(ctx context.Context, digest digest.Digest) (io.ReadCloser, error) {
+	desc := c.cacheState.find(digest)
+	if desc == nil {
+		return nil, errors.New("not found")
+	}
+	return c.Fetcher.Fetch(ctx, *desc)
+}
+
+func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	// parse the url
+	ctx := r.Context()
+	_, file := path.Split(r.URL.Path)
+	desc := c.cacheState.find(digest.Digest("sha256:" + file))
+	if desc == nil {
+		http.NotFound(rw, r)
+		return
+	}
+
+	rc, err := c.Fetcher.Fetch(ctx, *desc)
+	if err != nil {
+		http.NotFound(rw, r)
+		return
+	}
+	defer rc.Close()
+
+	rw.Header().Set("Content-Type", desc.MediaType)
+	rw.Header().Set("Etag", string(desc.Digest))
+	if rs, ok := rc.(io.ReadSeeker); ok {
+		// content of digests never changes so set mod time to a constant
+		var modTime time.Time
+		http.ServeContent(rw, r, file, modTime, rs)
+	} else {
+		rw.Header().Add("Content-Length", strconv.Itoa(int(desc.Size)))
+		if r.Method != "HEAD" {
+			_, err = io.Copy(rw, rc)
+			if err != nil {
+				fmt.Printf("error http %v\n", err)
+			}
+		}
+	}
+}

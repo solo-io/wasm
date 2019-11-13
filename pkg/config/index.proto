@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package solo.extendenvoy.config;
+
+option go_package = "config";
+
+message Root {
+  string id = 1;
+
+  string schema_sha256 = 2;
+}
+
+message Config {
+  string code_sha256 = 1;
+  repeated Root roots = 2;
+}
