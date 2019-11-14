@@ -25,24 +25,34 @@ type Cache interface {
 }
 
 type CacheImpl struct {
-	Puller  pull.Puller
-	Fetcher remotes.Fetcher
+	Puller   pull.Puller
+	Resolver remotes.Resolver
 
 	cacheState cacheState
 }
 
+type fetchableDescriptor struct {
+	ocispec.Descriptor
+	fetcher func(ctx context.Context) (io.ReadCloser, error) //remotes.Fetcher
+}
+
 type cacheState struct {
-	descriptors     []ocispec.Descriptor
+	descriptors     []fetchableDescriptor
 	descriptorsLock sync.RWMutex
 }
 
-func (c *cacheState) add(d ocispec.Descriptor) {
+func (c *cacheState) add(d fetchableDescriptor) {
+	if c.find(d.Digest) != nil {
+		// check existance for idempotency
+		// technically metadata can be different, but its fine for now.
+		return
+	}
 	c.descriptorsLock.Lock()
 	c.descriptors = append(c.descriptors, d)
 	c.descriptorsLock.Unlock()
 }
 
-func (c *cacheState) find(digest digest.Digest) *ocispec.Descriptor {
+func (c *cacheState) find(digest digest.Digest) *fetchableDescriptor {
 	c.descriptorsLock.RLock()
 	defer c.descriptorsLock.RUnlock()
 	for _, d := range c.descriptors {
@@ -60,7 +70,18 @@ func (c *CacheImpl) Add(ctx context.Context, image string) (digest.Digest, error
 		return digest.Digest(""), err
 	}
 
-	c.cacheState.add(desc)
+	fd := fetchableDescriptor{
+		Descriptor: desc,
+		fetcher: func(subctx context.Context) (io.ReadCloser, error) {
+			fetcher, err := c.Resolver.Fetcher(subctx, image)
+			if err != nil {
+				return nil, err
+			}
+			return fetcher.Fetch(subctx, desc)
+		},
+	}
+
+	c.cacheState.add(fd)
 
 	return desc.Digest, err
 }
@@ -70,7 +91,7 @@ func (c *CacheImpl) Get(ctx context.Context, digest digest.Digest) (io.ReadClose
 	if desc == nil {
 		return nil, errors.New("not found")
 	}
-	return c.Fetcher.Fetch(ctx, *desc)
+	return desc.fetcher(ctx)
 }
 
 func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
@@ -83,7 +104,7 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rc, err := c.Fetcher.Fetch(ctx, *desc)
+	rc, err := desc.fetcher(ctx)
 	if err != nil {
 		http.NotFound(rw, r)
 		return
