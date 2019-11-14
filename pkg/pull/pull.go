@@ -65,7 +65,7 @@ func (p *PullerImpl) PullCodeDescriptor(ctx context.Context, ref string) (ocispe
 
 	for _, child := range children {
 		if child.MediaType == model.CodeMediaType {
-			return desc, nil
+			return child, nil
 		}
 	}
 	return ocispec.Descriptor{}, errors.New("code not found")
@@ -77,6 +77,10 @@ func (p *PullerImpl) Pull(ctx context.Context, ref string) (Filter, error) {
 	if err != nil {
 		return nil, err
 	}
+	return p.Fetch(ctx, ref, desc)
+}
+
+func (p *PullerImpl) Fetch(ctx context.Context, ref string, desc ocispec.Descriptor) (Filter, error) {
 
 	fetcher, err := p.Resolver.Fetcher(ctx, ref)
 	if err != nil {
