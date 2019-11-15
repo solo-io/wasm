@@ -84,6 +84,7 @@ def _impl(ctx):
         abi_version = "unknown",
         abi_libc_version = "unknown",
         tool_paths = tool_paths,
+        # we can't use this as emcc, appends its own isystem and adding another breaks compilation
         # features = [toolchain_include_directories_feature],
     )
 
