@@ -112,10 +112,11 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer rc.Close()
 
 	rw.Header().Set("Content-Type", desc.MediaType)
-	rw.Header().Set("Etag", string(desc.Digest))
+	rw.Header().Set("Etag", "\""+string(desc.Digest)+"\"")
 	if rs, ok := rc.(io.ReadSeeker); ok {
 		// content of digests never changes so set mod time to a constant
-		var modTime time.Time
+		// don't use zero time because serve content doesn't use that.
+		modTime := time.Date(2000, time.January, 1, 0, 0, 0, 0, nil)
 		http.ServeContent(rw, r, file, modTime, rs)
 	} else {
 		rw.Header().Add("Content-Length", strconv.Itoa(int(desc.Size)))
