@@ -1,0 +1,80 @@
+workspace(name = "filter_example")
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+
+http_archive(
+  name = 'emscripten_toolchain',
+  url = 'https://github.com/emscripten-core/emsdk/archive/a5082b232617c762cb65832429f896c838df2483.tar.gz',
+  build_file = '//:emscripten-toolchain.BUILD',
+  strip_prefix = "emsdk-a5082b232617c762cb65832429f896c838df2483",
+  patch_cmds = [
+      "./emsdk install 1.39.2",
+      "./emsdk activate 1.39.2",
+  ]
+)
+
+# http_archive(
+#   name = 'emscripten_clang',
+#   url = 'https://s3.amazonaws.com/mozilla-games/emscripten/packages/llvm/tag/linux_64bit/emscripten-llvm-e1.37.22.tar.gz',
+#   build_file = '//:emscripten-clang.BUILD',
+#   strip_prefix = "emscripten-llvm-e1.37.22",
+# )
+
+
+
+http_archive(
+    name = "bazel_skylib",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.0.2/bazel-skylib-1.0.2.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.0.2/bazel-skylib-1.0.2.tar.gz",
+    ],
+    sha256 = "97e70364e9249702246c0e9444bccdc4b847bed1eb03c5a3ece4f83dfe6abc44",
+)
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+bazel_skylib_workspace()
+
+
+git_repository(
+    name = "google_protobuf",
+    remote = "https://github.com/protocolbuffers/protobuf",
+    commit = "655310ca192a6e3a050e0ca0b7084a2968072260",
+    patch_cmds = [
+        "git clone https://github.com/kwonoj/protobuf-wasm wasm-patches",
+        "cd wasm-patches && git checkout 4bba8b2f38b5004f87489642b6ca4525ae72fe7f && cd ..",
+        "git apply wasm-patches/*.patch",
+    ]
+)
+
+new_git_repository(
+    name = "envoy_wasm",
+    remote = "https://github.com/yuval-k/envoy-wasm",
+    commit = "9fbd857798f990381b22f2032109422bde876f63",
+    workspace_file_content = 'workspace(name = "envoy")',
+    strip_prefix = "api/wasm/cpp",
+    patch_cmds = ["rm BUILD"],
+    build_file_content = """
+cc_library(
+    name = "proxy_wasm_intrinsics",
+    visibility = ["//visibility:public"],
+    srcs = [
+        "proxy_wasm_intrinsics.h",
+        "proxy_wasm_enums.h",
+        "proxy_wasm_common.h",
+        "proxy_wasm_externs.h",
+        "proxy_wasm_api.h",
+        "proxy_wasm_intrinsics.pb.h",
+        "proxy_wasm_intrinsics_lite.pb.h",
+        "struct_lite.pb.h",
+    ],
+    hdrs = [
+        "proxy_wasm_intrinsics_lite.pb.cc",
+        "struct_lite.pb.cc",
+    ],
+    deps = [
+        "@google_protobuf//:protobuf_lite"
+    ],
+)
+"""
+)
