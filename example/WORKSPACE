@@ -40,11 +40,6 @@ git_repository(
     name = "google_protobuf",
     remote = "https://github.com/protocolbuffers/protobuf",
     commit = "655310ca192a6e3a050e0ca0b7084a2968072260",
-    patch_cmds = [
-        "git clone https://github.com/kwonoj/protobuf-wasm wasm-patches",
-        "cd wasm-patches && git checkout 4bba8b2f38b5004f87489642b6ca4525ae72fe7f && cd ..",
-        "git apply wasm-patches/*.patch",
-    ]
 )
 
 new_git_repository(
