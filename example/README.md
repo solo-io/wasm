@@ -3,5 +3,5 @@ Currently the build system is not hermetic, but it is pretty easy to use.
 
 build with
 ```
-bazel build :yuval --config=wasm
+bazel build :envoy_filter_http_wasm_example.wasm --config=wasm
 ```

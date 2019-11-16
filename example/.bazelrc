@@ -3,12 +3,6 @@ build --cxxopt=-O3
 build --cxxopt=-DEMSCRIPTEN_PROTOBUF_LITE=1
 
 
-
-# build --cxxopt='-std=c++17 -s STANDALONE_WASM=1 -s EMIT_EMSCRIPTEN_METADATA=1 -s EXPORTED_FUNCTIONS=[\'_malloc\',\'_free\'] -O3 -DEMSCRIPTEN_PROTOBUF_LITE=1'
-# build --define DEMSCRIPTEN_PROTOBUF_LITE=1
-# build --cxxopt=-O3 -DEMSCRIPTEN_PROTOBUF_LITE=1
-
-
 build:wasm --crosstool_top=//toolchain:emscripten
 
 # Use --cpu as a differentiator.
