@@ -67,7 +67,7 @@ FilterHeadersStatus ExampleContext::onResponseHeaders(uint32_t) {
   for (auto& p : pairs) {
     LOG_INFO(std::string(p.first) + std::string(" -> ") + std::string(p.second));
   }
-  addResponseHeader("newheader", "yuval");
+  addResponseHeader("newheader", "joe");
   replaceResponseHeader("location", "envoy-wasm");
   return FilterHeadersStatus::Continue;
 }
