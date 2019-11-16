@@ -1,3 +1,4 @@
+.vscode/
 example/bazel-bin
 example/bazel-example
 example/bazel-out
