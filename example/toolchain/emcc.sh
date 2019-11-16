@@ -4,7 +4,9 @@ set -euo pipefail
 
 # emsdk_env.sh\emcc doesn't like the bazel sandbox
 # specifically, emsdk_env.sh seems to try to `cd` and `cd` back which doesn't work well
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
 cd -P /proc/self/cwd
+fi
 
 export NODE_JS=''
 export EMSCRIPTEN_ROOT='external/emscripten_toolchain'
