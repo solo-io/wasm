@@ -6,23 +6,23 @@ set -euo pipefail
 # specifically, emsdk_env.sh seems to try to `cd` and `cd` back which doesn't work well
 cd -P /proc/self/cwd
 
- export NODE_JS=''
- export EMSCRIPTEN_ROOT='external/emscripten_toolchain'
- export SPIDERMONKEY_ENGINE=''
- export EM_EXCLUSIVE_CACHE_ACCESS=1
- export EMCC_SKIP_SANITY_CHECK=1
- export EMCC_WASM_BACKEND=1
+export NODE_JS=''
+export EMSCRIPTEN_ROOT='external/emscripten_toolchain'
+export SPIDERMONKEY_ENGINE=''
+export EM_EXCLUSIVE_CACHE_ACCESS=1
+export EMCC_SKIP_SANITY_CHECK=1
+export EMCC_WASM_BACKEND=1
 
  mkdir -p "tmp/emscripten_cache"
-
- export EM_CACHE="tmp/emscripten_cache"
- export TEMP_DIR="tmp"
+# the emscripten sdk does some path comparison, so make EM_CACHE an absolute path to make it work.
+export EM_CACHE=$PWD/"tmp/emscripten_cache"
+export TEMP_DIR="tmp"
 
 
 source external/emscripten_toolchain/emsdk_env.sh
 
 
-emcc -s EMIT_EMSCRIPTEN_METADATA=1 -s STANDALONE_WASM=1 -s EXPORTED_FUNCTIONS=['_malloc','_free'] "$@" # "${array[@]}"
+emcc -s EMIT_EMSCRIPTEN_METADATA=1 -s STANDALONE_WASM=1 -s EXPORTED_FUNCTIONS=['_malloc','_free'] "$@"
 
 
 # Remove the first line of .d file
