@@ -1,6 +1,8 @@
 #!/bin/bash
 # emsdk_env.sh\emcc doesn't like the bazel sand box
+if [[ "$OSTYPE" == "linux-gnu" ]]; then
 cd -P /proc/self/cwd
+fi
 
 set -euo pipefail
 source external/emscripten_toolchain/emsdk_env.sh
