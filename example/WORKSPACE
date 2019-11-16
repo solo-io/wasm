@@ -42,11 +42,14 @@ git_repository(
     commit = "655310ca192a6e3a050e0ca0b7084a2968072260",
 )
 
+# we don't need all the envoy buildry,
+# and so i go in straight to the api/wasm/cpp so that i can create a new workspace with
+# just the things needed.
 new_git_repository(
     name = "envoy_wasm",
     remote = "https://github.com/yuval-k/envoy-wasm",
     commit = "9fbd857798f990381b22f2032109422bde876f63",
-    workspace_file_content = 'workspace(name = "envoy")',
+    workspace_file_content = 'workspace(name = "envoy_wasm")',
     strip_prefix = "api/wasm/cpp",
     patch_cmds = ["rm BUILD"],
     build_file_content = """
