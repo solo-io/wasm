@@ -13,7 +13,7 @@ The build the example filter (mostly copied from the envoy-wasm):
 
 Push:
 ```
-./extend-envoy push gcr.io/solo-public/yuvalism:v1  example/bazel-bin/yuval
+./extend-envoy push gcr.io/solo-public/example-filter:v1  example/bazel-bin/envoy_filter_http_wasm_example.wasm
 ```
 
 load in to gloo:
@@ -29,7 +29,12 @@ set the httpGateway field like so:
         configs:
           wasm:
             config: yuval
-            image: gcr.io/solo-public/yuvalism:v1
+            image: gcr.io/solo-public/example-filter:v1
             name: yuval
             root_id: my_root_id
 ```
+
+
+# emscripten sdk
+If you change the emscripten SDK, an sdk with PR merged is needed:
+https://github.com/emscripten-core/emscripten/pull/9812/files
