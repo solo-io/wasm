@@ -7,6 +7,11 @@ build --cxxopt=-DEMSCRIPTEN_PROTOBUF_LITE=1
 # build --cxxopt=-fno-canonical-system-headers
 # build --cxxopt=-no-canonical-prefixes
 
+# ideally i would want 
+# build --sandbox_writable_path external/emscripten_toolchain/.emscripten_cache/
+# or
+# build --sandbox_writable_path $(bazel info output_base)/external/emscripten_toolchain/.emscripten_cache/
+# but that doesn't work. solved via readme
 
 build:wasm --crosstool_top=//toolchain:emscripten
 

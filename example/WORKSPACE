@@ -11,7 +11,7 @@ http_archive(
   strip_prefix = "emsdk-a5082b232617c762cb65832429f896c838df2483",
   patch_cmds = [
       "./emsdk install 1.39.0-upstream",
-      "./emsdk activate 1.39.0-upstream",
+      "./emsdk activate --embedded 1.39.0-upstream",
   ]
 )
 

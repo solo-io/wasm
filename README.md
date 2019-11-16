@@ -8,12 +8,12 @@ go build .
 
 The build the example filter (mostly copied from the envoy-wasm):
 ```
-(cd example; bazel build :envoy_filter_http_wasm_example.wasm --config=wasm)
+(cd example; bazel build :envoy_filter_http_wasm_example.wasm --config=wasm --sandbox_writable_path $(bazel info output_base)/external/emscripten_toolchain/.emscripten_cache/)
 ```
 
 Push:
 ```
-./extend-envoy push gcr.io/solo-public/example-filter:v1  example/bazel-bin/envoy_filter_http_wasm_example.wasm
+./extend-envoy push gcr.io/solo-public/example-filter:v1 example/bazel-bin/envoy_filter_http_wasm_example.wasm
 ```
 
 load in to gloo:
