@@ -21,6 +21,7 @@ filegroup(
     srcs = [
         "emcc.sh",
         "emar.sh",
+        "common.sh",
         # "@emscripten_clang//:all",
         "@emscripten_toolchain//:all",
      # ":emscripten_cache_content"
