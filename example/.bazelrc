@@ -6,20 +6,14 @@ build --cxxopt=-DEMSCRIPTEN_PROTOBUF_LITE=1
 # ideally we want this, but it doesn't work...
 # build --cxxopt=-fno-canonical-system-headers
 # build --cxxopt=-no-canonical-prefixes
+# as a work around we use `sed` to "fix" the *.d files.
 
-# ideally i would want 
-# build --sandbox_writable_path external/emscripten_toolchain/.emscripten_cache/
-# or
-# build --sandbox_writable_path $(bazel info output_base)/external/emscripten_toolchain/.emscripten_cache/
-# but that doesn't work. solved via readme
-
-build:wasm --crosstool_top=//toolchain:emscripten
+build --crosstool_top=//toolchain:emscripten
 
 # Use --cpu as a differentiator.
-
-build:wasm --cpu=wasm
+build --cpu=wasm
 
 # Use the default Bazel C++ toolchain to build the tools used during the
 # build.
 
-build:wasm --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build --host_crosstool_top=@bazel_tools//tools/cpp:toolchain

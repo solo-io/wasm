@@ -11,10 +11,10 @@ cc_toolchain_suite(
 
 filegroup(name = "empty")
  
- # filegroup(
- #   name = "emscripten_cache_content",
- #   srcs = glob(["emscripten_cache/**/*"]),
- # )
+filegroup(
+  name = "emscripten_cache_content",
+  srcs = glob(["tmp/emscripten_cache/**/*"]),
+)
 
 filegroup(
     name = "all",
@@ -22,9 +22,8 @@ filegroup(
         "emcc.sh",
         "emar.sh",
         "common.sh",
-        # "@emscripten_clang//:all",
         "@emscripten_toolchain//:all",
-     # ":emscripten_cache_content"
+        ":emscripten_cache_content"
     ],
 )
 cc_toolchain(
