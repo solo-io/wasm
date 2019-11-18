@@ -84,7 +84,7 @@ def _impl(ctx):
         abi_version = "unknown",
         abi_libc_version = "unknown",
         tool_paths = tool_paths,
-        # we don't need to use features, as emcc already adds the se directories.
+        # we don't need to use features, as emcc already adds the directories.
         # we just need to include them here so that bazel doesn't complain on 
         # "this rule is missing dependency declarations for the following files included".
         cxx_builtin_include_directories = ["external/emscripten_toolchain/upstream/emscripten/system/include/libcxx",
