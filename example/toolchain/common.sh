@@ -13,10 +13,9 @@ export EM_EXCLUSIVE_CACHE_ACCESS=1
 export EMCC_SKIP_SANITY_CHECK=1
 export EMCC_WASM_BACKEND=1
 
-mkdir -p "tmp/emscripten_cache"
+source external/emscripten_toolchain/emsdk_env.sh
 
  # the emscripten sdk does some path comparison, so make EM_CACHE an absolute path to make it work. 
+mkdir -p "tmp/emscripten_cache"
 export EM_CACHE=${PWD}"/tmp/emscripten_cache"
 export TEMP_DIR="tmp"
-
-source external/emscripten_toolchain/emsdk_env.sh
