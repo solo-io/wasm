@@ -19,7 +19,7 @@ cc_library(
         "struct_lite.pb.h",
     ],
     deps = [
-        "@google_protobuf//:protobuf_lite",
+        "@com_google_protobuf//:protobuf_lite",
     ],
 )
 filegroup(

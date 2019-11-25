@@ -15,13 +15,13 @@ http_archive(
   ]
 )
 
+# TODO: consider fixing this so that we don't need install and activate above.
 # http_archive(
 #   name = 'emscripten_clang',
 #   url = 'https://s3.amazonaws.com/mozilla-games/emscripten/packages/llvm/tag/linux_64bit/emscripten-llvm-e1.37.22.tar.gz',
 #   build_file = '//:emscripten-clang.BUILD',
 #   strip_prefix = "emscripten-llvm-e1.37.22",
 # )
-
 
 http_archive(
     name = "bazel_skylib",
@@ -34,9 +34,10 @@ http_archive(
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 bazel_skylib_workspace()
 
-
+# this must be named com_google_protobuf to match dependency pulled in by
+# rules_proto.
 git_repository(
-    name = "google_protobuf",
+    name = "com_google_protobuf",
     remote = "https://github.com/protocolbuffers/protobuf",
     commit = "655310ca192a6e3a050e0ca0b7084a2968072260",
 )
@@ -53,3 +54,16 @@ new_git_repository(
     patch_cmds = ["rm BUILD"],
     build_file = '//bazel/external:envoy-wasm-api.BUILD',
 )
+
+http_archive(
+    name = "rules_proto",
+    sha256 = "602e7161d9195e50246177e7c55b2f39950a9cf7366f74ed5f22fd45750cd208",
+    strip_prefix = "rules_proto-97d8af4dc474595af3900dd85cb3a29ad28cc313",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
+        "https://github.com/bazelbuild/rules_proto/archive/97d8af4dc474595af3900dd85cb3a29ad28cc313.tar.gz",
+    ],
+)
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+rules_proto_dependencies()
+rules_proto_toolchains()

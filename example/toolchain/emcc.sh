@@ -14,9 +14,9 @@ do
         echo Fixing $arg
         sed -e 's%[^ ]*/external/emscripten_toolchain/upstream/emscripten/system/%external/emscripten_toolchain/upstream/emscripten/system/%' $arg > $arg.tmp
         mv $arg.tmp $arg
+        # some zlib headers are treated as system headers
+        sed -e 's%[^ ]*/external/zlib/%external/zlib/%' $arg > $arg.tmp
+        mv $arg.tmp $arg
         break
     fi
 done
-
-
- 
