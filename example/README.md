@@ -1,7 +1,24 @@
-This compiles the example filter from envoy.
-Currently the build system is not hermetic, but it is pretty easy to use.
+This compiles an example filter for envoy WASM.
 
+# build filter
 build with
 ```
 bazel build :filter.wasm
+```
+
+Filter will be in:
+```
+./bazel-bin/filter.wasm
+```
+
+# build config descriptors
+
+build descriptors with:
+```
+bazel build :filter_proto
+```
+
+Descriptors will be in:
+```
+./bazel-bin/filter_proto-descriptor-set.proto.bin
 ```
