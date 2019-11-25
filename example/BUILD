@@ -1,12 +1,12 @@
 
 cc_binary(
-    name = "envoy_filter_http_wasm_example.wasm",
+    name = "filter.wasm",
     srcs = [
-        "envoy_filter_http_wasm_example.cc"
+        "filter.cc"
     ],
     deps = [
-        "@envoy_wasm//:proxy_wasm_intrinsics",
+        "@envoy_wasm_api//:proxy_wasm_intrinsics",
     ],
-    additional_linker_inputs = ["@envoy_wasm//:jslib"],
-    linkopts = ["--js-library", "external/envoy_wasm/proxy_wasm_intrinsics.js"],
+    additional_linker_inputs = ["@envoy_wasm_api//:jslib"],
+    linkopts = ["--js-library", "external/envoy_wasm_api/proxy_wasm_intrinsics.js"],
 )
