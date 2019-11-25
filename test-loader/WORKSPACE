@@ -1,0 +1,29 @@
+workspace(name = "filter_example")
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository", "new_git_repository")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# we don't need all the envoy buildry,
+# and so i go in straight to the api/wasm/cpp so that i can create a new workspace with
+# just the things needed.
+git_repository(
+    name = "envoy",
+    remote = "https://github.com/yuval-k/envoy-wasm",
+    commit = "9fbd857798f990381b22f2032109422bde876f63",
+)
+
+load("@envoy//bazel:api_binding.bzl", "envoy_api_binding")
+
+envoy_api_binding()
+
+load("@envoy//bazel:api_repositories.bzl", "envoy_api_dependencies")
+
+envoy_api_dependencies()
+
+load("@envoy//bazel:repositories.bzl", "envoy_dependencies") 
+
+envoy_dependencies()
+
+load("@envoy//bazel:dependency_imports.bzl", "envoy_dependency_imports")
+
+envoy_dependency_imports()

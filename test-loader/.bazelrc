@@ -1,0 +1,2 @@
+build --copt=-fPIC
+build --define wasm=v8 
