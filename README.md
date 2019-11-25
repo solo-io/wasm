@@ -31,7 +31,7 @@ set the httpGateway field like so:
             config: yuval
             image: gcr.io/solo-public/example-filter:v1
             name: yuval
-            root_id: my_root_id
+            root_id: add_header_root_id
 ```
 
 

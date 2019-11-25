@@ -2,21 +2,23 @@
 #include <string>
 #include <unordered_map>
 
+#include "google/protobuf/util/json_util.h"
 #include "proxy_wasm_intrinsics.h"
+#include "filter.pb.h"
 
-class ExampleRootContext : public RootContext {
+class AddHeaderRootContext : public RootContext {
 public:
-  explicit ExampleRootContext(uint32_t id, StringView root_id) : RootContext(id, root_id) {}
+  explicit AddHeaderRootContext(uint32_t id, StringView root_id) : RootContext(id, root_id) {}
   bool onConfigure(size_t /* configuration_size */) override;
 
   bool onStart(size_t) override;
 
-  std::string yuval_;
+  std::string header_value_;
 };
 
-class ExampleContext : public Context {
+class AddHeaderContext : public Context {
 public:
-  explicit ExampleContext(uint32_t id, RootContext* root) : Context(id, root), root_(static_cast<ExampleRootContext*>(static_cast<void*>(root))) {}
+  explicit AddHeaderContext(uint32_t id, RootContext* root) : Context(id, root), root_(static_cast<AddHeaderRootContext*>(static_cast<void*>(root))) {}
 
   void onCreate() override;
   FilterHeadersStatus onRequestHeaders(uint32_t headers) override;
@@ -25,61 +27,50 @@ public:
   void onDone() override;
   void onLog() override;
   void onDelete() override;
+private:
 
-  ExampleRootContext* root_;
+  AddHeaderRootContext* root_;
 };
-static RegisterContextFactory register_ExampleContext(CONTEXT_FACTORY(ExampleContext),
-                                                      ROOT_FACTORY(ExampleRootContext),
-                                                      "my_root_id");
+static RegisterContextFactory register_AddHeaderContext(CONTEXT_FACTORY(AddHeaderContext),
+                                                      ROOT_FACTORY(AddHeaderRootContext),
+                                                      "add_header_root_id");
 
-bool ExampleRootContext::onConfigure(size_t) { 
+bool AddHeaderRootContext::onConfigure(size_t) { 
   auto conf = getConfiguration();
-  LOG_WARN("onConfigure1 " + std::to_string(conf->size()));
-  LOG_WARN("onConfigure2 " + conf->toString());
-  yuval_ = conf->toString();
-  if (yuval_ != "yuval") {
-    return true;
-  }
+  Config config;
+  
+  google::protobuf::util::JsonParseOptions options;
+  options.case_insensitive_enum_parsing = true;
+  options.ignore_unknown_fields = false;
+
+  google::protobuf::util::JsonStringToMessage(conf->toString(), &config, options);
+  LOG_DEBUG("onConfigure " + config.value());
+  header_value_ = config.value();
   return true; 
 }
 
-bool ExampleRootContext::onStart(size_t) { LOG_WARN("onStart"); return true;}
+bool AddHeaderRootContext::onStart(size_t) { LOG_DEBUG("onStart"); return true;}
 
-void ExampleContext::onCreate() { LOG_WARN(std::string("onCreate " + std::to_string(id()))); }
+void AddHeaderContext::onCreate() { LOG_DEBUG(std::string("onCreate " + std::to_string(id()))); }
 
-FilterHeadersStatus ExampleContext::onRequestHeaders(uint32_t) {
-  LOG_INFO(std::string("onRequestHeaders ") + std::to_string(id()));
-  LOG_INFO(std::string("onRequestHeaders ") + root_->yuval_);
-  auto result = getRequestHeaderPairs();
-  auto pairs = result->pairs();
-  LOG_INFO(std::string("headers: ") + std::to_string(pairs.size()));
-  for (auto& p : pairs) {
-    LOG_INFO(std::string(p.first) + std::string(" -> ") + std::string(p.second));
-  }
+FilterHeadersStatus AddHeaderContext::onRequestHeaders(uint32_t) {
+  LOG_DEBUG(std::string("onRequestHeaders ") + std::to_string(id()));
   return FilterHeadersStatus::Continue;
 }
 
-FilterHeadersStatus ExampleContext::onResponseHeaders(uint32_t) {
+FilterHeadersStatus AddHeaderContext::onResponseHeaders(uint32_t) {
   LOG_DEBUG(std::string("onResponseHeaders ") + std::to_string(id()));
-  auto result = getResponseHeaderPairs();
-  auto pairs = result->pairs();
-  LOG_INFO(std::string("headers: ") + std::to_string(pairs.size()));
-  for (auto& p : pairs) {
-    LOG_INFO(std::string(p.first) + std::string(" -> ") + std::string(p.second));
-  }
-  addResponseHeader("newheader", "joe");
+  addResponseHeader("newheader", root_->header_value_);
   replaceResponseHeader("location", "envoy-wasm");
   return FilterHeadersStatus::Continue;
 }
 
-FilterDataStatus ExampleContext::onRequestBody(size_t body_buffer_length, bool end_of_stream) {
-  auto body = getBufferBytes(BufferType::HttpRequestBody, 0, body_buffer_length);
-  LOG_ERROR(std::string("onRequestBody ") + std::string(body->view()));
+FilterDataStatus AddHeaderContext::onRequestBody(size_t body_buffer_length, bool end_of_stream) {
   return FilterDataStatus::Continue;
 }
 
-void ExampleContext::onDone() { LOG_WARN(std::string("onDone " + std::to_string(id()))); }
+void AddHeaderContext::onDone() { LOG_DEBUG(std::string("onDone " + std::to_string(id()))); }
 
-void ExampleContext::onLog() { LOG_WARN(std::string("onLog " + std::to_string(id()))); }
+void AddHeaderContext::onLog() { LOG_DEBUG(std::string("onLog " + std::to_string(id()))); }
 
-void ExampleContext::onDelete() { LOG_WARN(std::string("onDelete " + std::to_string(id()))); }
+void AddHeaderContext::onDelete() { LOG_DEBUG(std::string("onDelete " + std::to_string(id()))); }
