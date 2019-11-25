@@ -1,11 +1,11 @@
 build --cxxopt=-std=c++17
 build --cxxopt=-O3
+build --cxxopt=-no-canonical-prefixes
 build --cxxopt=-DEMSCRIPTEN_PROTOBUF_LITE=1
 
 # https://github.com/bazelbuild/bazel/issues/9451
 # ideally we want this, but it doesn't work...
 # build --cxxopt=-fno-canonical-system-headers
-# build --cxxopt=-no-canonical-prefixes
 # as a work around we use `sed` to "fix" the *.d files.
 
 build --crosstool_top=//toolchain:emscripten
