@@ -25,7 +25,7 @@ func PushCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts pushOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
-		Use:   "push name[:tag|@digest] code.wasm config_proto-descriptor-set.proto.bin",
+		Use:   "push name[:tag|@digest] code.wasm [config_proto-descriptor-set.proto.bin]",
 		Short: "Push wasm to remote registry",
 		Long: `Push wasm to remote registry
 
