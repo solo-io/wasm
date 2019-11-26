@@ -13,6 +13,7 @@ import (
 type pushOptions struct {
 	targetRef string
 	code      string
+	config    string
 	verbose   bool
 
 	debug bool
@@ -24,7 +25,7 @@ func PushCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts pushOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
-		Use:   "push name[:tag|@digest] code.wasm",
+		Use:   "push name[:tag|@digest] code.wasm config_proto-descriptor-set.proto.bin",
 		Short: "Push wasm to remote registry",
 		Long: `Push wasm to remote registry
 
@@ -48,11 +49,14 @@ Example - Push file to the HTTP registry:
 `,
 		Args: cobra.MinimumNArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 2 {
+			if len(args) != 2 && len(args) != 3 {
 				return fmt.Errorf("invalid number of arguments")
 			}
 			opts.targetRef = args[0]
 			opts.code = args[1]
+			if len(args) == 3 {
+				opts.config = args[2]
+			}
 			return runPush(opts)
 		},
 	}
@@ -66,5 +70,5 @@ func runPush(opts pushOptions) error {
 	pusher := push.PusherImpl{
 		Resolver: resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...),
 	}
-	return pusher.Push(context.Background(), push.NewLocalFilter(opts.code, "", opts.targetRef))
+	return pusher.Push(context.Background(), push.NewLocalFilter(opts.code, opts.config, opts.targetRef))
 }

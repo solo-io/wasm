@@ -2,7 +2,10 @@ package push
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/deislabs/oras/pkg/content"
@@ -48,20 +51,55 @@ type PusherImpl struct {
 	Resolver remotes.Resolver
 }
 
+type Config struct {
+}
+
+func makeConfig(localFilter LocalFilter) Config {
+	// TODO: something smarter
+	return Config{}
+}
+
+func writeConfig(cfg Config) (string, func(), error) {
+
+	bytes, err := json.Marshal(&cfg)
+	if err != nil {
+		return "", nil, err
+	}
+
+	tmpfile, err := ioutil.TempFile("", "config.*.txt")
+	if err != nil {
+		return "", nil, err
+	}
+	defer tmpfile.Close()
+
+	_, err = tmpfile.Write(bytes)
+	if err != nil {
+		// remove after close
+		defer os.Remove(tmpfile.Name())
+		return "", nil, err
+	}
+
+	return tmpfile.Name(), func() { os.Remove(tmpfile.Name()) }, nil
+}
+
 func (p *PusherImpl) Push(ctx context.Context, localFilter LocalFilter) error {
 	var pushOpts []oras.PushOpt
 
 	store := content.NewFileStore("")
 
-	filename := localFilter.ConfigFilename()
-	if filename != "" { // TODO : error here instead
-		file, err := store.Add(annotationConfig, model.ConfigMediaType, filename)
-		if err != nil {
-			return err
-		}
-		file.Annotations = nil
-		pushOpts = append(pushOpts, oras.WithConfig(file))
+	cfg := makeConfig(localFilter)
+	filename, cleanup, err := writeConfig(cfg)
+	if err != nil {
+		return err
 	}
+	defer cleanup()
+
+	file, err := store.Add(annotationConfig, model.ConfigMediaType, filename)
+	if err != nil {
+		return err
+	}
+	file.Annotations = nil
+	pushOpts = append(pushOpts, oras.WithConfig(file))
 
 	files, err := getFiles(localFilter, store)
 	if err != nil {
@@ -80,8 +118,16 @@ func (p *PusherImpl) Push(ctx context.Context, localFilter LocalFilter) error {
 }
 
 func getFiles(localFilter LocalFilter, store *content.FileStore) ([]ocispec.Descriptor, error) {
-
 	var files []ocispec.Descriptor
+
+	if cfg := localFilter.ConfigFilename(); cfg != "" { // TODO : error here instead?
+		cfgFile, err := store.Add("config.proto.bin", model.ProtoSchemaMediaType, cfg)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, cfgFile)
+	}
+
 	file, err := store.Add("code.wasm", model.CodeMediaType, localFilter.CodeFilename())
 	if err != nil {
 		return nil, err
