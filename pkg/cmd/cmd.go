@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/solo-io/extend-envoy/pkg/cmd/cache"
 	"github.com/solo-io/extend-envoy/pkg/cmd/opts"
 	"github.com/solo-io/extend-envoy/pkg/cmd/pull"
 	"github.com/solo-io/extend-envoy/pkg/cmd/push"
@@ -14,7 +15,7 @@ func Run() {
 		Use: "extend-envoy [command]",
 	}
 	var opts opts.GeneralOptions
-	cmd.AddCommand(push.PushCmd(&opts), pull.PullCmd(&opts))
+	cmd.AddCommand(push.PushCmd(&opts), pull.PullCmd(&opts), cache.CacheCmd(&opts))
 	cmd.PersistentFlags().StringArrayVarP(&opts.Configs, "config", "c", nil, "auth config path")
 	cmd.PersistentFlags().StringVarP(&opts.Username, "username", "u", "", "registry username")
 	cmd.PersistentFlags().StringVarP(&opts.Password, "password", "p", "", "registry password")

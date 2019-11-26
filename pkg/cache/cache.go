@@ -116,13 +116,14 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	if rs, ok := rc.(io.ReadSeeker); ok {
 		// content of digests never changes so set mod time to a constant
 		// don't use zero time because serve content doesn't use that.
-		modTime := time.Date(2000, time.January, 1, 0, 0, 0, 0, nil)
+		modTime := time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
 		http.ServeContent(rw, r, file, modTime, rs)
 	} else {
 		rw.Header().Add("Content-Length", strconv.Itoa(int(desc.Size)))
 		if r.Method != "HEAD" {
 			_, err = io.Copy(rw, rc)
 			if err != nil {
+				// TODO: use real log
 				fmt.Printf("error http %v\n", err)
 			}
 		}
