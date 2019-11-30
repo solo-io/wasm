@@ -1,0 +1,24 @@
+[package]
+description = "Envoy WASM filter bindings"
+name = "wasm_filter_bindings"
+version = "0.0.1"
+authors = ["Eitan Yarmush, Yuval Kohavi"]
+edition = "2018"
+
+
+[dependencies]
+log = "0.4"
+# futures = "0.1.16"
+# grpcio = "0.4.3"
+protobuf = "2.8.1"
+
+[build-dependencies]
+protoc-grpcio = "1.1.0"
+
+[profile.release]
+lto = true
+opt-level = 3
+panic = "abort"
+
+[lib]
+crate-type = ["cdylib", "rlib"]

@@ -1,0 +1,7 @@
+syntax = "proto3";
+
+package soloio;
+
+message Config {
+    string value = 1;
+}

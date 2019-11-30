@@ -1,2 +1,5 @@
 .vscode/
 */bazel-*
+
+# rust output
+target

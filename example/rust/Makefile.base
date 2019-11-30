@@ -1,0 +1,7 @@
+RUST_API:=$(shell git rev-parse --show-toplevel)/api/wasm/rust
+
+%.wasm %.wat: %/src/lib.rs %/Cargo.toml ${RUST_API}/src/lib.rs ${RUST_API}/Cargo.toml
+	cd $* && cargo build --target=wasm32-unknown-unknown --release
+	mv $*/target/wasm32-unknown-unknown/release/$*.wasm .
+	rm -rf $*/target
+	wasm-gc $*.wasm
