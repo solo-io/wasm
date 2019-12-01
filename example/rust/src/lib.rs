@@ -117,12 +117,12 @@ pub enum FilterDataStatus {
 
 /// External APIs for envoy to call into
 #[no_mangle]
-extern "C" fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
+fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
     info!("in proxy_on_start");
-    0
+    1
 }
 #[no_mangle]
-extern "C" fn proxy_validate_configuration(root_context_id: u32, configuration_size: u32) -> u32 {
+fn proxy_validate_configuration(root_context_id: u32, configuration_size: u32) -> u32 {
     // let b = log::RecordBuilder::new();
     // b.level(log::Level::Debug);
     info!("in proxy_validate_config");
@@ -130,23 +130,23 @@ extern "C" fn proxy_validate_configuration(root_context_id: u32, configuration_s
     // // b.args(String::from(""));
     // // log::
     // // LOGGER.log(b.build());
-    0
+    1
 }
 #[no_mangle]
-extern "C" fn proxy_on_configure(root_context_id: u32, configuration_size: u32) -> u32 {
+fn proxy_on_configure(root_context_id: u32, configuration_size: u32) -> u32 {
     println!("in proxy_on_configure");
-    0
+    1
 }
 #[no_mangle]
-extern "C" fn proxy_on_tick(root_context_id: u32) {}
+fn proxy_on_tick(root_context_id: u32) {}
 // #[no_mangle]
-// extern "C" fn proxy_on_queue_ready(root_context_id: u32, token: u32) {}
+// fn proxy_on_queue_ready(root_context_id: u32, token: u32) {}
 #[no_mangle]
-extern "C" fn proxy_on_create(context_id: u32, root_context_id: u32) {}
+fn proxy_on_create(context_id: u32, root_context_id: u32) {}
 #[no_mangle]
-extern "C" fn proxy_on_new_connection(context_id: u32) -> FilterStatus {FilterStatus::Continue}
+fn proxy_on_new_connection(context_id: u32) -> FilterStatus {FilterStatus::Continue}
 /// stream decoder
 #[no_mangle]
-extern "C" fn proxy_on_downstream_data(context_id: u32, data_length: u32, end_of_stream: u32) -> FilterStatus {FilterStatus::StopIteration}
+fn proxy_on_downstream_data(context_id: u32, data_length: u32, end_of_stream: u32) -> FilterStatus {FilterStatus::StopIteration}
 // #[no_mangle]
-// extern "C" fn proxy_on_queue_ready(root_context_id: u32, token: u32) {}
+// fn proxy_on_queue_ready(root_context_id: u32, token: u32) {}

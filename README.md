@@ -34,6 +34,29 @@ set the httpGateway field like so:
             root_id: add_header_root_id
 ```
 
+```
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: default
+  namespace: gloo-system
+spec:
+  virtualHost:
+    domains:
+    - '*'
+    routes:
+    - matcher:
+        exact: /sample-route-1
+      routeAction:
+        single:
+          upstream:
+            name: default-petstore-8080
+            namespace: gloo-system
+      routePlugins:
+        prefixRewrite:
+          prefixRewrite: /api/pets
+```
+
 
 # emscripten sdk
 If you change the emscripten SDK, an sdk with PR merged is needed:
