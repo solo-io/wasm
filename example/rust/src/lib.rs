@@ -1,4 +1,5 @@
 use log::{info};
+use std::collections::HashMap;
 /// Low-level Proxy-WASM APIs for the host functions.
 pub mod host;
 pub mod filter;
@@ -67,14 +68,25 @@ fn free(ptr: *mut u8) {
     }
 }
 
-    
-struct Filter {
-    decoder: &'static DecoderFilter,
-    encoder: &'static EncoderFilter
+macro_rules! root_context_factory {
+    () => {
+        
+    };
 }
 
-impl Filter {
-    pub fn new(decoder: &'static DecoderFilter, encoder: &&'static EncoderFilter) -> Self {
+static ROOT_CONTEXT: RootContext = RootContext;
+
+pub struct RootContext {}
+// pub struct
+
+    
+struct Filter<'filter> {
+    decoder: &'filter DecoderFilter,
+    encoder: &'filter EncoderFilter
+}
+
+impl<'filter> Filter<'filter> {
+    pub fn new(decoder: &'filter DecoderFilter, encoder: &'filter EncoderFilter) -> Self {
         Filter {decoder, encoder}
     }
 }
@@ -83,6 +95,10 @@ pub struct HeaderMap {}
 
 pub struct Buffer {}
 
+pub struct Metadata {
+    data: HashMap<String, String>,
+}
+
 struct DecoderFilter {}
 
 struct EncoderFilter {}
@@ -90,16 +106,19 @@ struct EncoderFilter {}
 
 pub trait StreamDecoder {
     fn on_decode_headers(header_map: &HeaderMap, header_only: bool) -> FilterHeadersStatus;
+    fn on_decode_metadata(metadata: &Metadata, header_only: bool) -> FilterMetadataStatus;
     fn on_decode_data(buf: &Buffer, end_stream: bool) -> FilterDataStatus;
     fn on_decode_trailers(header_map: HeaderMap, end_stream: bool) -> FilterTrailersStatus;
 }
 
 pub trait StreamEncoder {
     fn on_encode_headers(header_map: u32, header_only: bool) -> FilterHeadersStatus;
+    fn on_encode_metadata(metadata: &Metadata, header_only: bool) -> FilterMetadataStatus;
     fn on_encode_data(buf: &Buffer, end_stream: bool) -> FilterDataStatus;
     fn on_encode_trailers(header_map: HeaderMap, end_stream: bool) -> FilterTrailersStatus;
 }
 
+#[repr(C)]
 pub enum FilterStatus { Continue = 0, StopIteration = 1 }
 #[repr(C)]
 pub enum FilterHeadersStatus { Continue = 0, StopIteration = 1 }
@@ -118,7 +137,6 @@ pub enum FilterDataStatus {
 /// External APIs for envoy to call into
 #[no_mangle]
 fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
-    info!("in proxy_on_start");
     1
 }
 #[no_mangle]
@@ -134,7 +152,7 @@ fn proxy_validate_configuration(root_context_id: u32, configuration_size: u32) -
 }
 #[no_mangle]
 fn proxy_on_configure(root_context_id: u32, configuration_size: u32) -> u32 {
-    println!("in proxy_on_configure");
+    info!("in proxy_on_configure");
     1
 }
 #[no_mangle]
@@ -148,5 +166,42 @@ fn proxy_on_new_connection(context_id: u32) -> FilterStatus {FilterStatus::Conti
 /// stream decoder
 #[no_mangle]
 fn proxy_on_downstream_data(context_id: u32, data_length: u32, end_of_stream: u32) -> FilterStatus {FilterStatus::StopIteration}
+#[no_mangle]
+fn proxy_on_upstream_data(context_id: u32, data_length: u32, end_of_stream: u32) -> FilterStatus {FilterStatus::StopIteration}
+
+#[no_mangle]
+fn proxy_on_downstream_connection_close(context_id: u32, peer_type: u32) {}
+#[no_mangle]
+fn proxy_on_upstream_connection_close(context_id: u32, peer_type: u32) {}
+
+#[no_mangle]
+fn proxy_on_request_headers(context_id: u32, headers: u32) -> FilterHeadersStatus {FilterHeadersStatus::Continue}
+#[no_mangle]
+fn proxy_on_request_metadata(context_id: u32, elements: u32) -> FilterMetadataStatus {FilterMetadataStatus::Continue}
+#[no_mangle]
+fn proxy_on_request_body(context_id: u32, body_buffer_length: u32, end_of_stream: u32) -> FilterDataStatus {FilterDataStatus::Continue}
+#[no_mangle]
+fn proxy_on_request_trailers(context_id: u32, trailers: u32) -> FilterTrailersStatus {FilterTrailersStatus::Continue}
+
+#[no_mangle]
+fn proxy_on_response_headers(context_id: u32, headers: u32) -> FilterHeadersStatus {FilterHeadersStatus::Continue}
+#[no_mangle]
+fn proxy_on_response_metadata(context_id: u32, elements: u32) -> FilterMetadataStatus {FilterMetadataStatus::Continue}
+#[no_mangle]
+fn proxy_on_response_body(context_id: u32, body_buffer_length: u32, end_of_stream: u32) -> FilterDataStatus {FilterDataStatus::Continue}
+#[no_mangle]
+fn proxy_on_response_trailers(context_id: u32, trailers: u32) -> FilterTrailersStatus {FilterTrailersStatus::Continue}
+
+
+#[no_mangle]
+fn proxy_on_done(context_id: u32) -> u32 {1}
+#[no_mangle]
+fn proxy_on_log(context_id: u32) {}
+#[no_mangle]
+fn proxy_on_delete(context_id: u32)  {}
+
+
+
+
 // #[no_mangle]
 // fn proxy_on_queue_ready(root_context_id: u32, token: u32) {}

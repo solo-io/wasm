@@ -1,0 +1,47 @@
+admin:
+  access_log_path: /dev/null
+  address:
+    socket_address:
+      address: 127.0.0.1
+      port_value: 19000
+static_resources:
+  listeners:
+  - name: listener_0
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 8080 }
+    filter_chains:
+    - filters:
+      - name: envoy.http_connection_manager
+        config:
+          codec_type: auto
+          stat_prefix: ingress_http
+          route_config:
+            name: gloo-webgrpc
+            virtual_hosts:
+            - name: gloo-webgrpc
+              domains: ["*"]
+              routes:
+              - match: { prefix: "/" }
+                route: { cluster: static-cluster }
+          http_filters:
+          - name: envoy.filters.http.wasm
+            config: 
+              config: 
+                name: "test"
+                root_id: "test_id"
+                vm_config:
+                  vm_id: test
+                  runtime: envoy.wasm.runtime.v8
+                  allow_precompiled: false
+                  code:
+                    local:
+                      filename: /home/eitanya/src/extend-envoy/example/rust/target/wasm32-unknown-unknown/debug/wasm_filter_bindings.wasm 
+                configuration: |
+                  root: hello
+          - name: envoy.router
+  clusters:
+  - name: static-cluster
+    connect_timeout: 0.25s
+    type: logical_dns
+    lb_policy: round_robin
+    hosts: [{ socket_address: { address: 127.0.0.1, port_value: 10101 } }]
