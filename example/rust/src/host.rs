@@ -92,6 +92,7 @@ pub enum BufferType {
 }
 
 #[repr(C)]
+#[derive(PartialEq)]
 pub enum WasmResult {
     Ok = 0,
     // The result could not be found, e.g. a provided key did not appear in a table.

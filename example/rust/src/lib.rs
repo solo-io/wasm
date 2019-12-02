@@ -1,5 +1,8 @@
-use log::{info};
+extern crate protobuf;
+
+use log::{info, debug};
 use std::collections::HashMap;
+use std::ptr;
 /// Low-level Proxy-WASM APIs for the host functions.
 pub mod host;
 pub mod filter;
@@ -68,16 +71,50 @@ fn free(ptr: *mut u8) {
     }
 }
 
-macro_rules! root_context_factory {
-    () => {
+// macro_rules! root_context_factory {
+//     () => {
         
-    };
-}
+//     };
+// }
 
-static ROOT_CONTEXT: RootContext = RootContext;
+
 
 pub struct RootContext {}
-// pub struct
+
+static ROOT_CONTEXT: RootContext = RootContext {};
+
+pub fn get_configuration<T: protobuf::Message>() -> protobuf::ProtobufResult<T> {
+    let mut configuration_ptr: *const *mut u8 = ptr::null_mut();
+    let mut message_size: Box<usize> = Box::default();
+    unsafe {
+        let result = host::proxy_get_configuration(configuration_ptr, message_size.as_mut());
+        if result != host::WasmResult::Ok {  
+            debug!("non-ok result: {:}", result as u32);
+        }
+    }
+    let read;
+    unsafe {
+        let mut config: Box<u8> =  Box::from_raw(*configuration_ptr);
+        debug!("config {:}, size: {:}", config, message_size);
+        read = Vec::from_raw_parts(config.as_mut(), *message_size, *message_size);
+    }
+
+    protobuf::parse_from_bytes::<T>(&read)
+}
+
+impl RootContext {
+    pub fn validate_configuration(&self) -> host::WasmResult {host::WasmResult::Ok}
+
+    pub fn on_configure(&self) -> host::WasmResult {
+        let proto_config = get_configuration::<filter::Config>();
+
+        info!("config value: {}" proto_config.is_err());
+        host::WasmResult::Ok
+
+    }
+}
+
+pub struct Context {}
 
     
 struct Filter<'filter> {
@@ -141,19 +178,11 @@ fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
 }
 #[no_mangle]
 fn proxy_validate_configuration(root_context_id: u32, configuration_size: u32) -> u32 {
-    // let b = log::RecordBuilder::new();
-    // b.level(log::Level::Debug);
-    info!("in proxy_validate_config");
-    // log::
-    // // b.args(String::from(""));
-    // // log::
-    // // LOGGER.log(b.build());
-    1
+    ROOT_CONTEXT.validate_configuration() as u32
 }
 #[no_mangle]
 fn proxy_on_configure(root_context_id: u32, configuration_size: u32) -> u32 {
-    info!("in proxy_on_configure");
-    1
+    ROOT_CONTEXT.on_configure() as u32
 }
 #[no_mangle]
 fn proxy_on_tick(root_context_id: u32) {}
