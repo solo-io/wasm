@@ -4,12 +4,23 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/google/go-github/v28/github"
 	"golang.org/x/oauth2"
 )
 
-func UpdateCatalogItem(ctx context.Context, token, ref, catalogRepo, itemname, contents string) error {
+func UpdateCatalogItem(ctx context.Context, ref, catalogRepo, itemname, contents string) error {
+
+	token := os.Getenv("GITHUB_API_TOKEN")
+	if token == "" {
+		var err error
+		token, err = getToken()
+		if err != nil {
+			return err
+		}
+	}
+
 	// TODO: token
 	var httpClient *http.Client
 	if token != "" {

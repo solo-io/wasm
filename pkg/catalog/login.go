@@ -1,11 +1,14 @@
 package catalog
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
+	"runtime"
 	"strconv"
 )
 
@@ -28,7 +31,7 @@ func ResolveHubEndpoint(path string) *url.URL {
 	return HubEndpoint().ResolveReference(&url.URL{Path: path})
 }
 
-func Login() error {
+func Login(ctx context.Context) error {
 	// start http server on a random port
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -43,12 +46,26 @@ func Login() error {
 	authUrl.RawQuery = currentQuery.Encode()
 
 	fmt.Println("Using port:", port)
-	fmt.Println("go to: ", authUrl.String())
+	urlString := authUrl.String()
+
+	if err := openbrowser(urlString); err != nil {
+		fmt.Println("Cannot launch browser. Please open this url in your browser: ", urlString)
+	} else {
+		fmt.Println("Opening browser for login. If the browser did not open for you, please go to: ", urlString)
+	}
+
 	handler, accessTokenChan := NewHandler()
 	go http.Serve(listener, handler)
-	accessToken := <-accessTokenChan
+	select {
+	case accessToken := <-accessTokenChan:
+		if err := saveToken(accessToken); err != nil {
+			panic(err)
+		}
+		fmt.Println("success ! you are now authneticated")
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 
-	fmt.Println("success ! ", accessToken)
 	return nil
 
 }
@@ -70,8 +87,28 @@ func NewHandler() (http.Handler, <-chan string) {
 		case c <- token:
 		default:
 		}
-		w.Write([]byte("auth success!"))
+		w.Write([]byte("auth success! you can now close this window"))
 	})
 
 	return h, c
+}
+
+// https://gist.github.com/hyg/9c4afcd91fe24316cbf0
+func openbrowser(url string) error {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "linux":
+		cmd = exec.Command("xdg-open", url)
+	case "windows":
+		cmd = exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
+	case "darwin":
+		cmd = exec.Command("open", url)
+	default:
+		return fmt.Errorf("unsupported platform")
+	}
+
+	err := cmd.Start()
+	go cmd.Wait()
+
+	return err
 }

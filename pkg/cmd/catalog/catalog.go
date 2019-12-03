@@ -2,7 +2,6 @@ package catalog
 
 import (
 	"context"
-	"os"
 
 	"github.com/solo-io/extend-envoy/pkg/catalog"
 	"github.com/solo-io/extend-envoy/pkg/cmd/opts"
@@ -53,13 +52,11 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 
 func runCatalog(opts catalogOptions) error {
 
-	return catalog.UpdateCatalogItem(context.Background(), os.Getenv("GITHUB_API_TOKEN"),
+	return catalog.UpdateCatalogItem(context.Background(),
 		"yuval123", "testrepo", "yuval.foo", "foo: bar")
 
 }
 
 func runLogin(opts catalogOptions) error {
-
-	return catalog.Login()
-
+	return catalog.Login(context.Background())
 }
