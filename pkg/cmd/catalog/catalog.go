@@ -18,7 +18,7 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
 		Use:   "catalog name[:tag|@digest] ...",
-		Short: "submit to catalog",
+		Short: "interact with catalog",
 		Long: `catalog
 `,
 		//Args: cobra.MinimumNArgs(1),
@@ -27,6 +27,27 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 		},
 	}
 
+	cmd.AddCommand(&cobra.Command{
+		Use:   "add name[:tag|@digest] ...",
+		Short: "add to catalog",
+		Long: `add
+`,
+		//Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runCatalog(opts)
+		},
+	})
+	cmd.AddCommand(&cobra.Command{
+		Use:   "login name[:tag|@digest] ...",
+		Short: "login to catalog",
+		Long: `login
+`,
+		//Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runLogin(opts)
+		},
+	})
+
 	return cmd
 }
 
@@ -34,5 +55,11 @@ func runCatalog(opts catalogOptions) error {
 
 	return catalog.UpdateCatalogItem(context.Background(), os.Getenv("GITHUB_API_TOKEN"),
 		"yuval123", "testrepo", "yuval.foo", "foo: bar")
+
+}
+
+func runLogin(opts catalogOptions) error {
+
+	return catalog.Login()
 
 }
