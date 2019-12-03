@@ -26,7 +26,7 @@ func saveToken(t string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(f, []byte(t), 0400)
+	return ioutil.WriteFile(f, []byte(t), 0600)
 }
 
 func getToken() (string, error) {

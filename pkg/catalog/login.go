@@ -87,7 +87,11 @@ func NewHandler() (http.Handler, <-chan string) {
 		case c <- token:
 		default:
 		}
-		w.Write([]byte("auth success! you can now close this window"))
+		w.Write([]byte(`
+		<html><head></head><body>
+		auth success! You can now close this window.
+		</body></html>
+		`))
 	})
 
 	return h, c
