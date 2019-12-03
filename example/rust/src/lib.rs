@@ -1,11 +1,13 @@
-extern crate protobuf;
 
 use log::{info, debug};
 use std::collections::HashMap;
-use std::ptr;
+// use serde::de;
+
+pub mod filter;
+
 /// Low-level Proxy-WASM APIs for the host functions.
 pub mod host;
-pub mod filter;
+// pub mod filter;
 
 /// Logger that integrates with host's logging system.
 pub struct Logger;
@@ -29,7 +31,7 @@ impl Logger {
 }
 
 impl log::Log for Logger {
-    fn enabled(&self, _metadata: &log::Metadata) -> bool {
+    fn enabled(&self, _metadata: &log::Metadata) -> bool { 
         true
     }
 
@@ -78,13 +80,72 @@ fn free(ptr: *mut u8) {
 // }
 
 
+static mut CONTEXT_FACTORY_MAP: Vec<(String, &dyn ContextFactory)> = {
+    Vec::new()
+};
 
-pub struct RootContext {}
+static mut ROOT_CONTEXT_FACTORY_MAP: Vec<(String, &dyn RootContextFactory)> = {
+    Vec::new()
+};
 
-static ROOT_CONTEXT: RootContext = RootContext {};
+static mut ROOT_CONTEXT_MAP: Vec<(u32, &dyn RootContext)> = {
+    Vec::new()
+};
 
-pub fn get_configuration<T: protobuf::Message>() -> protobuf::ProtobufResult<T> {
-    let mut configuration_ptr: *const *mut u8 = ptr::null_mut();
+static mut CONTEXT_MAP: Vec<(String, &dyn Context)> = {
+    Vec::new()
+};
+
+
+fn get_context(key: String) -> Result<&'static dyn Context, ContextManagerError> {
+    Err(ContextManagerError::NoContext)
+}
+
+fn get_root_contetxt(key: u32) -> Result<&'static dyn RootContext, ContextManagerError> {
+    Err(ContextManagerError::NoRootContext)
+}
+
+fn get_context_factory(key: String) -> Result<&'static dyn ContextFactory, ContextManagerError>  {
+    Err(ContextManagerError::NoContextFactory)
+}
+
+fn get_root_contetxt_factory(key: String) -> Result<&'static dyn RootContextFactory, ContextManagerError>  {
+    Err(ContextManagerError::NoRootContextFactory)
+}
+
+pub enum ContextManagerError {
+    NoContext,
+    NoRootContext,
+    NoRootContextFactory,
+    NoContextFactory,
+}
+
+
+pub trait RootContext {
+    fn on_start(&self, configuration_size: u32) -> host::WasmResult;
+    fn on_tick(&self);
+    fn validate_configuration(&self, configuration_size: u32) -> host::WasmResult;
+    fn on_configure(&self, configuration_size: u32) -> host::WasmResult;
+    fn on_done(&self) -> host::WasmResult;
+    fn on_queue_ready(&self, token: u32);
+}
+
+pub trait Context {}
+
+
+pub trait RootContextFactory {
+    fn root_context(&self) -> RootContext;
+}
+
+pub trait ContextFactory {
+    fn context(&self) -> Context;
+}
+
+static mut ROOT_CONTEXT: &dyn RootContext = &BasicRootContext {};
+
+pub fn get_configuration<T: serde::de::DeserializeOwned>(configuration_size: u32) -> Option<T> {
+    let configuration: *mut u8 = malloc(configuration_size as usize);
+    let configuration_ptr: *const *mut u8 = &configuration;
     let mut message_size: Box<usize> = Box::default();
     unsafe {
         let result = host::proxy_get_configuration(configuration_ptr, message_size.as_mut());
@@ -93,42 +154,76 @@ pub fn get_configuration<T: protobuf::Message>() -> protobuf::ProtobufResult<T> 
         }
     }
     let read;
+    let mut config: Box<u8>;
     unsafe {
-        let mut config: Box<u8> =  Box::from_raw(*configuration_ptr);
-        debug!("config {:}, size: {:}", config, message_size);
+        if configuration_ptr.is_null() {
+            // let error: serde_json::Error = 
+            //     protobuf::ProtobufError::message_not_initialized("configurtion_ptr is null");
+            return None
+        }
+        config =  Box::from_raw(*configuration_ptr);
+        debug!("config {:}, size: {:}", config, *message_size);
         read = Vec::from_raw_parts(config.as_mut(), *message_size, *message_size);
     }
 
-    protobuf::parse_from_bytes::<T>(&read)
+    let my_message = filter::Config::new();
+    serde_json::to_string(&my_message).unwrap();
+
+
+    match serde_json::from_slice(&read) {
+        Ok(v) => Some(v),
+        Err(_) => None,
+    }
 }
 
-impl RootContext {
-    pub fn validate_configuration(&self) -> host::WasmResult {host::WasmResult::Ok}
+pub struct BasicRootContext {}
 
-    pub fn on_configure(&self) -> host::WasmResult {
-        let proto_config = get_configuration::<filter::Config>();
-
-        info!("config value: {}" proto_config.is_err());
+impl RootContext for BasicRootContext {
+    fn on_start(&self, _: u32) -> host::WasmResult {
+        info!("on_start");
         host::WasmResult::Ok
-
     }
-}
 
-pub struct Context {}
+    fn on_tick(&self) {}
 
-    
-struct Filter<'filter> {
-    decoder: &'filter DecoderFilter,
-    encoder: &'filter EncoderFilter
-}
-
-impl<'filter> Filter<'filter> {
-    pub fn new(decoder: &'filter DecoderFilter, encoder: &'filter EncoderFilter) -> Self {
-        Filter {decoder, encoder}
+    fn validate_configuration(&self, configuration_size: u32) -> host::WasmResult {
+        info!("validate_configuration");
+        let proto_config = get_configuration::<filter::Config>(configuration_size);
+        match proto_config {
+            Some(v) => {
+                info!("validate_config: {:?}", v);
+                host::WasmResult::Ok
+            },
+            None => {
+                info!("on_configure error");
+                host::WasmResult::ParseFailure
+            },
+        }
     }
+
+    fn on_configure(&self, configuration_size: u32) -> host::WasmResult {
+        info!("on_configure");
+        let proto_config = get_configuration::<filter::Config>(configuration_size);
+        match proto_config {
+            Some(v) => {
+                info!("on_configure: {:?}", v);
+                host::WasmResult::Ok
+            },
+            None => {
+                info!("on_configure error");
+                host::WasmResult::ParseFailure
+            },
+        }
+    }
+
+    fn on_done(&self) -> host::WasmResult {host::WasmResult::Ok}
+
+    fn on_queue_ready(&self, _: u32) {}
+
 }
 
-pub struct HeaderMap {}
+pub struct HeaderMap {
+    data: HashMap<String, Vec<String>>,}
 
 pub struct Buffer {}
 
@@ -136,10 +231,9 @@ pub struct Metadata {
     data: HashMap<String, String>,
 }
 
-struct DecoderFilter {}
-
-struct EncoderFilter {}
-
+struct DecoderFilter<D: StreamDecoder> {
+    stream_decoder: D,
+}
 
 pub trait StreamDecoder {
     fn on_decode_headers(header_map: &HeaderMap, header_only: bool) -> FilterHeadersStatus;
@@ -174,20 +268,34 @@ pub enum FilterDataStatus {
 /// External APIs for envoy to call into
 #[no_mangle]
 fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
-    1
+    unsafe {
+        ROOT_CONTEXT.on_start(configuration_size) as u32
+    }
 }
 #[no_mangle]
 fn proxy_validate_configuration(root_context_id: u32, configuration_size: u32) -> u32 {
-    ROOT_CONTEXT.validate_configuration() as u32
+    unsafe {
+        ROOT_CONTEXT.validate_configuration(configuration_size) as u32
+    }
 }
 #[no_mangle]
 fn proxy_on_configure(root_context_id: u32, configuration_size: u32) -> u32 {
-    ROOT_CONTEXT.on_configure() as u32
+    unsafe {
+        ROOT_CONTEXT.on_configure(configuration_size) as u32
+    }
 }
 #[no_mangle]
-fn proxy_on_tick(root_context_id: u32) {}
-// #[no_mangle]
-// fn proxy_on_queue_ready(root_context_id: u32, token: u32) {}
+fn proxy_on_tick(root_context_id: u32) {
+    unsafe {
+        ROOT_CONTEXT.on_tick();
+    }
+}
+#[no_mangle]
+fn proxy_on_queue_ready(root_context_id: u32, token: u32) {
+    unsafe {
+        ROOT_CONTEXT.on_queue_ready(token);
+    }
+}
 #[no_mangle]
 fn proxy_on_create(context_id: u32, root_context_id: u32) {}
 #[no_mangle]
@@ -230,7 +338,3 @@ fn proxy_on_log(context_id: u32) {}
 fn proxy_on_delete(context_id: u32)  {}
 
 
-
-
-// #[no_mangle]
-// fn proxy_on_queue_ready(root_context_id: u32, token: u32) {}

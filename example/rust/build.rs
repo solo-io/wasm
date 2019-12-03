@@ -1,13 +1,16 @@
-extern crate protoc_grpcio;
+// extern crate protoc_rust;
+
+// use protoc_rust::Customize;
 
 fn main() {
-  let import_root = ".";
-  let proto_root = "src";
-  println!("cargo:rerun-if-changed={}", proto_root);
-  protoc_grpcio::compile_grpc_protos(
-      &["proto/filter.proto"],
-      &[import_root],
-      &proto_root,
-      None
-  ).expect("Failed to compile gRPC definitions!");
+	// protoc_rust::Args::new()
+	// 	.out_dir("src")
+	// 	.inputs(&["proto/filter.proto"])
+	// 	.include(".")    
+	// 	.customize(Customize {
+	// 		serde_derive: Some(true),
+	// 		..Default::default()
+	// 	})
+	// 	.run()
+	// 	.expect("protoc");
 }
