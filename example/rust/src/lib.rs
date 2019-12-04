@@ -3,10 +3,10 @@ use log::{info, debug};
 use std::collections::HashMap;
 // use serde::de;
 
-pub mod filter;
+mod filter;
 
 /// Low-level Proxy-WASM APIs for the host functions.
-pub mod host;
+mod host;
 // pub mod filter;
 
 /// Logger that integrates with host's logging system.
