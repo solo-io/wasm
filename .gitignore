@@ -1,2 +1,8 @@
 .vscode/
 */bazel-*
+
+# go bin
+extend-envoy
+
+# rust output
+target
