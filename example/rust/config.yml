@@ -35,9 +35,11 @@ static_resources:
                   allow_precompiled: false
                   code:
                     local:
-                      filename: /home/eitanya/src/extend-envoy/example/rust/target/wasm32-unknown-unknown/debug/wasm_filter_bindings.wasm 
+                      filename: /home/eitanya/src/extend-envoy/target/wasm32-unknown-unknown/debug/wasm_filter_bindings.wasm 
                 configuration: |
-                  value: hello
+                  {
+                    "value": "hello"
+                  }
           - name: envoy.router
   clusters:
   - name: static-cluster

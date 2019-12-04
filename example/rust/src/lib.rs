@@ -122,11 +122,11 @@ pub enum ContextManagerError {
 
 
 pub trait RootContext {
-    fn on_start(&self, configuration_size: u32) -> host::WasmResult;
+    fn on_start(&self, configuration_size: u32) -> bool;
     fn on_tick(&self);
-    fn validate_configuration(&self, configuration_size: u32) -> host::WasmResult;
-    fn on_configure(&self, configuration_size: u32) -> host::WasmResult;
-    fn on_done(&self) -> host::WasmResult;
+    fn validate_configuration(&self, configuration_size: u32) -> bool;
+    fn on_configure(&self, configuration_size: u32) -> bool;
+    fn on_done(&self) -> bool;
     fn on_queue_ready(&self, token: u32);
 }
 
@@ -143,7 +143,7 @@ pub trait ContextFactory {
 
 static mut ROOT_CONTEXT: &dyn RootContext = &BasicRootContext {};
 
-pub fn get_configuration<T: serde::de::DeserializeOwned>(configuration_size: u32) -> Option<T> {
+pub fn get_configuration<'a,T : serde::de::DeserializeOwned>(configuration_size: u32) ->  Option<T> {
     let configuration: *mut u8 = malloc(configuration_size as usize);
     let configuration_ptr: *const *mut u8 = &configuration;
     let mut message_size: Box<usize> = Box::default();
@@ -163,60 +163,61 @@ pub fn get_configuration<T: serde::de::DeserializeOwned>(configuration_size: u32
         }
         config =  Box::from_raw(*configuration_ptr);
         debug!("config {:}, size: {:}", config, *message_size);
-        read = Vec::from_raw_parts(config.as_mut(), *message_size, *message_size);
+        read = std::slice::from_raw_parts(config.as_mut(), *message_size);
     }
 
-    let my_message = filter::Config::new();
-    serde_json::to_string(&my_message).unwrap();
-
-
-    match serde_json::from_slice(&read) {
-        Ok(v) => Some(v),
-        Err(_) => None,
+    match serde_json::from_slice::<T>(&read) {
+        Ok(v) => {
+            Some(v)
+        },
+        Err(e) => {
+            debug!("error: {}", e);
+            None
+        },
     }
 }
 
 pub struct BasicRootContext {}
 
 impl RootContext for BasicRootContext {
-    fn on_start(&self, _: u32) -> host::WasmResult {
+    fn on_start(&self, _: u32) -> bool {
         info!("on_start");
-        host::WasmResult::Ok
+        true
     }
 
     fn on_tick(&self) {}
 
-    fn validate_configuration(&self, configuration_size: u32) -> host::WasmResult {
+    fn validate_configuration(&self, configuration_size: u32) -> bool {
         info!("validate_configuration");
         let proto_config = get_configuration::<filter::Config>(configuration_size);
         match proto_config {
             Some(v) => {
                 info!("validate_config: {:?}", v);
-                host::WasmResult::Ok
+                true
             },
             None => {
-                info!("on_configure error");
-                host::WasmResult::ParseFailure
+                info!("validate_config  error");
+                false
             },
         }
     }
 
-    fn on_configure(&self, configuration_size: u32) -> host::WasmResult {
+    fn on_configure(&self, configuration_size: u32) -> bool {
         info!("on_configure");
         let proto_config = get_configuration::<filter::Config>(configuration_size);
         match proto_config {
             Some(v) => {
                 info!("on_configure: {:?}", v);
-                host::WasmResult::Ok
+                true
             },
             None => {
                 info!("on_configure error");
-                host::WasmResult::ParseFailure
+                false
             },
         }
     }
 
-    fn on_done(&self) -> host::WasmResult {host::WasmResult::Ok}
+    fn on_done(&self) -> bool {true}
 
     fn on_queue_ready(&self, _: u32) {}
 
