@@ -2,11 +2,11 @@ package catalog
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/google/go-github/v28/github"
+	"github.com/solo-io/extend-envoy/pkg/auth/store"
 	"golang.org/x/oauth2"
 )
 
@@ -15,7 +15,7 @@ func UpdateCatalogItem(ctx context.Context, ref, catalogRepo, itemname, contents
 	token := os.Getenv("GITHUB_API_TOKEN")
 	if token == "" {
 		var err error
-		token, err = getToken()
+		token, err = store.GetToken()
 		if err != nil {
 			return err
 		}
@@ -40,40 +40,46 @@ func UpdateCatalogItem(ctx context.Context, ref, catalogRepo, itemname, contents
 	catalogOwner := "solo-io"
 	branch := "master"
 	gt := NewGithubTransaction(ctx, client, catalogOwner, catalogRepo, branch, githubUsername, ref)
-	fmt.Println("ensure fork")
-	if err := gt.EnsureFork(); err != nil {
-		return err
-	}
-	fmt.Println("ensure branch")
-	if err := gt.EnsureBranch(); err != nil {
-		return err
+
+	steps := []struct {
+		name string
+		f    func() error
+	}{
+		{
+			"Making sure your fork is available",
+			gt.EnsureFork,
+		},
+		{
+			"Making sure a feature branch is available",
+			gt.EnsureBranch,
+		},
+		{
+			"Adding your catalog item to the feature branch",
+			func() error { return gt.ModifyBranch(itemname, contents) },
+		},
+		{
+			"Makeing sure a PR is open",
+			func() error {
+				prState, err := gt.CurrentPrState()
+				if err != nil {
+					return err
+				}
+
+				if prState != Pending {
+					if err := gt.EnsurePr(); err != nil {
+						return err
+					}
+				}
+				return nil
+			},
+		},
 	}
 
-	fmt.Println("current pr state")
-	prState, err := gt.CurrentPrState()
-	if err != nil {
-		return err
-	}
-	if prState == Merged {
-		fmt.Println("current pr merged - del bra")
-		if err := gt.DeleteBranch(); err != nil {
-			return err
-		}
-		fmt.Println("current pr merged - ens bra")
-		if err := gt.EnsureBranch(); err != nil {
+	for _, step := range steps {
+		if err := step.f(); err != nil {
 			return err
 		}
 	}
-	fmt.Println("modify branch")
 
-	if err := gt.ModifyBranch(itemname, contents); err != nil {
-		return err
-	}
-	if prState != Pending {
-		fmt.Println("current pr merged - ens pr")
-		if err := gt.EnsurePr(); err != nil {
-			return err
-		}
-	}
 	return nil
 }

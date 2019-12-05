@@ -1,4 +1,4 @@
-package catalog
+package store
 
 import (
 	"io/ioutil"
@@ -21,7 +21,7 @@ func getTokenFile() (string, error) {
 	return filepath.Join(dir, "token"), nil
 }
 
-func saveToken(t string) error {
+func SaveToken(t string) error {
 	f, err := getTokenFile()
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func saveToken(t string) error {
 	return ioutil.WriteFile(f, []byte(t), 0600)
 }
 
-func getToken() (string, error) {
+func GetToken() (string, error) {
 
 	f, err := getTokenFile()
 	if err != nil {

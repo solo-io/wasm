@@ -1,4 +1,4 @@
-package catalog
+package auth
 
 import (
 	"context"
@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"runtime"
 	"strconv"
+
+	"github.com/solo-io/extend-envoy/pkg/auth/store"
 )
 
 func HubEndpoint() *url.URL {
@@ -58,10 +60,10 @@ func Login(ctx context.Context) error {
 	go http.Serve(listener, handler)
 	select {
 	case accessToken := <-accessTokenChan:
-		if err := saveToken(accessToken); err != nil {
+		if err := store.SaveToken(accessToken); err != nil {
 			panic(err)
 		}
-		fmt.Println("success ! you are now authneticated")
+		fmt.Println("success ! you are now authenticated")
 	case <-ctx.Done():
 		return ctx.Err()
 	}
