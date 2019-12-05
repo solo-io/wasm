@@ -67,6 +67,24 @@ extern "C" {
         length_ptr: *mut usize,
         flags_ptr: *mut u32,
     ) -> WasmResult;
+
+    // State accessors
+    pub fn proxy_get_property(
+        path_ptr: *const c_char,
+        path_size: usize,
+        value_ptr_ptr: *const *mut c_char,
+        value_size_ptr: *mut usize,
+    ) -> WasmResult;
+// extern "C" WasmResult proxy_set_property(const char* path_ptr, size_t path_size,
+//     const char* value_ptr, size_t value_size);
+
+    pub fn proxy_set_property(
+        path_ptr: *const c_char,
+        path_size: usize,
+        value_ptr: *const c_char,
+        value_size: usize,
+    ) -> WasmResult;
+
 }
 
 #[repr(C)]

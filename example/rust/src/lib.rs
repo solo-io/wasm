@@ -1,55 +1,26 @@
 
+use lazy_static::{lazy_static};
 use log::{info, debug};
 use std::collections::HashMap;
+use std::rc::{Rc};
+use std::cell::{RefCell};
+use std::sync;
 // use serde::de;
 
-mod filter;
 
 /// Low-level Proxy-WASM APIs for the host functions.
 mod host;
-// pub mod filter;
+mod logger;
+mod filter;
 
 /// Logger that integrates with host's logging system.
 pub struct Logger;
 
-static LOGGER: Logger = Logger;
-
-impl Logger {
-    pub fn init() -> Result<(), log::SetLoggerError> {
-        log::set_logger(&LOGGER).map(|()| log::set_max_level(log::LevelFilter::Trace))
-    }
-
-    fn proxywasm_loglevel(level: log::Level) -> u32 {
-        match level {
-            log::Level::Trace => 0,
-            log::Level::Debug => 1,
-            log::Level::Info => 2,
-            log::Level::Warn => 3,
-            log::Level::Error => 4,
-        }
-    }
-}
-
-impl log::Log for Logger {
-    fn enabled(&self, _metadata: &log::Metadata) -> bool { 
-        true
-    }
-
-    fn log(&self, record: &log::Record) {
-        let level = Logger::proxywasm_loglevel(record.level());
-        let message = record.args().to_string();
-        unsafe {
-            host::proxy_log(level, message.as_ptr(), message.len());
-        }
-    }
-
-    fn flush(&self) {}
-}
-
 /// Always hook into host's logging system.
 #[no_mangle]
 fn _start() {
-    Logger::init().unwrap();
+    logger::Logger::init().unwrap();
+
 }
 
 /// Allow host to allocate memory.
@@ -73,45 +44,100 @@ fn free(ptr: *mut u8) {
     }
 }
 
-// macro_rules! root_context_factory {
-//     () => {
-        
-//     };
-// }
 
-
-static mut CONTEXT_FACTORY_MAP: Vec<(String, &dyn ContextFactory)> = {
-    Vec::new()
-};
-
-static mut ROOT_CONTEXT_FACTORY_MAP: Vec<(String, &dyn RootContextFactory)> = {
-    Vec::new()
-};
-
-static mut ROOT_CONTEXT_MAP: Vec<(u32, &dyn RootContext)> = {
-    Vec::new()
-};
-
-static mut CONTEXT_MAP: Vec<(String, &dyn Context)> = {
-    Vec::new()
-};
-
-
-fn get_context(key: String) -> Result<&'static dyn Context, ContextManagerError> {
-    Err(ContextManagerError::NoContext)
+struct ContextManager {
+    root_context_map: HashMap<u32, sync::Arc<dyn RootContext>>,
+    context_map: HashMap<String, sync::Arc<dyn Context>>,
+    context_factory_map: HashMap<String, sync::Arc<dyn ContextFactory>>,
+    root_context_factory_map: HashMap<String, sync::Arc<dyn RootContextFactory>>,
 }
 
-fn get_root_contetxt(key: u32) -> Result<&'static dyn RootContext, ContextManagerError> {
-    Err(ContextManagerError::NoRootContext)
+static mut CONTEXT_MANAGER: Option<sync::Arc<sync::Mutex<Box<ContextManager>>>> = None;
+
+fn get_context_manager() -> sync::Arc<sync::Mutex<Box<ContextManager>>> {
+    unsafe  {
+        match CONTEXT_MANAGER.clone() {
+            Some(cm) => {
+                cm
+            }
+            None => {
+                sync::Arc::new(
+                    sync::Mutex::new(
+                        Box::new(
+                            ContextManager{
+                                context_factory_map: HashMap::new(),
+                                root_context_factory_map: HashMap::new(),
+                                root_context_map: HashMap::new(),
+                                context_map: HashMap::new(),
+                            }
+                        )
+                    )
+                )
+            }
+        }
+    }
 }
 
-fn get_context_factory(key: String) -> Result<&'static dyn ContextFactory, ContextManagerError>  {
-    Err(ContextManagerError::NoContextFactory)
+impl ContextManager {
+    fn add_context(key: String, context: sync::Arc<dyn Context>) {
+        unsafe {
+            get_context_manager().lock().unwrap().context_map.insert(key, context);
+        }
+    }
+    fn add_root_context(key: u32, context: sync::Arc<dyn RootContext>) {
+        unsafe {
+            get_context_manager().lock().unwrap().root_context_map.insert(key, context);
+        }
+    }
+    pub fn add_root_context_factory(key: String, context: sync::Arc<dyn RootContextFactory>) {
+        unsafe {
+            get_context_manager().lock().unwrap().root_context_factory_map.insert(key, context);
+        }
+    }
+    pub fn add_context_factory(key: String, context: sync::Arc<dyn ContextFactory>) {
+        unsafe {
+            get_context_manager().lock().unwrap().context_factory_map.insert(key, context);
+        }
+    }
+
+    fn get_context(&mut self, key: String) -> Result<sync::Arc<dyn Context>, ContextManagerError> {
+        match self.context_map.get_mut(&key) {
+            Some(v) => {
+                Ok(v.clone())
+            },
+            None => {Err(ContextManagerError::NoContext)}
+        }
+    }
+    
+    fn get_root_contetxt(&mut self, key: u32) -> Result<sync::Arc<dyn RootContext>, ContextManagerError> {
+        match self.root_context_map.get_mut(&key) {
+            Some(v) => {
+                Ok(v.clone())
+            },
+            None => {Err(ContextManagerError::NoContext)}
+        }
+    }
+    
+    fn get_context_factory(&mut self, key: String) -> Result<sync::Arc<dyn ContextFactory>, ContextManagerError>  {
+        match self.context_factory_map.get_mut(&key) {
+            Some(v) => {
+                Ok(v.clone())
+            },
+            None => {Err(ContextManagerError::NoContext)}
+        }
+    }
+    
+    fn get_root_contetxt_factory(&mut self, key: String) -> Result<sync::Arc<dyn RootContextFactory>, ContextManagerError>  {
+        match self.root_context_factory_map.get_mut(&key) {
+            Some(v) => {
+                Ok(v.clone())
+            },
+            None => {Err(ContextManagerError::NoContext)}
+        }
+    }
 }
 
-fn get_root_contetxt_factory(key: String) -> Result<&'static dyn RootContextFactory, ContextManagerError>  {
-    Err(ContextManagerError::NoRootContextFactory)
-}
+
 
 pub enum ContextManagerError {
     NoContext,
@@ -121,29 +147,31 @@ pub enum ContextManagerError {
 }
 
 
-pub trait RootContext {
-    fn on_start(&self, configuration_size: u32) -> bool;
+pub trait RootContext: std::marker::Sync {
+    fn on_start(&mut self, configuration_size: u32) -> bool;
     fn on_tick(&self);
     fn validate_configuration(&self, configuration_size: u32) -> bool;
-    fn on_configure(&self, configuration_size: u32) -> bool;
+    fn on_configure(&mut self, configuration_size: u32) -> bool;
     fn on_done(&self) -> bool;
     fn on_queue_ready(&self, token: u32);
 }
 
-pub trait Context {}
+pub trait Context: StreamDecoder + StreamEncoder {}
 
 
 pub trait RootContextFactory {
-    fn root_context(&self) -> RootContext;
+    fn root_context(&self) -> &dyn RootContext;
 }
 
 pub trait ContextFactory {
-    fn context(&self) -> Context;
+    fn context(&self) -> &dyn Context;
 }
 
-static mut ROOT_CONTEXT: &dyn RootContext = &BasicRootContext {};
+static mut ROOT_CONTEXT: BasicRootContext = BasicRootContext {
+    proto_config: None
+};
 
-pub fn get_configuration<'a,T : serde::de::DeserializeOwned>(configuration_size: u32) ->  Option<T> {
+pub fn get_configuration<'a,T : serde::de::DeserializeOwned>(configuration_size: u32) ->  Result<T, EnvoyError> {
     let configuration: *mut u8 = malloc(configuration_size as usize);
     let configuration_ptr: *const *mut u8 = &configuration;
     let mut message_size: Box<usize> = Box::default();
@@ -159,7 +187,7 @@ pub fn get_configuration<'a,T : serde::de::DeserializeOwned>(configuration_size:
         if configuration_ptr.is_null() {
             // let error: serde_json::Error = 
             //     protobuf::ProtobufError::message_not_initialized("configurtion_ptr is null");
-            return None
+            return Err(EnvoyError::ConfigurationError(6))
         }
         config =  Box::from_raw(*configuration_ptr);
         debug!("config {:}, size: {:}", config, *message_size);
@@ -168,19 +196,25 @@ pub fn get_configuration<'a,T : serde::de::DeserializeOwned>(configuration_size:
 
     match serde_json::from_slice::<T>(&read) {
         Ok(v) => {
-            Some(v)
+            Ok(v)
         },
         Err(e) => {
             debug!("error: {}", e);
-            None
+            Err(EnvoyError::ConfigurationError(6))
         },
     }
 }
 
-pub struct BasicRootContext {}
+pub enum EnvoyError {
+    ConfigurationError(i32),
+}
+
+pub struct BasicRootContext {
+    proto_config: Option<filter::Config>
+}
 
 impl RootContext for BasicRootContext {
-    fn on_start(&self, _: u32) -> bool {
+    fn on_start(&mut self, _: u32) -> bool {
         info!("on_start");
         true
     }
@@ -191,26 +225,27 @@ impl RootContext for BasicRootContext {
         info!("validate_configuration");
         let proto_config = get_configuration::<filter::Config>(configuration_size);
         match proto_config {
-            Some(v) => {
+            Ok(v) => {
                 info!("validate_config: {:?}", v);
                 true
             },
-            None => {
+            Err(_) => {
                 info!("validate_config  error");
                 false
             },
         }
     }
 
-    fn on_configure(&self, configuration_size: u32) -> bool {
+    fn on_configure(&mut self, configuration_size: u32) -> bool {
         info!("on_configure");
         let proto_config = get_configuration::<filter::Config>(configuration_size);
         match proto_config {
-            Some(v) => {
+            Ok(v) => {
                 info!("on_configure: {:?}", v);
+                self.proto_config = Some(v);
                 true
             },
-            None => {
+            Err(_) => {
                 info!("on_configure error");
                 false
             },
@@ -232,22 +267,19 @@ pub struct Metadata {
     data: HashMap<String, String>,
 }
 
-struct DecoderFilter<D: StreamDecoder> {
-    stream_decoder: D,
-}
 
 pub trait StreamDecoder {
-    fn on_decode_headers(header_map: &HeaderMap, header_only: bool) -> FilterHeadersStatus;
-    fn on_decode_metadata(metadata: &Metadata, header_only: bool) -> FilterMetadataStatus;
-    fn on_decode_data(buf: &Buffer, end_stream: bool) -> FilterDataStatus;
-    fn on_decode_trailers(header_map: HeaderMap, end_stream: bool) -> FilterTrailersStatus;
+    fn on_decode_headers(&self, header_map: &HeaderMap, header_only: bool) -> FilterHeadersStatus;
+    fn on_decode_metadata(&self, metadata: &Metadata, header_only: bool) -> FilterMetadataStatus;
+    fn on_decode_data(&self, buf: &Buffer, end_stream: bool) -> FilterDataStatus;
+    fn on_decode_trailers(&self, header_map: HeaderMap, end_stream: bool) -> FilterTrailersStatus;
 }
 
 pub trait StreamEncoder {
-    fn on_encode_headers(header_map: u32, header_only: bool) -> FilterHeadersStatus;
-    fn on_encode_metadata(metadata: &Metadata, header_only: bool) -> FilterMetadataStatus;
-    fn on_encode_data(buf: &Buffer, end_stream: bool) -> FilterDataStatus;
-    fn on_encode_trailers(header_map: HeaderMap, end_stream: bool) -> FilterTrailersStatus;
+    fn on_encode_headers(&self, header_map: u32, header_only: bool) -> FilterHeadersStatus;
+    fn on_encode_metadata(&self, metadata: &Metadata, header_only: bool) -> FilterMetadataStatus;
+    fn on_encode_data(&self, buf: &Buffer, end_stream: bool) -> FilterDataStatus;
+    fn on_encode_trailers(&self, header_map: HeaderMap, end_stream: bool) -> FilterTrailersStatus;
 }
 
 #[repr(C)]
@@ -266,39 +298,49 @@ pub enum FilterDataStatus {
     StopIterationNoBuffer = 3
 }
 
+#[no_mangle]
+fn proxy_on_create(context_id: u32, root_context_id: u32) {}
+
 /// External APIs for envoy to call into
 #[no_mangle]
 fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
-    unsafe {
-        ROOT_CONTEXT.on_start(configuration_size) as u32
-    }
+    1
+    // unsafe {
+    //     match get_context_manager().borrow_mut().get_root_contetxt(root_context_id) {
+    //         Ok(v) => {
+    //             v.borrow_mut().on_start(configuration_size);
+    //             1
+    //         },
+    //         Err(_) => {false as u32}
+    //     }
+    // }
 }
 #[no_mangle]
 fn proxy_validate_configuration(root_context_id: u32, configuration_size: u32) -> u32 {
-    unsafe {
-        ROOT_CONTEXT.validate_configuration(configuration_size) as u32
-    }
+    1
+    // unsafe {
+    //     ROOT_CONTEXT.validate_configuration(configuration_size) as u32
+    // }
 }
 #[no_mangle]
 fn proxy_on_configure(root_context_id: u32, configuration_size: u32) -> u32 {
-    unsafe {
-        ROOT_CONTEXT.on_configure(configuration_size) as u32
-    }
+    1
+    // unsafe {
+    //     ROOT_CONTEXT.on_configure(configuration_size) as u32
+    // }
 }
 #[no_mangle]
 fn proxy_on_tick(root_context_id: u32) {
-    unsafe {
-        ROOT_CONTEXT.on_tick();
-    }
+    // unsafe {
+    //     ROOT_CONTEXT.on_tick();
+    // }
 }
 #[no_mangle]
 fn proxy_on_queue_ready(root_context_id: u32, token: u32) {
-    unsafe {
-        ROOT_CONTEXT.on_queue_ready(token);
-    }
+    // unsafe {
+    //     ROOT_CONTEXT.on_queue_ready(token);
+    // }
 }
-#[no_mangle]
-fn proxy_on_create(context_id: u32, root_context_id: u32) {}
 #[no_mangle]
 fn proxy_on_new_connection(context_id: u32) -> FilterStatus {FilterStatus::Continue}
 /// stream decoder
