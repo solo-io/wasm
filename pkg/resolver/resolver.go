@@ -2,15 +2,17 @@ package resolver
 
 import (
 	"crypto/tls"
-	"net/http"
-
 	auth "github.com/deislabs/oras/pkg/auth/docker"
+	"net/http"
+	"strings"
 
 	"github.com/solo-io/extend-envoy/pkg/auth/store"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 )
+
+const basicAuthToTokenUser = "basic2token"
 
 func NewResolver(username, password string, insecure bool, plainHTTP bool, configs ...string) remotes.Resolver {
 
@@ -47,7 +49,10 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 
 		if token != "" {
 			if hostName == "getwasm.io" {
-				return "", token, nil
+				return basicAuthToTokenUser, token, nil
+			}
+			if strings.HasPrefix(hostName, "localhost") {
+				return basicAuthToTokenUser, token, nil
 			}
 		}
 
