@@ -1,17 +1,18 @@
 package resolver
 
 import (
-	"context"
 	"crypto/tls"
-	"fmt"
-	"net/http"
-	"os"
-
 	auth "github.com/deislabs/oras/pkg/auth/docker"
+	"net/http"
+	"strings"
+
+	"github.com/solo-io/extend-envoy/pkg/auth/store"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 )
+
+const basicAuthToTokenUser = "basic2token"
 
 func NewResolver(username, password string, insecure bool, plainHTTP bool, configs ...string) remotes.Resolver {
 
@@ -35,14 +36,31 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 		}
 		return docker.NewResolver(opts)
 	}
-	cli, err := auth.NewClient(configs...)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: Error loading auth file: %v\n", err)
+	var dockerCreds func(hostname string) (string, string, error)
+	if cli, err := auth.NewClient(configs...); err != nil {
+		if authcli, ok := cli.(*auth.Client); ok {
+			dockerCreds = authcli.Credential
+		}
 	}
-	resolver, err := cli.Resolver(context.Background())
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: Error loading resolver: %v\n", err)
-		resolver = docker.NewResolver(opts)
+
+	token, _ := store.GetToken()
+
+	opts.Credentials = func(hostName string) (string, string, error) {
+
+		if token != "" {
+			if hostName == "getwasm.io" {
+				return basicAuthToTokenUser, token, nil
+			}
+			if strings.HasPrefix(hostName, "localhost") {
+				return basicAuthToTokenUser, token, nil
+			}
+		}
+
+		if dockerCreds != nil {
+			return dockerCreds(hostName)
+		}
+		return "", "", nil
 	}
-	return resolver
+
+	return docker.NewResolver(opts)
 }
