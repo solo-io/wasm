@@ -1,8 +1,8 @@
 use log::{info, debug};
 use std::collections::HashMap;
 use std::sync;
-use std::os::raw::{c_char};
-use std::ffi::{CString, c_void};
+use std::os::raw::{c_uchar};
+use std::ffi::{CString};
 
 // use serde::de;
 
@@ -99,7 +99,12 @@ impl ContextManager {
         get_context_manager().lock().unwrap().context_factory_map.insert(key, context);
     }
 
-    fn ensure_root_context() {}
+    fn ensure_root_context() {
+        match get_properpty("plugin_root_id") {
+            Err(e) => debug!("{:?}", e as u32),
+            Ok(_) => debug!("shouldn't be ok"),
+        }
+    }
 
     fn get_context(&mut self, key: String) -> Result<sync::Arc<sync::Mutex<dyn Context>>, ContextManagerError> {
         match self.context_map.get_mut(&key) {
@@ -204,23 +209,39 @@ pub fn get_configuration<T : serde::de::DeserializeOwned>(configuration_size: u3
     }
 }
 
-pub fn get_properpty(key: &str) -> Result<String, EnvoyError> {
+pub fn get_properpty(key: &str) -> Result<host::DataExchange, EnvoyError> {
     let c_to_print =  match CString::new(key) {
         Ok(v) => v,
         Err(_) => return Err(EnvoyError::NilPropertyError)
     };
+    debug!("have c_str, {}, len: {}", c_to_print.clone().into_string().unwrap(), key.len());
     let mut value_size: Box<usize> = Box::default();
-    let mut value_ptr: Box<c_char> = Box::default();
-    let value_ptr_ptr: *const *mut c_char = &(value_ptr.as_mut() as *mut c_char);
+    let mut value_ptr: Box<c_uchar> = Box::default();
+    let value_ptr_ptr: *const *mut c_uchar = &(value_ptr.as_mut() as *mut c_uchar);
     unsafe {
-        match host::proxy_get_property(c_to_print.as_ptr(), key.len()-1,
-            value_ptr_ptr, value_size.as_mut() as *mut usize) {
-                host::WasmResult::Ok => {}
-                _ => return Err(EnvoyError::NilPropertyError)
+        let result = host::proxy_get_property(c_to_print.as_ptr() as *const u8, key.len(),
+            value_ptr_ptr, value_size.as_mut() as *mut usize);
+        match result {
+                host::WasmResult::Ok => {
+                    debug!("result is ok")
+                }
+                _ => {
+                    debug!("result is not ok {}", result as u32);
+                    return Err(EnvoyError::NilPropertyError)
+                }
             };
-
+        // debug!("value_ptr {:}, value_size: {:}", value_ptr, *value_size);
+        // let read = std::slice::from_raw_parts(value_ptr.as_mut(), *value_size);
+        // value_str = std::str::from_utf8_unchecked(read);
+        // let value = value_ptr.
+        if value_ptr_ptr.is_null() {
+            return Err(EnvoyError::NilPropertyError)
+        }
+        Ok(host::DataExchange{
+            value_ptr: value_ptr.as_ref() as *const c_uchar,
+            value_size: *value_size
+        })
     }
-    Err(EnvoyError::NilPropertyError)
 }
 
 pub enum EnvoyError {
@@ -323,6 +344,7 @@ fn proxy_on_create(context_id: u32, root_context_id: u32) {}
 /// External APIs for envoy to call into
 #[no_mangle]
 fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
+    ContextManager::ensure_root_context();
     match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
         Ok(ctx) => {
             ctx.lock().unwrap().on_start(configuration_size) as u32

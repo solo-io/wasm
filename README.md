@@ -16,6 +16,30 @@ Push:
 ./extend-envoy push gcr.io/solo-public/example-filter:v1 example/bazel-bin/filter.wasm example/bazel-bin/filter_proto-descriptor-set.proto.bin
 ```
 
+vs
+```
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: default
+  namespace: gloo-system
+spec: 
+  virtualHost:
+    domains:
+    - '*'
+    routes:
+    - matchers:
+      - prefix: /
+      routeAction:
+        single:
+          upstream:
+            name: default-petstore-8080
+            namespace: gloo-system
+      options:
+        prefixRewrite: /api/pets
+
+```
+
 load in to gloo:
 ```
 kubectl edit -n gloo-system gateways.gateway.solo.io.v2 gateway-proxy-v2
@@ -24,7 +48,11 @@ kubectl edit -n gloo-system gateways.gateway.solo.io.v2 gateway-proxy-v2
 set the httpGateway field like so:
 ```
   httpGateway:
+
     plugins:
+      virtualServices:
+        name: default
+        namespace: gloo-system
       extensions:
         configs:
           wasm:
@@ -34,28 +62,7 @@ set the httpGateway field like so:
             root_id: add_header_root_id
 ```
 
-```
-apiVersion: gateway.solo.io/v1
-kind: VirtualService
-metadata:
-  name: default
-  namespace: gloo-system
-spec:
-  virtualHost:
-    domains:
-    - '*'
-    routes:
-    - matcher:
-        exact: /sample-route-1
-      routeAction:
-        single:
-          upstream:
-            name: default-petstore-8080
-            namespace: gloo-system
-      routePlugins:
-        prefixRewrite:
-          prefixRewrite: /api/pets
-```
+
 
 
 # emscripten sdk
