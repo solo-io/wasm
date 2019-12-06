@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/solo-io/extend-envoy/pkg/cmd/build"
 	"os"
 
 	"github.com/solo-io/extend-envoy/pkg/cmd/cache"
@@ -17,6 +18,7 @@ func Run() {
 	}
 	var opts opts.GeneralOptions
 	cmd.AddCommand(
+		build.BuildCmd(),
 		push.PushCmd(&opts),
 		pull.PullCmd(&opts),
 		cache.CacheCmd(&opts),
