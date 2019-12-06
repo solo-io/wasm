@@ -3,8 +3,8 @@ package catalog
 import (
 	"context"
 
-	"github.com/solo-io/extend-envoy/pkg/catalog"
 	"github.com/solo-io/extend-envoy/pkg/auth"
+	"github.com/solo-io/extend-envoy/pkg/catalog"
 	"github.com/solo-io/extend-envoy/pkg/cmd/opts"
 	"github.com/spf13/cobra"
 )
@@ -54,7 +54,7 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 func runCatalog(opts catalogOptions) error {
 
 	return catalog.UpdateCatalogItem(context.Background(),
-		"yuval123", "testrepo", "yuval.foo", "foo: bar")
+		"branchname", "testrepo", "solo.foo", "foo: bar")
 
 }
 
