@@ -50,7 +50,7 @@ func Login(ctx context.Context) error {
 	fmt.Println("Using port:", port)
 	urlString := authUrl.String()
 
-	if err := openbrowser(urlString); err != nil {
+	if err := openBrowser(urlString); err != nil {
 		fmt.Println("Cannot launch browser. Please open this url in your browser: ", urlString)
 	} else {
 		fmt.Println("Opening browser for login. If the browser did not open for you, please go to: ", urlString)
@@ -100,7 +100,7 @@ func NewHandler() (http.Handler, <-chan string) {
 }
 
 // https://gist.github.com/hyg/9c4afcd91fe24316cbf0
-func openbrowser(url string) error {
+func openBrowser(url string) error {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "linux":
