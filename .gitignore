@@ -7,3 +7,6 @@ extend-envoy
 
 # rust output
 target
+
+# example output
+_output/

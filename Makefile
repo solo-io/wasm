@@ -9,6 +9,7 @@ build-example:
 
 .PHONY: clean
 clean:
-	rm -rf  ./builder/build_output && \
-	rm -rf ./builder/workspace && \
+	rm -rf  _output/
+	rm -rf  example/cpp/{bazel-bin,bazel-out,bazel-testlogs,bazel-workspace}
+
 

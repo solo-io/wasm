@@ -6,3 +6,5 @@ DESTDIR=/tmp/build_output
 bazel build :filter.wasm
 
 cp -r bazel-bin/filter.wasm $DESTDIR/
+
+bazel clean

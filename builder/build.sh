@@ -12,3 +12,6 @@ docker run \
     -v "${OUTDIR}:/tmp/build_output" \
     -w /src/workspace \
     soloio/wasm-builder
+
+rm -rf "${WORKSPACE}/{bazel-bin,bazel-out,bazel-testlogs,bazel-workspace}"
+chmod +wr "${OUTDIR}/filter.wasm"
