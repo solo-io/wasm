@@ -34,6 +34,13 @@ http_archive(
 load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
 bazel_skylib_workspace()
 
+# http_archive(
+#     name = "com_google_protobuf",
+#     sha256 = "d7cfd31620a352b2ee8c1ed883222a0d77e44346643458e062e86b1d069ace3e",
+#     strip_prefix = "protobuf-3.10.1",
+#     urls = ["https://github.com/protocolbuffers/protobuf/releases/download/v3.10.1/protobuf-all-3.10.1.tar.gz"],
+# )
+
 # this must be named com_google_protobuf to match dependency pulled in by
 # rules_proto.
 git_repository(
@@ -48,7 +55,7 @@ git_repository(
 new_git_repository(
     name = "envoy_wasm_api",
     remote = "https://github.com/yuval-k/envoy-wasm",
-    commit = "9fbd857798f990381b22f2032109422bde876f63",
+    commit = "c9e7516bfe6aaebe53651c45cb5afe5504f812d9",
     workspace_file_content = 'workspace(name = "envoy_wasm_api")',
     strip_prefix = "api/wasm/cpp",
     patch_cmds = ["rm BUILD"],
