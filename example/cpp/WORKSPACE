@@ -48,7 +48,7 @@ git_repository(
 new_git_repository(
     name = "envoy_wasm_api",
     remote = "https://github.com/envoyproxy/envoy-wasm",
-    commit = "957f3e23b07d22f1cb849e216feb9c58e7e8a607",
+    commit = "eccd25f6d3d4c678be58f52191c17abef3e0bd4e",
     workspace_file_content = 'workspace(name = "envoy_wasm_api")',
     strip_prefix = "api/wasm/cpp",
     patch_cmds = ["rm BUILD"],
