@@ -62,6 +62,5 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 		return "", "", nil
 	}
 
-	docker.NewResolver(opts)
 	return docker.NewResolver(opts)
 }
