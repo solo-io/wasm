@@ -42,10 +42,6 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 			dockerCreds = authcli.Credential
 		}
 	}
-	resolver, err := cli.Resolver(context.Background())
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "WARNING: Error loading resolver: %v\n", err)
-		resolver = docker.NewResolver(opts)
 
 	token, _ := store.GetToken()
 
