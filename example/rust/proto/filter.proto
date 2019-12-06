@@ -1,0 +1,10 @@
+syntax = "proto3";
+package soloio;
+
+// import "rustproto.proto";
+
+// option (rustproto.serde_derive_all) = true;
+
+message Config {
+    string value = 1;
+}
