@@ -316,7 +316,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "wasm_filter_bindings"
 version = "0.0.1"
 dependencies = [
- "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "protobuf 3.0.0-pre (git+https://github.com/stepancheg/rust-protobuf)",
  "protoc-rust 3.0.0-pre (git+https://github.com/stepancheg/rust-protobuf)",

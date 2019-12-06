@@ -1,10 +1,9 @@
-
-use lazy_static::{lazy_static};
 use log::{info, debug};
 use std::collections::HashMap;
-use std::rc::{Rc};
-use std::cell::{RefCell};
 use std::sync;
+use std::os::raw::{c_char};
+use std::ffi::{CString, c_void};
+
 // use serde::de;
 
 
@@ -21,6 +20,13 @@ pub struct Logger;
 fn _start() {
     logger::Logger::init().unwrap();
 
+    ContextManager::add_root_context(1, sync::Arc::new(
+        sync::Mutex::new(
+            BasicRootContext {
+                proto_config: None
+            }   
+        )
+    ));
 }
 
 /// Allow host to allocate memory.
@@ -45,11 +51,12 @@ fn free(ptr: *mut u8) {
 }
 
 
+
 struct ContextManager {
-    root_context_map: HashMap<u32, sync::Arc<dyn RootContext>>,
-    context_map: HashMap<String, sync::Arc<dyn Context>>,
-    context_factory_map: HashMap<String, sync::Arc<dyn ContextFactory>>,
-    root_context_factory_map: HashMap<String, sync::Arc<dyn RootContextFactory>>,
+    root_context_map: HashMap<u32, sync::Arc<sync::Mutex<dyn RootContext>>>,
+    context_map: HashMap<String, sync::Arc<sync::Mutex<dyn Context>>>,
+    context_factory_map: HashMap<String, sync::Arc<sync::Mutex<dyn ContextFactory>>>,
+    root_context_factory_map: HashMap<String, sync::Arc<sync::Mutex<dyn RootContextFactory>>>,
 }
 
 static mut CONTEXT_MANAGER: Option<sync::Arc<sync::Mutex<Box<ContextManager>>>> = None;
@@ -79,28 +86,22 @@ fn get_context_manager() -> sync::Arc<sync::Mutex<Box<ContextManager>>> {
 }
 
 impl ContextManager {
-    fn add_context(key: String, context: sync::Arc<dyn Context>) {
-        unsafe {
-            get_context_manager().lock().unwrap().context_map.insert(key, context);
-        }
+    fn add_context(key: String, context: sync::Arc<sync::Mutex<dyn Context>>) {
+        get_context_manager().lock().unwrap().context_map.insert(key, context);
     }
-    fn add_root_context(key: u32, context: sync::Arc<dyn RootContext>) {
-        unsafe {
-            get_context_manager().lock().unwrap().root_context_map.insert(key, context);
-        }
+    fn add_root_context(key: u32, context: sync::Arc<sync::Mutex<dyn RootContext>>) {
+        get_context_manager().lock().unwrap().root_context_map.insert(key, context);
     }
-    pub fn add_root_context_factory(key: String, context: sync::Arc<dyn RootContextFactory>) {
-        unsafe {
-            get_context_manager().lock().unwrap().root_context_factory_map.insert(key, context);
-        }
+    pub fn add_root_context_factory(key: String, context: sync::Arc<sync::Mutex<dyn RootContextFactory>>) {
+        get_context_manager().lock().unwrap().root_context_factory_map.insert(key, context);
     }
-    pub fn add_context_factory(key: String, context: sync::Arc<dyn ContextFactory>) {
-        unsafe {
-            get_context_manager().lock().unwrap().context_factory_map.insert(key, context);
-        }
+    pub fn add_context_factory(key: String, context: sync::Arc<sync::Mutex<dyn ContextFactory>>) {
+        get_context_manager().lock().unwrap().context_factory_map.insert(key, context);
     }
 
-    fn get_context(&mut self, key: String) -> Result<sync::Arc<dyn Context>, ContextManagerError> {
+    fn ensure_root_context() {}
+
+    fn get_context(&mut self, key: String) -> Result<sync::Arc<sync::Mutex<dyn Context>>, ContextManagerError> {
         match self.context_map.get_mut(&key) {
             Some(v) => {
                 Ok(v.clone())
@@ -109,7 +110,7 @@ impl ContextManager {
         }
     }
     
-    fn get_root_contetxt(&mut self, key: u32) -> Result<sync::Arc<dyn RootContext>, ContextManagerError> {
+    fn get_root_contetxt(&mut self, key: u32) -> Result<sync::Arc<sync::Mutex<dyn RootContext>>, ContextManagerError> {
         match self.root_context_map.get_mut(&key) {
             Some(v) => {
                 Ok(v.clone())
@@ -118,7 +119,7 @@ impl ContextManager {
         }
     }
     
-    fn get_context_factory(&mut self, key: String) -> Result<sync::Arc<dyn ContextFactory>, ContextManagerError>  {
+    fn get_context_factory(&mut self, key: String) -> Result<sync::Arc<sync::Mutex<dyn ContextFactory>>, ContextManagerError>  {
         match self.context_factory_map.get_mut(&key) {
             Some(v) => {
                 Ok(v.clone())
@@ -127,7 +128,7 @@ impl ContextManager {
         }
     }
     
-    fn get_root_contetxt_factory(&mut self, key: String) -> Result<sync::Arc<dyn RootContextFactory>, ContextManagerError>  {
+    fn get_root_contetxt_factory(&mut self, key: String) -> Result<sync::Arc<sync::Mutex<dyn RootContextFactory>>, ContextManagerError>  {
         match self.root_context_factory_map.get_mut(&key) {
             Some(v) => {
                 Ok(v.clone())
@@ -167,11 +168,11 @@ pub trait ContextFactory {
     fn context(&self) -> &dyn Context;
 }
 
-static mut ROOT_CONTEXT: BasicRootContext = BasicRootContext {
-    proto_config: None
-};
+// static mut ROOT_CONTEXT: BasicRootContext = BasicRootContext {
+//     proto_config: None
+// };
 
-pub fn get_configuration<'a,T : serde::de::DeserializeOwned>(configuration_size: u32) ->  Result<T, EnvoyError> {
+pub fn get_configuration<T : serde::de::DeserializeOwned>(configuration_size: u32) ->  Result<T, EnvoyError> {
     let configuration: *mut u8 = malloc(configuration_size as usize);
     let configuration_ptr: *const *mut u8 = &configuration;
     let mut message_size: Box<usize> = Box::default();
@@ -185,9 +186,7 @@ pub fn get_configuration<'a,T : serde::de::DeserializeOwned>(configuration_size:
     let mut config: Box<u8>;
     unsafe {
         if configuration_ptr.is_null() {
-            // let error: serde_json::Error = 
-            //     protobuf::ProtobufError::message_not_initialized("configurtion_ptr is null");
-            return Err(EnvoyError::ConfigurationError(6))
+            return Err(EnvoyError::ConfigurationError)
         }
         config =  Box::from_raw(*configuration_ptr);
         debug!("config {:}, size: {:}", config, *message_size);
@@ -200,13 +199,33 @@ pub fn get_configuration<'a,T : serde::de::DeserializeOwned>(configuration_size:
         },
         Err(e) => {
             debug!("error: {}", e);
-            Err(EnvoyError::ConfigurationError(6))
+            Err(EnvoyError::ConfigurationError)
         },
     }
 }
 
+pub fn get_properpty(key: &str) -> Result<String, EnvoyError> {
+    let c_to_print =  match CString::new(key) {
+        Ok(v) => v,
+        Err(_) => return Err(EnvoyError::NilPropertyError)
+    };
+    let mut value_size: Box<usize> = Box::default();
+    let mut value_ptr: Box<c_char> = Box::default();
+    let value_ptr_ptr: *const *mut c_char = &(value_ptr.as_mut() as *mut c_char);
+    unsafe {
+        match host::proxy_get_property(c_to_print.as_ptr(), key.len()-1,
+            value_ptr_ptr, value_size.as_mut() as *mut usize) {
+                host::WasmResult::Ok => {}
+                _ => return Err(EnvoyError::NilPropertyError)
+            };
+
+    }
+    Err(EnvoyError::NilPropertyError)
+}
+
 pub enum EnvoyError {
-    ConfigurationError(i32),
+    ConfigurationError,
+    NilPropertyError,
 }
 
 pub struct BasicRootContext {
@@ -304,42 +323,48 @@ fn proxy_on_create(context_id: u32, root_context_id: u32) {}
 /// External APIs for envoy to call into
 #[no_mangle]
 fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
-    1
-    // unsafe {
-    //     match get_context_manager().borrow_mut().get_root_contetxt(root_context_id) {
-    //         Ok(v) => {
-    //             v.borrow_mut().on_start(configuration_size);
-    //             1
-    //         },
-    //         Err(_) => {false as u32}
-    //     }
-    // }
+    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
+        Ok(ctx) => {
+            ctx.lock().unwrap().on_start(configuration_size) as u32
+        }
+        Err(_) => {false as u32}
+    }
 }
 #[no_mangle]
 fn proxy_validate_configuration(root_context_id: u32, configuration_size: u32) -> u32 {
-    1
-    // unsafe {
-    //     ROOT_CONTEXT.validate_configuration(configuration_size) as u32
-    // }
+    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
+        Ok(ctx) => {
+            ctx.lock().unwrap().validate_configuration(configuration_size) as u32
+        }
+        Err(_) => {false as u32}
+    }
 }
 #[no_mangle]
 fn proxy_on_configure(root_context_id: u32, configuration_size: u32) -> u32 {
-    1
-    // unsafe {
-    //     ROOT_CONTEXT.on_configure(configuration_size) as u32
-    // }
+    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
+        Ok(ctx) => {
+            ctx.lock().unwrap().on_configure(configuration_size) as u32
+        }
+        Err(_) => {false as u32}
+    }
 }
 #[no_mangle]
 fn proxy_on_tick(root_context_id: u32) {
-    // unsafe {
-    //     ROOT_CONTEXT.on_tick();
-    // }
+    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
+        Ok(ctx) => {
+            ctx.lock().unwrap().on_tick();
+        }
+        Err(_) => {}
+    }
 }
 #[no_mangle]
 fn proxy_on_queue_ready(root_context_id: u32, token: u32) {
-    // unsafe {
-    //     ROOT_CONTEXT.on_queue_ready(token);
-    // }
+    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
+        Ok(ctx) => {
+            ctx.lock().unwrap().on_queue_ready(token);
+        }
+        Err(_) => {}
+    }
 }
 #[no_mangle]
 fn proxy_on_new_connection(context_id: u32) -> FilterStatus {FilterStatus::Continue}
