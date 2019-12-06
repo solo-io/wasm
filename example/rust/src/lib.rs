@@ -230,10 +230,6 @@ pub fn get_properpty(key: &str) -> Result<host::DataExchange, EnvoyError> {
                     return Err(EnvoyError::NilPropertyError)
                 }
             };
-        // debug!("value_ptr {:}, value_size: {:}", value_ptr, *value_size);
-        // let read = std::slice::from_raw_parts(value_ptr.as_mut(), *value_size);
-        // value_str = std::str::from_utf8_unchecked(read);
-        // let value = value_ptr.
         if value_ptr_ptr.is_null() {
             return Err(EnvoyError::NilPropertyError)
         }

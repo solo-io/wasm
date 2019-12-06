@@ -48,7 +48,6 @@ kubectl edit -n gloo-system gateways.gateway.solo.io.v2 gateway-proxy-v2
 set the httpGateway field like so:
 ```
   httpGateway:
-
     plugins:
       virtualServices:
         name: default
@@ -56,7 +55,10 @@ set the httpGateway field like so:
       extensions:
         configs:
           wasm:
-            config: yuval
+            config: |
+              {
+                "value":"hello"
+              }
             image: gcr.io/solo-public/example-filter:v1
             name: yuval
             root_id: add_header_root_id
