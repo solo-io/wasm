@@ -5,4 +5,4 @@ RUN apt update && \
 
 COPY bazelfy.sh /bazelfy.sh
 
-ENTRYPOINT bazelfy.sh
+ENTRYPOINT /bazelfy.sh
