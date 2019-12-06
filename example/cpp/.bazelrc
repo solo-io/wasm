@@ -3,6 +3,12 @@ build --cxxopt=-O3
 build --cxxopt=-no-canonical-prefixes
 build --cxxopt=-DEMSCRIPTEN_PROTOBUF_LITE=1
 
+# try to optimize un-used code
+build --cxxopt=-fdata-sections
+build --cxxopt=-ffunction-sections
+
+build --linkopt=-Wl,--gc-sections
+
 # https://github.com/bazelbuild/bazel/issues/9451
 # ideally we want this, but it doesn't work...
 # build --cxxopt=-fno-canonical-system-headers
