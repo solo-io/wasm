@@ -92,6 +92,16 @@ pub struct DataExchange {
     pub value_size: usize,
 }
 
+impl DataExchange {
+    pub unsafe fn slice_from_raw_parts<'a>(self) -> &'a [c_uchar] {
+        std::slice::from_raw_parts(self.value_ptr, self.value_size)
+    }
+
+    pub unsafe fn string_from_raw_parts(self) -> String {
+        String::from_raw_parts(self.value_ptr as *mut u8, self.value_size, self.value_size)
+    }
+}
+
 #[repr(C)]
 pub enum HeaderMapType {
     RequestHeaders = 0,   // During the onLog callback these are immutable

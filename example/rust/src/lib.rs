@@ -20,13 +20,7 @@ pub struct Logger;
 fn _start() {
     logger::Logger::init().unwrap();
 
-    ContextManager::add_root_context(1, sync::Arc::new(
-        sync::Mutex::new(
-            BasicRootContext {
-                proto_config: None
-            }   
-        )
-    ));
+    get_context_manager().lock().unwrap().register_context(basic_root_context_factory, basic_context_factory, String::from("yuval_k"));
 }
 
 /// Allow host to allocate memory.
@@ -51,12 +45,115 @@ fn free(ptr: *mut u8) {
 }
 
 
+fn basic_root_context_factory(root_id: &u32, root_str_id: &String) -> *mut dyn RootContext {
+    let mut cfg = BasicRootContext{
+        proto_config: None,
+    };
+    &mut cfg as *mut dyn RootContext
+}
+
+
+fn basic_context_factory(id: &u32, root: *mut dyn RootContext) -> *mut dyn Context {
+    let mut cfg = BasicContext{
+        root,
+    };
+    &mut cfg as *mut dyn Context
+}
+
+pub struct BasicRootContext {
+    proto_config: Option<filter::Config>
+}
+
+impl RootContext for BasicRootContext {
+    fn on_start(&mut self, _: u32) -> bool {
+        info!("on_start");
+        true
+    }
+
+    fn on_tick(&self) {}
+
+    fn validate_configuration(&self, configuration_size: u32) -> bool {
+        info!("validate_configuration");
+        let proto_config = get_configuration::<filter::Config>(configuration_size);
+        match proto_config {
+            Ok(v) => {
+                info!("validate_config: {:?}", v);
+                true
+            },
+            Err(_) => {
+                info!("validate_config  error");
+                false
+            },
+        }
+    }
+
+    fn on_configure(&mut self, configuration_size: u32) -> bool {
+        info!("on_configure");
+        let proto_config = get_configuration::<filter::Config>(configuration_size);
+        match proto_config {
+            Ok(v) => {
+                info!("on_configure: {:?}", v);
+                self.proto_config = Some(v);
+                true
+            },
+            Err(_) => {
+                info!("on_configure error");
+                false
+            },
+        }
+    }
+
+    fn on_done(&self) -> bool {true}
+
+    fn on_queue_ready(&self, _: u32) {}
+}
+
+pub struct BasicContext {
+    root: *mut dyn RootContext
+}
+
+impl StreamDecoder for BasicContext {
+    fn on_decode_headers(&self, header_map: &HeaderMap, header_only: bool) -> FilterHeadersStatus {
+        FilterHeadersStatus::Continue
+    }
+    fn on_decode_metadata(&self, metadata: &Metadata, header_only: bool) -> FilterMetadataStatus {
+        FilterMetadataStatus::Continue
+    }
+    fn on_decode_data(&self, buf: &Buffer, end_stream: bool) -> FilterDataStatus {
+        FilterDataStatus::Continue
+    }
+    fn on_decode_trailers(&self, header_map: HeaderMap, end_stream: bool) -> FilterTrailersStatus {
+        FilterTrailersStatus::Continue
+    }
+}
+
+impl StreamEncoder for BasicContext {
+    fn on_encode_headers(&self, header_map: u32, header_only: bool) -> FilterHeadersStatus {
+        FilterHeadersStatus::Continue
+    }
+    fn on_encode_metadata(&self, metadata: &Metadata, header_only: bool) -> FilterMetadataStatus {
+        FilterMetadataStatus::Continue
+    }
+    fn on_encode_data(&self, buf: &Buffer, end_stream: bool) -> FilterDataStatus {
+        FilterDataStatus::Continue
+    }
+    fn on_encode_trailers(&self, header_map: HeaderMap, end_stream: bool) -> FilterTrailersStatus {
+        FilterTrailersStatus::Continue
+    }
+}
+
+impl Context for BasicContext {
+    fn as_root(&self) -> *mut dyn RootContext {
+        self.root
+    }
+}
+
 
 struct ContextManager {
-    root_context_map: HashMap<u32, sync::Arc<sync::Mutex<dyn RootContext>>>,
-    context_map: HashMap<String, sync::Arc<sync::Mutex<dyn Context>>>,
-    context_factory_map: HashMap<String, sync::Arc<sync::Mutex<dyn ContextFactory>>>,
-    root_context_factory_map: HashMap<String, sync::Arc<sync::Mutex<dyn RootContextFactory>>>,
+    root_context_map: HashMap<String, sync::Arc<sync::Mutex<*mut dyn RootContext>>>,
+    context_map: HashMap<u32, sync::Arc<sync::Mutex<*mut dyn Context>>>,
+    context_factory_map: HashMap<String, sync::Arc<sync::Mutex<fn(&u32, *mut dyn RootContext) -> *mut dyn Context>>>,
+    root_context_factory_map: HashMap<String, sync::Arc<sync::Mutex<fn(&u32, &String) -> *mut dyn RootContext>>>,
 }
 
 static mut CONTEXT_MANAGER: Option<sync::Arc<sync::Mutex<Box<ContextManager>>>> = None;
@@ -86,59 +183,97 @@ fn get_context_manager() -> sync::Arc<sync::Mutex<Box<ContextManager>>> {
 }
 
 impl ContextManager {
-    fn add_context(key: String, context: sync::Arc<sync::Mutex<dyn Context>>) {
+    pub fn register_context(&mut self, root_context_factory:  fn(&u32, &String) -> *mut dyn RootContext, 
+        context_factory: fn(&u32, *mut dyn RootContext) -> *mut dyn Context, root_id: String) {
+        self.context_factory_map.insert(root_id.clone(), sync::Arc::new(sync::Mutex::new(context_factory)));
+        self.root_context_factory_map.insert(root_id.clone(), sync::Arc::new(sync::Mutex::new(root_context_factory)));
+    }
+    fn add_context(key: u32, context: sync::Arc<sync::Mutex<*mut dyn Context>>) {
         get_context_manager().lock().unwrap().context_map.insert(key, context);
     }
-    fn add_root_context(key: u32, context: sync::Arc<sync::Mutex<dyn RootContext>>) {
+    fn add_root_context(key: String, context: sync::Arc<sync::Mutex<*mut dyn RootContext>>) {
         get_context_manager().lock().unwrap().root_context_map.insert(key, context);
     }
-    pub fn add_root_context_factory(key: String, context: sync::Arc<sync::Mutex<dyn RootContextFactory>>) {
+    fn add_root_context_factory(key: String, context: sync::Arc<sync::Mutex<fn(&u32, &String) -> *mut dyn RootContext>>) {
         get_context_manager().lock().unwrap().root_context_factory_map.insert(key, context);
     }
-    pub fn add_context_factory(key: String, context: sync::Arc<sync::Mutex<dyn ContextFactory>>) {
+    fn add_context_factory(key: String, context: sync::Arc<sync::Mutex<fn(&u32, *mut dyn RootContext) -> *mut dyn Context>>) {
         get_context_manager().lock().unwrap().context_factory_map.insert(key, context);
     }
 
-    fn ensure_root_context() {
-        match get_properpty("plugin_root_id") {
-            Err(e) => debug!("{:?}", e as u32),
-            Ok(_) => debug!("shouldn't be ok"),
+    fn ensure_root_context(&mut self, root_context_id: &u32) -> Result<*mut dyn RootContext, EnvoyError>  {
+
+        let mut prop: String;
+        unsafe {
+            prop = get_properpty("plugin_root_id")?.string_from_raw_parts();
         }
+
+        match self.get_context(&root_context_id) {
+            Some(sync_ctx) => {
+                unsafe {
+                    match sync_ctx.lock().unwrap().as_ref() {
+                        Some(ctx) => return Ok(ctx.as_root()),
+                        None => return Err(EnvoyError::NilPropertyError)
+                    }
+                }
+            },
+            None => {},
+        };
+
+
+        let root_context_factory = match self.get_root_context_factory(&mut prop) {
+            Some(v) => v,
+            None => return Err(EnvoyError::ConfigurationError)
+        };
+        
+        let root_ctx = root_context_factory.lock().unwrap()(root_context_id, &prop);
+        
+        let context_factory = match self.get_context_factory(&mut prop) {
+            Some(v) => v,
+            None => return Err(EnvoyError::ConfigurationError)
+        }; 
+
+        let ctx = context_factory.lock().unwrap()(root_context_id, root_ctx.clone());
+
+        self.root_context_map.insert(prop, sync::Arc::new(sync::Mutex::new(root_ctx)));
+        self.context_map.insert(*root_context_id, sync::Arc::new(sync::Mutex::new(ctx)));
+
+        Ok(root_ctx)
     }
 
-    fn get_context(&mut self, key: String) -> Result<sync::Arc<sync::Mutex<dyn Context>>, ContextManagerError> {
+    fn get_context(&mut self, key: &u32) -> Option<sync::Arc<sync::Mutex<*mut dyn Context>>> {
         match self.context_map.get_mut(&key) {
             Some(v) => {
-                Ok(v.clone())
+                Some(v.clone())
             },
-            None => {Err(ContextManagerError::NoContext)}
+            None => None
         }
     }
     
-    fn get_root_contetxt(&mut self, key: u32) -> Result<sync::Arc<sync::Mutex<dyn RootContext>>, ContextManagerError> {
-        match self.root_context_map.get_mut(&key) {
+    fn get_root_contetxt(&mut self, key: &String) -> Option<sync::Arc<sync::Mutex<*mut dyn RootContext>>> {
+        match self.root_context_map.get_mut(key) {
             Some(v) => {
-                Ok(v.clone())
+                Some(v.clone())
             },
-            None => {Err(ContextManagerError::NoContext)}
+            None => None
         }
     }
     
-    fn get_context_factory(&mut self, key: String) -> Result<sync::Arc<sync::Mutex<dyn ContextFactory>>, ContextManagerError>  {
-        match self.context_factory_map.get_mut(&key) {
+    fn get_context_factory(&mut self, key: &String) -> Option<sync::Arc<sync::Mutex<fn(&u32, *mut dyn RootContext) -> *mut dyn Context>>> {
+        match self.context_factory_map.get_mut(key) {
             Some(v) => {
-                Ok(v.clone())
+                Some(v.clone())
             },
-            None => {Err(ContextManagerError::NoContext)}
+            None => None
         }
     }
     
-    fn get_root_contetxt_factory(&mut self, key: String) -> Result<sync::Arc<sync::Mutex<dyn RootContextFactory>>, ContextManagerError>  {
-        match self.root_context_factory_map.get_mut(&key) {
+    fn get_root_context_factory(&mut self, key: &String) -> Option<sync::Arc<sync::Mutex<fn(&u32, &String) -> *mut dyn RootContext>>> {
+        match self.root_context_factory_map.get_mut(key) {
             Some(v) => {
-                Ok(v.clone())
+                Some(v.clone())
             },
-            None => {Err(ContextManagerError::NoContext)}
+            None => None
         }
     }
 }
@@ -162,15 +297,17 @@ pub trait RootContext: std::marker::Sync {
     fn on_queue_ready(&self, token: u32);
 }
 
-pub trait Context: StreamDecoder + StreamEncoder {}
+pub trait Context: StreamDecoder + StreamEncoder {
+    fn as_root(&self) -> *mut dyn RootContext; 
+}
 
 
 pub trait RootContextFactory {
-    fn root_context(&self) -> &dyn RootContext;
+    fn root_context(&self) -> *mut dyn RootContext;
 }
 
 pub trait ContextFactory {
-    fn context(&self) -> &dyn Context;
+    fn context(&self) -> *mut dyn Context;
 }
 
 // static mut ROOT_CONTEXT: BasicRootContext = BasicRootContext {
@@ -245,54 +382,7 @@ pub enum EnvoyError {
     NilPropertyError,
 }
 
-pub struct BasicRootContext {
-    proto_config: Option<filter::Config>
-}
 
-impl RootContext for BasicRootContext {
-    fn on_start(&mut self, _: u32) -> bool {
-        info!("on_start");
-        true
-    }
-
-    fn on_tick(&self) {}
-
-    fn validate_configuration(&self, configuration_size: u32) -> bool {
-        info!("validate_configuration");
-        let proto_config = get_configuration::<filter::Config>(configuration_size);
-        match proto_config {
-            Ok(v) => {
-                info!("validate_config: {:?}", v);
-                true
-            },
-            Err(_) => {
-                info!("validate_config  error");
-                false
-            },
-        }
-    }
-
-    fn on_configure(&mut self, configuration_size: u32) -> bool {
-        info!("on_configure");
-        let proto_config = get_configuration::<filter::Config>(configuration_size);
-        match proto_config {
-            Ok(v) => {
-                info!("on_configure: {:?}", v);
-                self.proto_config = Some(v);
-                true
-            },
-            Err(_) => {
-                info!("on_configure error");
-                false
-            },
-        }
-    }
-
-    fn on_done(&self) -> bool {true}
-
-    fn on_queue_ready(&self, _: u32) {}
-
-}
 
 pub struct HeaderMap {
     data: HashMap<String, Vec<String>>,}
@@ -340,48 +430,94 @@ fn proxy_on_create(context_id: u32, root_context_id: u32) {}
 /// External APIs for envoy to call into
 #[no_mangle]
 fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
-    ContextManager::ensure_root_context();
-    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
-        Ok(ctx) => {
-            ctx.lock().unwrap().on_start(configuration_size) as u32
+    get_context_manager().lock().unwrap().ensure_root_context(&root_context_id);
+    match get_context_manager().lock().unwrap().get_context(&root_context_id) {
+        Some(ctx_wrapper) => {
+            unsafe {
+                let ctx = match ctx_wrapper.lock().unwrap().as_ref() {
+                    Some(v) => v,
+                    None => return false as u32,
+                };
+                match ctx.as_root().as_mut() {
+                    Some(v) => v.on_start(configuration_size) as u32,
+                    None => false as u32,
+                }
+            }
         }
-        Err(_) => {false as u32}
+        None => {false as u32}
     }
 }
+
 #[no_mangle]
 fn proxy_validate_configuration(root_context_id: u32, configuration_size: u32) -> u32 {
-    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
-        Ok(ctx) => {
-            ctx.lock().unwrap().validate_configuration(configuration_size) as u32
+    match get_context_manager().lock().unwrap().get_context(&root_context_id) {
+        Some(ctx_wrapper) => {
+            unsafe {
+                let ctx = match ctx_wrapper.lock().unwrap().as_ref() {
+                    Some(v) => v,
+                    None => return false as u32,
+                };
+                match ctx.as_root().as_ref() {
+                    Some(v) => v.validate_configuration(configuration_size) as u32,
+                    None => false as u32,
+                }
+            }
         }
-        Err(_) => {false as u32}
+        None => {false as u32}
     }
 }
 #[no_mangle]
 fn proxy_on_configure(root_context_id: u32, configuration_size: u32) -> u32 {
-    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
-        Ok(ctx) => {
-            ctx.lock().unwrap().on_configure(configuration_size) as u32
+    match get_context_manager().lock().unwrap().get_context(&root_context_id) {
+        Some(ctx_wrapper) => {
+            unsafe {
+                let ctx = match ctx_wrapper.lock().unwrap().as_ref() {
+                    Some(v) => v,
+                    None => return false as u32,
+                };
+                match ctx.as_root().as_mut() {
+                    Some(v) => v.on_configure(configuration_size) as u32,
+                    None => false as u32,
+                }
+            }     
         }
-        Err(_) => {false as u32}
+        None => {false as u32}
     }
 }
 #[no_mangle]
 fn proxy_on_tick(root_context_id: u32) {
-    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
-        Ok(ctx) => {
-            ctx.lock().unwrap().on_tick();
+    match get_context_manager().lock().unwrap().get_context(&root_context_id) {
+        Some(ctx_wrapper) => {
+            unsafe {
+                let ctx = match ctx_wrapper.lock().unwrap().as_ref() {
+                    Some(v) => v,
+                    None => return,
+                };
+                match ctx.as_root().as_ref() {
+                    Some(v) => v.on_tick(),
+                    None => {},
+                };
+            }
         }
-        Err(_) => {}
+        None => {}
     }
 }
 #[no_mangle]
 fn proxy_on_queue_ready(root_context_id: u32, token: u32) {
-    match get_context_manager().lock().unwrap().get_root_contetxt(root_context_id) {
-        Ok(ctx) => {
-            ctx.lock().unwrap().on_queue_ready(token);
+    match get_context_manager().lock().unwrap().get_context(&root_context_id) {
+        Some(ctx_wrapper) => {
+            unsafe {
+                let ctx = match ctx_wrapper.lock().unwrap().as_ref() {
+                    Some(v) => v,
+                    None => return,
+                };
+                match ctx.as_root().as_ref() {
+                    Some(v) => v.on_queue_ready(token),
+                    None => {},
+                };
+            }
         }
-        Err(_) => {}
+        None => {}
     }
 }
 #[no_mangle]

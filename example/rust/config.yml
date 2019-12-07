@@ -35,7 +35,7 @@ static_resources:
                   allow_precompiled: false
                   code:
                     local:
-                      filename: /home/eitanya/src/extend-envoy/target/wasm32-unknown-unknown/debug/wasm_filter_bindings.wasm 
+                      filename: /etc/filter.wasm
                 configuration: |
                   {
                     "value": "hello"
