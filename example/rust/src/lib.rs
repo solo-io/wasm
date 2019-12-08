@@ -1,8 +1,13 @@
+#[macro_use]
+extern crate lazy_static;
+
+use phf::phf_map;
 use log::{info, debug};
 use std::collections::HashMap;
 use std::sync;
-use std::os::raw::{c_uchar};
-use std::ffi::{CString};
+use std::sync::{Arc, Mutex};
+use std::os::raw::{c_char};
+use std::ffi::{CString, CStr};
 
 // use serde::de;
 
@@ -11,16 +16,33 @@ use std::ffi::{CString};
 mod host;
 mod logger;
 mod filter;
+mod context;
+mod ffi;
 
 /// Logger that integrates with host's logging system.
 pub struct Logger;
+
+lazy_static! {
+    static ref ROOT_CONTEXT_MAP: HashMap<&'static str, Arc<Mutex<Box<dyn context::RootContext + Send>>>> = {
+        HashMap::new()
+    };
+
+    static ref CONTEXT_MAP: HashMap<&'static u32, Arc<Mutex<Box<dyn context::Context + Send>>>> = {
+        HashMap::new()
+    };
+}
+
+pub static mut ROOT_CONTEXT_FACTORY_MAP: phf::Map<&'static str, context::RootContextFactory> = phf_map! {
+    "test_id" => basic_root_context_factory,
+};
+pub static mut CONTEXT_FACTORY_MAP: phf::Map<&'static str, context::ContextFactory> = phf_map! {
+    "test_id" => basic_context_factory,
+};
 
 /// Always hook into host's logging system.
 #[no_mangle]
 fn _start() {
     logger::Logger::init().unwrap();
-
-    get_context_manager().lock().unwrap().register_context(basic_root_context_factory, basic_context_factory, String::from("yuval_k"));
 }
 
 /// Allow host to allocate memory.
@@ -45,26 +67,26 @@ fn free(ptr: *mut u8) {
 }
 
 
-fn basic_root_context_factory(root_id: &u32, root_str_id: &String) -> *mut dyn RootContext {
+fn basic_root_context_factory(root_id: &u32, root_str_id: &str) -> *mut dyn context::RootContext {
     let mut cfg = BasicRootContext{
         proto_config: None,
     };
-    &mut cfg as *mut dyn RootContext
+    &mut cfg as *mut dyn context::RootContext
 }
 
 
-fn basic_context_factory(id: &u32, root: *mut dyn RootContext) -> *mut dyn Context {
+fn basic_context_factory(id: &u32, root: *mut dyn context::RootContext) -> *mut dyn context::Context {
     let mut cfg = BasicContext{
         root,
     };
-    &mut cfg as *mut dyn Context
+    &mut cfg as *mut dyn context::Context
 }
 
 pub struct BasicRootContext {
     proto_config: Option<filter::Config>
 }
 
-impl RootContext for BasicRootContext {
+impl context::RootContext for BasicRootContext {
     fn on_start(&mut self, _: u32) -> bool {
         info!("on_start");
         true
@@ -109,10 +131,10 @@ impl RootContext for BasicRootContext {
 }
 
 pub struct BasicContext {
-    root: *mut dyn RootContext
+    root: *mut dyn context::RootContext
 }
 
-impl StreamDecoder for BasicContext {
+impl context::StreamDecoder for BasicContext {
     fn on_decode_headers(&self, header_map: &HeaderMap, header_only: bool) -> FilterHeadersStatus {
         FilterHeadersStatus::Continue
     }
@@ -127,7 +149,7 @@ impl StreamDecoder for BasicContext {
     }
 }
 
-impl StreamEncoder for BasicContext {
+impl context::StreamEncoder for BasicContext {
     fn on_encode_headers(&self, header_map: u32, header_only: bool) -> FilterHeadersStatus {
         FilterHeadersStatus::Continue
     }
@@ -142,8 +164,8 @@ impl StreamEncoder for BasicContext {
     }
 }
 
-impl Context for BasicContext {
-    fn as_root(&self) -> *mut dyn RootContext {
+impl context::Context for BasicContext {
+    fn as_root(&self) -> *mut dyn context::RootContext {
         self.root
     }
 }
@@ -183,11 +205,6 @@ fn get_context_manager() -> sync::Arc<sync::Mutex<Box<ContextManager>>> {
 }
 
 impl ContextManager {
-    pub fn register_context(&mut self, root_context_factory:  fn(&u32, &String) -> *mut dyn RootContext, 
-        context_factory: fn(&u32, *mut dyn RootContext) -> *mut dyn Context, root_id: String) {
-        self.context_factory_map.insert(root_id.clone(), sync::Arc::new(sync::Mutex::new(context_factory)));
-        self.root_context_factory_map.insert(root_id.clone(), sync::Arc::new(sync::Mutex::new(root_context_factory)));
-    }
     fn add_context(key: u32, context: sync::Arc<sync::Mutex<*mut dyn Context>>) {
         get_context_manager().lock().unwrap().context_map.insert(key, context);
     }
@@ -203,10 +220,21 @@ impl ContextManager {
 
     fn ensure_root_context(&mut self, root_context_id: &u32) -> Result<*mut dyn RootContext, EnvoyError>  {
 
-        let mut prop: String;
-        unsafe {
-            prop = get_properpty("plugin_root_id")?.string_from_raw_parts();
+        unsafe{debug!("map length: {}", CONTEXT_FACTORY_MAP.len());};
+        for key in self.context_factory_map.keys() {
+            debug!("entry {}", key);
         }
+
+        let prop_cstring = unsafe{ get_properpty("plugin_root_id")?.cstring() };
+
+        let mut str_buf =  match prop_cstring.into_string() {
+            Ok(v) => v,
+            Err(e) => {
+                debug!("into string error: {}", e);
+                return Err(EnvoyError::NilPropertyError)
+            }
+        };
+        debug!("plugin_root_id_str: {}", str_buf);
 
         match self.get_context(&root_context_id) {
             Some(sync_ctx) => {
@@ -220,22 +248,28 @@ impl ContextManager {
             None => {},
         };
 
+        debug!("no root context found");
 
-        let root_context_factory = match self.get_root_context_factory(&mut prop) {
+
+        let root_context_factory = match self.get_root_context_factory(&mut str_buf) {
             Some(v) => v,
             None => return Err(EnvoyError::ConfigurationError)
         };
         
-        let root_ctx = root_context_factory.lock().unwrap()(root_context_id, &prop);
+        let root_ctx = root_context_factory.lock().unwrap()(root_context_id, &str_buf);
+
+        debug!("created root_ctx");
         
-        let context_factory = match self.get_context_factory(&mut prop) {
+        let context_factory = match self.get_context_factory(&mut str_buf) {
             Some(v) => v,
             None => return Err(EnvoyError::ConfigurationError)
         }; 
 
         let ctx = context_factory.lock().unwrap()(root_context_id, root_ctx.clone());
 
-        self.root_context_map.insert(prop, sync::Arc::new(sync::Mutex::new(root_ctx)));
+        debug!("created ctx");
+
+        self.root_context_map.insert(str_buf, sync::Arc::new(sync::Mutex::new(root_ctx)));
         self.context_map.insert(*root_context_id, sync::Arc::new(sync::Mutex::new(ctx)));
 
         Ok(root_ctx)
@@ -315,7 +349,7 @@ pub trait ContextFactory {
 // };
 
 pub fn get_configuration<T : serde::de::DeserializeOwned>(configuration_size: u32) ->  Result<T, EnvoyError> {
-    let configuration: *mut u8 = malloc(configuration_size as usize);
+    let configuration: *mut u8 = std::ptr::null_mut();
     let configuration_ptr: *const *mut u8 = &configuration;
     let mut message_size: Box<usize> = Box::default();
     unsafe {
@@ -351,17 +385,14 @@ pub fn get_properpty(key: &str) -> Result<host::DataExchange, EnvoyError> {
         Ok(v) => v,
         Err(_) => return Err(EnvoyError::NilPropertyError)
     };
-    debug!("have c_str, {}, len: {}", c_to_print.clone().into_string().unwrap(), key.len());
     let mut value_size: Box<usize> = Box::default();
-    let mut value_ptr: Box<c_uchar> = Box::default();
-    let value_ptr_ptr: *const *mut c_uchar = &(value_ptr.as_mut() as *mut c_uchar);
+    let value_ptr: *mut c_char = std::ptr::null_mut();
+    let value_ptr_ptr: *const *mut c_char = &(value_ptr);
     unsafe {
-        let result = host::proxy_get_property(c_to_print.as_ptr() as *const u8, key.len(),
+        let result = host::proxy_get_property(c_to_print.as_ptr(), key.len(),
             value_ptr_ptr, value_size.as_mut() as *mut usize);
         match result {
-                host::WasmResult::Ok => {
-                    debug!("result is ok")
-                }
+                host::WasmResult::Ok => {}
                 _ => {
                     debug!("result is not ok {}", result as u32);
                     return Err(EnvoyError::NilPropertyError)
@@ -370,8 +401,11 @@ pub fn get_properpty(key: &str) -> Result<host::DataExchange, EnvoyError> {
         if value_ptr_ptr.is_null() {
             return Err(EnvoyError::NilPropertyError)
         }
+
+        // debug!("value_suze: {}", value_size);
+        // debug!("str_slice: {:?}", CString::from_raw(value_ptr));
         Ok(host::DataExchange{
-            value_ptr: value_ptr.as_ref() as *const c_uchar,
+            value_ptr: value_ptr,
             value_size: *value_size
         })
     }
@@ -424,27 +458,24 @@ pub enum FilterDataStatus {
     StopIterationNoBuffer = 3
 }
 
-#[no_mangle]
-fn proxy_on_create(context_id: u32, root_context_id: u32) {}
-
 /// External APIs for envoy to call into
 #[no_mangle]
 fn proxy_on_start(root_context_id: u32, configuration_size: u32) -> u32 {
-    get_context_manager().lock().unwrap().ensure_root_context(&root_context_id);
-    match get_context_manager().lock().unwrap().get_context(&root_context_id) {
-        Some(ctx_wrapper) => {
-            unsafe {
-                let ctx = match ctx_wrapper.lock().unwrap().as_ref() {
-                    Some(v) => v,
-                    None => return false as u32,
-                };
-                match ctx.as_root().as_mut() {
-                    Some(v) => v.on_start(configuration_size) as u32,
-                    None => false as u32,
-                }
-            }
+    let ctx = match get_context_manager().lock().unwrap().ensure_root_context(&root_context_id) {
+        Ok(v) => v,
+        Err(e) => {
+            debug!("error ensuring root context: {:?}", e as u32);
+            return 0
         }
-        None => {false as u32}
+    };
+    unsafe {
+        match ctx.as_mut() {
+            Some(v) => v.on_start(configuration_size) as u32,
+            None => {
+                debug!("could not reference ctx");
+                0
+            },
+        }
     }
 }
 
@@ -520,6 +551,9 @@ fn proxy_on_queue_ready(root_context_id: u32, token: u32) {
         None => {}
     }
 }
+
+#[no_mangle]
+fn proxy_on_create(context_id: u32, root_context_id: u32) {}
 #[no_mangle]
 fn proxy_on_new_connection(context_id: u32) -> FilterStatus {FilterStatus::Continue}
 /// stream decoder

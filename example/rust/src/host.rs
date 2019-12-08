@@ -1,7 +1,11 @@
-use std::os::raw::c_uchar;
+use std::os::raw::{c_char};
+use log::{info, debug};
+use std::ffi::{CString, CStr};
+
 
 extern "C" {
     pub fn proxy_get_configuration(
+        // was u8, might change back if it starts breaking
         configuration_ptr: *const *mut u8,
         message_size: *mut usize,
     ) -> WasmResult;
@@ -11,43 +15,43 @@ extern "C" {
     // header values
     pub fn proxy_add_header_map_value(
         hm_type: HeaderMapType,
-        key_ptr: c_uchar,
+        key_ptr: c_char,
         key_size: usize,
-        value_ptr: c_uchar,
+        value_ptr: c_char,
         value_size: *mut usize,
     ) -> WasmResult;
 
     pub fn proxy_get_header_map_value(
         hm_type: HeaderMapType,
-        key_ptr: c_uchar,
+        key_ptr: c_char,
         key_size: usize,
-        value_ptr: *const c_uchar,
+        value_ptr: *const c_char,
         value_size: *mut usize,
     ) -> WasmResult;
 
     pub fn proxy_set_header_map_pairs(
         hm_type: HeaderMapType,
-        ptr: *const c_uchar,
+        ptr: *const c_char,
         size: usize,
     ) -> WasmResult;
 
     pub fn proxy_get_header_map_pairs(
         hm_type: HeaderMapType,
-        ptr: c_uchar,
+        ptr: c_char,
         size: usize,
     ) -> WasmResult;
 
     pub fn proxy_replace_header_map_value(
         hm_type: HeaderMapType,
-        key_ptr: c_uchar,
+        key_ptr: c_char,
         size: usize,
-        value_ptr: *const c_uchar,
+        value_ptr: *const c_char,
         value_size: usize,
     ) -> WasmResult;
 
     pub fn proxy_remove_header_map_value(
         hm_type: HeaderMapType,
-        key_ptr: c_uchar,
+        key_ptr: c_char,
         key_size: usize,
     ) -> WasmResult;
 
@@ -58,7 +62,7 @@ extern "C" {
         buff_type: BufferType,
         start: u32,
         lengthL: u32,
-        ptr: *const c_uchar,
+        ptr: *const c_char,
         size: *mut usize,
     ) -> WasmResult;
 
@@ -70,35 +74,39 @@ extern "C" {
 
     // State accessors
     pub fn proxy_get_property(
-        path_ptr: *const c_uchar,
+        path_ptr: *const c_char,
         path_size: usize,
-        value_ptr_ptr: *const *mut c_uchar,
+        value_ptr_ptr: *const *mut c_char,
         value_size_ptr: *mut usize,
     ) -> WasmResult;
 // extern "C" WasmResult proxy_set_property(const char* path_ptr, size_t path_size,
 //     const char* value_ptr, size_t value_size);
 
     pub fn proxy_set_property(
-        path_ptr: *const c_uchar,
+        path_ptr: *const c_char,
         path_size: usize,
-        value_ptr: *const c_uchar,
+        value_ptr: *const c_char,
         value_size: usize,
     ) -> WasmResult;
 
 }
 
 pub struct DataExchange {
-    pub value_ptr: *const c_uchar,
+    pub value_ptr: *mut c_char,
     pub value_size: usize,
 }
 
 impl DataExchange {
-    pub unsafe fn slice_from_raw_parts<'a>(self) -> &'a [c_uchar] {
+    pub unsafe fn slice_from_raw_parts<'a>(self) -> &'a [c_char] {
         std::slice::from_raw_parts(self.value_ptr, self.value_size)
     }
 
-    pub unsafe fn string_from_raw_parts(self) -> String {
-        String::from_raw_parts(self.value_ptr as *mut u8, self.value_size, self.value_size)
+    pub unsafe fn cstr<'a>(self) ->  &'a CStr {
+        CStr::from_ptr(self.value_ptr)
+    }
+
+    pub unsafe fn cstring(self) -> CString {
+        CString::from_raw(self.value_ptr as *mut c_char)
     }
 }
 
