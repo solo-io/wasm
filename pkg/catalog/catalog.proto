@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+option go_package = "catalog";
+
+message ModuleSpec {
+    // The name of the extension. Must be unique within a repository.
+    string name = 1;
+    // Module logo URL. optional
+    string logo_url = 2;
+    // Short description of the extension.
+    string short_description = 3;
+    // Long description of the extension.
+    // TODO support colocated markdown file OR link to markdown file
+    string long_description = 4;
+    // URL for the module in Solo.io's repository.
+    string module_url = 5;
+    // Link to documentation for the extension.
+    string documentation_url = 6;
+    // Link to repository containing the extension's source code.
+    string repository_url = 7;
+    // The name of the entity that authored the extension.
+    string creator_name = 8;
+    // Link to the entity that authored the extension.
+    string creator_url = 9;
+    // Install instructions for this extension.
+    InstallInstructions install_instructions = 3;
+}
+
+// Set of install instructions for each supported envoy flavor
+message InstallInstructions {
+    message Gloo {
+        string glooctl = 1;
+        string gateway_yaml = 2;
+    }
+    message VanillaEnvoy {
+        string config = 1;
+    }
+    Gloo gloo = 1;
+    VanillaEnvoy vanilla_envoy = 3;
+}

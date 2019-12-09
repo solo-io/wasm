@@ -7,8 +7,10 @@ require (
 	github.com/containerd/containerd v1.3.0
 	github.com/cratonica/2goarray v0.0.0-20190331194516-514510793eaa // indirect
 	github.com/deislabs/oras v0.7.0
+	github.com/ghodss/yaml v0.0.0-20150909031657-73d445a93680
 	github.com/gobuffalo/envy v1.8.1 // indirect
 	github.com/gobuffalo/logger v1.0.3 // indirect
+	github.com/gogo/protobuf v1.2.2-0.20190723190241-65acae22fc9d
 	github.com/golang/protobuf v1.3.2
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-github/v28 v28.1.1
@@ -24,6 +26,7 @@ require (
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20191206220618-eeba5f6aabab // indirect
+	gopkg.in/AlecAivazis/survey.v1 v1.8.7
 	k8s.io/apimachinery v0.0.0-20191111054156-6eb29fdf75dc
 )
 

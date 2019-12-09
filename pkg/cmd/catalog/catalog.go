@@ -17,14 +17,8 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts catalogOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
-		Use:   "catalog name[:tag|@digest] ...",
+		Use:   "catalog",
 		Short: "interact with catalog",
-		Long: `catalog
-`,
-		//Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCatalog(opts)
-		},
 	}
 
 	cmd.AddCommand(&cobra.Command{
@@ -32,17 +26,17 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 		Short: "add to catalog",
 		Long: `add
 `,
-		//Args: cobra.MinimumNArgs(1),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCatalog(opts)
+			return runCatalog(opts, args[0])
 		},
 	})
 	cmd.AddCommand(&cobra.Command{
-		Use:   "login name[:tag|@digest] ...",
+		Use:   "login",
 		Short: "login to catalog",
-		Long: `login
+		Long: `login allows you pushing to getwasm.io and automate the process of 
+		creating a PR to publish you content to the hub.
 `,
-		//Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runLogin(opts)
 		},
@@ -51,10 +45,9 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 	return cmd
 }
 
-func runCatalog(opts catalogOptions) error {
+func runCatalog(opts catalogOptions, ref string) error {
 
-	return catalog.UpdateCatalogItem(context.Background(),
-		"branchname", "testrepo", "solo.foo", "foo: bar")
+	return catalog.UpdateCatalogItem(context.Background(), ref)
 
 }
 
