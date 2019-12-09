@@ -13,7 +13,7 @@ The build the example filter (mostly copied from the envoy-wasm):
 
 Push:
 ```
-./extend-envoy push gcr.io/solo-public/example-filter:v1 example/bazel-bin/filter.wasm example/bazel-bin/filter_proto-descriptor-set.proto.bin
+./wasme push gcr.io/solo-public/example-filter:v1 example/bazel-bin/filter.wasm example/bazel-bin/filter_proto-descriptor-set.proto.bin
 ```
 
 load in to gloo:

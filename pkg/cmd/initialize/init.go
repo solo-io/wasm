@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/extend-envoy/pkg/util"
+	"github.com/solo-io/wasme/pkg/util"
 	"github.com/spf13/cobra"
 	"path/filepath"
 )

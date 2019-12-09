@@ -15,7 +15,7 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
 	"github.com/containerd/containerd/remotes"
-	"github.com/solo-io/extend-envoy/pkg/pull"
+	"github.com/solo-io/wasme/pkg/pull"
 )
 
 type Cache interface {

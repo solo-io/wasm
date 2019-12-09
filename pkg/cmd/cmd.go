@@ -1,22 +1,22 @@
 package cmd
 
 import (
-	"github.com/solo-io/extend-envoy/pkg/cmd/build"
-	"github.com/solo-io/extend-envoy/pkg/cmd/initialize"
-	"github.com/solo-io/extend-envoy/pkg/cmd/list"
+	"github.com/solo-io/wasme/pkg/cmd/build"
+	"github.com/solo-io/wasme/pkg/cmd/initialize"
+	"github.com/solo-io/wasme/pkg/cmd/list"
 	"os"
 
-	"github.com/solo-io/extend-envoy/pkg/cmd/cache"
-	"github.com/solo-io/extend-envoy/pkg/cmd/catalog"
-	"github.com/solo-io/extend-envoy/pkg/cmd/opts"
-	"github.com/solo-io/extend-envoy/pkg/cmd/pull"
-	"github.com/solo-io/extend-envoy/pkg/cmd/push"
+	"github.com/solo-io/wasme/pkg/cmd/cache"
+	"github.com/solo-io/wasme/pkg/cmd/catalog"
+	"github.com/solo-io/wasme/pkg/cmd/opts"
+	"github.com/solo-io/wasme/pkg/cmd/pull"
+	"github.com/solo-io/wasme/pkg/cmd/push"
 	"github.com/spf13/cobra"
 )
 
 func Run() {
 	cmd := &cobra.Command{
-		Use: "extend-envoy [command]",
+		Use: "wasme [command]",
 	}
 	var opts opts.GeneralOptions
 	cmd.AddCommand(

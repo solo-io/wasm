@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/google/go-github/v28/github"
-	"github.com/solo-io/extend-envoy/pkg/auth/store"
+	"github.com/solo-io/wasme/pkg/auth/store"
 	"golang.org/x/oauth2"
 )
 

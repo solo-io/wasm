@@ -3,7 +3,7 @@
 */bazel-*
 
 # go bin
-extend-envoy
+wasme
 
 # rust output
 target

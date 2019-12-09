@@ -10,7 +10,7 @@ import (
 	"github.com/containerd/containerd/remotes"
 	"github.com/deislabs/oras/pkg/content"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
-	"github.com/solo-io/extend-envoy/pkg/model"
+	"github.com/solo-io/wasme/pkg/model"
 )
 
 type FilterImpl struct {

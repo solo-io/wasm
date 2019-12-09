@@ -7,7 +7,7 @@ import (
 
 	auth "github.com/deislabs/oras/pkg/auth/docker"
 
-	"github.com/solo-io/extend-envoy/pkg/auth/store"
+	"github.com/solo-io/wasme/pkg/auth/store"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
