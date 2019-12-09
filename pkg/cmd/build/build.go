@@ -58,6 +58,7 @@ func runBuild(opts buildOptions) error {
 	// container paths are currently hard-coded in builder image
 	args := []string{
 		"run",
+		"--rm",
 		"-v", sourceDir + ":/src/workspace",
 		"-v", tmpDir + ":/tmp/build_output",
 		"-w", "/src/workspace",
