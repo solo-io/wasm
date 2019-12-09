@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/solo-io/extend-envoy/pkg/auth/store"
+	"github.com/solo-io/wasme/pkg/auth/store"
 )
 
 func HubEndpoint() *url.URL {

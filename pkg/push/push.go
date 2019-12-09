@@ -11,7 +11,7 @@ import (
 	"github.com/deislabs/oras/pkg/content"
 	"github.com/deislabs/oras/pkg/oras"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
-	"github.com/solo-io/extend-envoy/pkg/model"
+	"github.com/solo-io/wasme/pkg/model"
 )
 
 const (

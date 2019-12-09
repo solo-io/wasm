@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/solo-io/extend-envoy/pkg/cmd/opts"
-	"github.com/solo-io/extend-envoy/pkg/push"
-	"github.com/solo-io/extend-envoy/pkg/resolver"
+	"github.com/solo-io/wasme/pkg/cmd/opts"
+	"github.com/solo-io/wasme/pkg/push"
+	"github.com/solo-io/wasme/pkg/resolver"
 	"github.com/spf13/cobra"
 )
 

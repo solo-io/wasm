@@ -3,9 +3,9 @@ package catalog
 import (
 	"context"
 
-	"github.com/solo-io/extend-envoy/pkg/auth"
-	"github.com/solo-io/extend-envoy/pkg/catalog"
-	"github.com/solo-io/extend-envoy/pkg/cmd/opts"
+	"github.com/solo-io/wasme/pkg/auth"
+	"github.com/solo-io/wasme/pkg/catalog"
+	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/spf13/cobra"
 )
 

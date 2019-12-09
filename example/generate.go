@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/extend-envoy/pkg/util"
+	"github.com/solo-io/wasme/pkg/util"
 	"io/ioutil"
 	"os"
 	"os/exec"

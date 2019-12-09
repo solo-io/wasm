@@ -6,9 +6,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/solo-io/extend-envoy/pkg/cmd/opts"
-	"github.com/solo-io/extend-envoy/pkg/pull"
-	"github.com/solo-io/extend-envoy/pkg/resolver"
+	"github.com/solo-io/wasme/pkg/cmd/opts"
+	"github.com/solo-io/wasme/pkg/pull"
+	"github.com/solo-io/wasme/pkg/resolver"
 	"github.com/spf13/cobra"
 )
 

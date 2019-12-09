@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/solo-io/extend-envoy/pkg/cmd/opts"
-	"github.com/solo-io/extend-envoy/pkg/defaults"
+	"github.com/solo-io/wasme/pkg/cmd/opts"
+	"github.com/solo-io/wasme/pkg/defaults"
 	"github.com/spf13/cobra"
 )
 

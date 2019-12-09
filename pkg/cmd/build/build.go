@@ -50,7 +50,7 @@ func runBuild(opts buildOptions) error {
 		return err
 	}
 
-	tmpDir, err := ioutil.TempDir("/tmp", "extend-envoy")
+	tmpDir, err := ioutil.TempDir("/tmp", "wasme")
 	if err != nil {
 		return err
 	}

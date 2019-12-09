@@ -1,4 +1,4 @@
-module github.com/solo-io/extend-envoy
+module github.com/solo-io/wasme
 
 go 1.13
 
