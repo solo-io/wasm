@@ -1,6 +1,12 @@
 IMAGE?=quay.io/solo-io/ee-builder
 TAG?=v1
 
+.PHONY: build
+build:
+	GO11MODULE=on go get -v ./... && \
+	mkdir -p _output && \
+	GO11MODULE=on go build -v -o _output/wasme main.go
+
 # install codegen deps
 .PHONY: gen-deps
 gen-deps:
