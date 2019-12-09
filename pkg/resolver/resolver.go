@@ -2,9 +2,10 @@ package resolver
 
 import (
 	"crypto/tls"
-	auth "github.com/deislabs/oras/pkg/auth/docker"
 	"net/http"
 	"strings"
+
+	auth "github.com/deislabs/oras/pkg/auth/docker"
 
 	"github.com/solo-io/extend-envoy/pkg/auth/store"
 

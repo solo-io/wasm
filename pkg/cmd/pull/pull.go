@@ -2,7 +2,9 @@ package pull
 
 import (
 	"context"
-	"fmt"
+	"io/ioutil"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/solo-io/extend-envoy/pkg/cmd/opts"
 	"github.com/solo-io/extend-envoy/pkg/pull"
@@ -28,7 +30,7 @@ func PullCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts pullOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
-		Use:   "pull <name:tag|name@digest>",
+		Use:   "pull <name:tag|name@digest> [-o output-file]",
 		Short: "Pull files from remote registry",
 		Long: `Pull files from remote registry
 
@@ -54,7 +56,7 @@ Example - Pull files from the HTTP registry:
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.output, "output", "o", "", "output directory")
+	cmd.Flags().StringVarP(&opts.output, "output", "o", "filter.wasm", "output file")
 	cmd.Flags().BoolVarP(&opts.verbose, "verbose", "v", false, "verbose output")
 
 	cmd.Flags().BoolVarP(&opts.debug, "debug", "d", false, "debug mode")
@@ -70,6 +72,13 @@ func runPull(opts pullOptions) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(filter)
-	return nil
+
+	logrus.Printf("Pulled filter image %v", opts.targetRef)
+
+	raw, err := ioutil.ReadAll(filter.Code())
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(opts.output, raw, 0644)
 }
