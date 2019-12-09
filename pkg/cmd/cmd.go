@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/solo-io/extend-envoy/pkg/cmd/build"
 	"github.com/solo-io/extend-envoy/pkg/cmd/initialize"
+	"github.com/solo-io/extend-envoy/pkg/cmd/list"
 	"os"
 
 	"github.com/solo-io/extend-envoy/pkg/cmd/cache"
@@ -25,6 +26,7 @@ func Run() {
 		pull.PullCmd(&opts),
 		cache.CacheCmd(&opts),
 		catalog.CatalogCmd(&opts),
+		list.ListCmd(),
 	)
 	cmd.PersistentFlags().StringArrayVarP(&opts.Configs, "config", "c", nil, "auth config path")
 	cmd.PersistentFlags().StringVarP(&opts.Username, "username", "u", "", "registry username")
