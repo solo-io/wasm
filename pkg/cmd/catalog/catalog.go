@@ -34,7 +34,7 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 	cmd.AddCommand(&cobra.Command{
 		Use:   "login",
 		Short: "login to catalog",
-		Long: `login allows you pushing to getwasm.io and automate the process of 
+		Long: `login allows you pushing to webassemblyhub.io and automate the process of 
 		creating a PR to publish you content to the hub.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {

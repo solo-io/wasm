@@ -8,6 +8,7 @@ import (
 	auth "github.com/deislabs/oras/pkg/auth/docker"
 
 	"github.com/solo-io/wasme/pkg/auth/store"
+	"github.com/solo-io/wasme/pkg/consts"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
@@ -49,7 +50,7 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 	opts.Credentials = func(hostName string) (string, string, error) {
 
 		if token != "" {
-			if hostName == "getwasm.io" {
+			if hostName == consts.HubDomain {
 				return basicAuthToTokenUser, token, nil
 			}
 			if strings.HasPrefix(hostName, "localhost") {

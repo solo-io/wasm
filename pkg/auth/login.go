@@ -12,13 +12,14 @@ import (
 	"strconv"
 
 	"github.com/solo-io/wasme/pkg/auth/store"
+	"github.com/solo-io/wasme/pkg/consts"
 )
 
 func HubEndpoint() *url.URL {
 
 	endpoint := os.Getenv("HUB_ENDPOINT")
 	if endpoint == "" {
-		endpoint = "https://getwasm.io/"
+		endpoint = "https://" + consts.HubDomain + ".io/"
 	}
 
 	u, err := url.Parse(endpoint)
