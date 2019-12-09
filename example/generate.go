@@ -1,5 +1,5 @@
 // This file is used to generate embeddable binary data (in Go) from the content of the example directory
-// Outputs to pkg/cmd/initialize/example_project_zfsgen.go
+// Outputs to pkg/cmd/initialize/cpp_archive_2gobytes.go
 package main
 
 import (
