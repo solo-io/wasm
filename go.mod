@@ -20,11 +20,12 @@ require (
 	github.com/rogpeppe/go-internal v1.5.0 // indirect
 	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/sirupsen/logrus v1.4.2
+	github.com/solo-io/go-utils v0.11.0 // indirect
 	github.com/spf13/cobra v0.0.5
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sys v0.0.0-20191206220618-eeba5f6aabab // indirect
-	k8s.io/apimachinery v0.0.0-20191111054156-6eb29fdf75dc
+	k8s.io/apimachinery v0.0.0-20191121015412-41065c7a8c2a
 )
 
 replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309
