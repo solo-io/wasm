@@ -142,7 +142,7 @@ func UpdateCatalogItem(ctx context.Context, ref string) error {
 					if pr, err := gt.EnsurePr(); err != nil {
 						return err
 					} else {
-						fmt.Println("Created PR: " + pr.GetURL())
+						fmt.Println("Created PR: " + pr.GetHTMLURL())
 					}
 				}
 				return nil
