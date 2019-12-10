@@ -1,6 +1,6 @@
 ---
 title: "Reference"
-description: "Reference for the Wasme CLI
+description: "Reference for the Wasme CLI"
 weight: 5
 ---
 
