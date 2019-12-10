@@ -1,10 +1,10 @@
 ---
 title: "Installation"
-description: "Installing the Web Assembly Hub CLI"
+description: "Installing the WebAssembly Hub CLI"
 weight: 3
 ---
 
-To install the Web Assembly Hub CLI (`wasme`), simply run the following:
+To install the WebAssembly Hub CLI (`wasme`), simply run the following:
 
 ```bash
 curl -sL https://run.solo.io/wasme/install | sh
@@ -20,4 +20,4 @@ wasme --version
 wasme version 0.0.1
 ```
 
-Great! You're all set to start building filters. If you're just getting started with the Web Assembly Hub, check out the [Getting Started Tutorial]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_1">}})
+Great! You're all set to start building filters. If you're just getting started with the WebAssembly Hub, check out the [Getting Started Tutorial]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_1">}})
