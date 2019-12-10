@@ -19,7 +19,7 @@ func HubEndpoint() *url.URL {
 
 	endpoint := os.Getenv("HUB_ENDPOINT")
 	if endpoint == "" {
-		endpoint = "https://" + consts.HubDomain + ".io/"
+		endpoint = "https://" + consts.HubDomain + "/"
 	}
 
 	u, err := url.Parse(endpoint)
