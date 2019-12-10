@@ -113,7 +113,7 @@ configuration: |
   {}
 ```
 
-Now that we have the config, we should save it to a local file called `config.yml`, we are going to need it soon.
+Now that we have the config, we should save it to a local file called `config.yml`.
 
 ## Filter
 
