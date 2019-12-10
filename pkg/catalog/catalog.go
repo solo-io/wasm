@@ -14,12 +14,15 @@ import (
 	"github.com/google/go-github/v28/github"
 	"github.com/solo-io/wasme/pkg/auth/store"
 	"golang.org/x/oauth2"
+	survey "gopkg.in/AlecAivazis/survey.v1"
 )
 
 //go:generate protoc --proto_path=. --go_out=. catalog.proto
 
 const (
-	catalogRepo = "wasme"
+	wasmeCatalogRepo = "wasme"
+	catalogOwner     = "solo-io"
+	branch           = "master"
 )
 
 func getName(refspec reference.Spec) string {
@@ -58,9 +61,8 @@ func getContents(refspec reference.Spec) (string, error) {
 		return "", err
 	}
 	yamls := string(yamlb)
-	fmt.Println(m, err, yamls)
 
-	return yamls, fmt.Errorf("no")
+	return yamls, nil
 }
 
 func UpdateCatalogItem(ctx context.Context, ref string) error {
@@ -84,7 +86,11 @@ func UpdateCatalogItem(ctx context.Context, ref string) error {
 		}
 	}
 
-	// TODO: token
+	catalogRepo := os.Getenv("CATALOG_REPO")
+	if catalogRepo == "" {
+		catalogRepo = wasmeCatalogRepo
+	}
+
 	var httpClient *http.Client
 	if token != "" {
 		ts := oauth2.StaticTokenSource(
@@ -92,7 +98,6 @@ func UpdateCatalogItem(ctx context.Context, ref string) error {
 		)
 		httpClient = oauth2.NewClient(ctx, ts)
 	}
-
 	client := github.NewClient(httpClient)
 
 	user, _, err := client.Users.Get(ctx, "")
@@ -100,27 +105,32 @@ func UpdateCatalogItem(ctx context.Context, ref string) error {
 		return err
 	}
 	githubUsername := *user.Login
-	catalogOwner := "solo-io"
-	branch := "master"
-	gt := NewGithubTransaction(ctx, client, catalogOwner, catalogRepo, branch, githubUsername, ref)
+
+	forkBranch := getName(refspec) + "-" + refspec.Object
+	gt := NewGithubTransaction(ctx, client, catalogOwner, catalogRepo, branch, githubUsername, forkBranch)
 
 	steps := []struct {
+		desc string
 		name string
 		f    func() error
 	}{
 		{
+			fmt.Sprintf("Fork github.com/%s/%s", catalogOwner, catalogRepo),
 			"Making sure your fork is available",
 			gt.EnsureFork,
 		},
 		{
+			fmt.Sprintf("Create a feature branch named %s", forkBranch),
 			"Making sure a feature branch is available",
 			gt.EnsureBranch,
 		},
 		{
+			"Add your spec to this branch in this location: " + itemname,
 			"Adding your catalog item to the feature branch",
 			func() error { return gt.ModifyBranch(itemname, contents) },
 		},
 		{
+			fmt.Sprintf("And open a Pull Request against github.com/%s/%s", catalogOwner, catalogRepo),
 			"Makeing sure a PR is open",
 			func() error {
 				prState, err := gt.CurrentPrState()
@@ -136,6 +146,21 @@ func UpdateCatalogItem(ctx context.Context, ref string) error {
 				return nil
 			},
 		},
+	}
+
+	message := "We are all set to submit your entry to the catalog. Here is your spec:\n" + contents + "\nIn these steps we will:\n"
+	for _, step := range steps {
+		message += fmt.Sprintln("\t", step.desc)
+	}
+
+	prompt := &survey.Confirm{
+		Message: message,
+	}
+	var answer bool
+	survey.AskOne(prompt, answer, nil)
+	if !answer {
+		fmt.Println("aborted")
+		return nil
 	}
 
 	for _, step := range steps {
