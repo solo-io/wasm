@@ -16,8 +16,8 @@ the techniques used here can be applied to any and all wasm filters build this w
 
 ## Configuration
 
-The first step in testing the filter locally is creating the static E config which will serve out new filter.
-Documentation on E's API can be found [here](https://www.envoyproxy.io/docs/envoy/v1.12.0/api/api). 
+The first step in testing the filter locally is creating the static Envoy config which will serve out new filter.
+Documentation on Envoy's API can be found [here](https://www.envoyproxy.io/docs/envoy/v1.12.0/api/api). 
 
 Below is the full yaml necessary to test. We will unpack it step by step after.
 ```yaml
