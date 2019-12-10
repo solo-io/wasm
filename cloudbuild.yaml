@@ -1,0 +1,40 @@
+steps:
+
+  - name: gcr.io/cloud-builders/gsutil
+    entrypoint: 'bash'
+    args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/wasme/wasme-mod.tar.gz | tar -xzf -']
+    env:
+    volumes: &vol
+      - name: 'gopath'
+        path: '/go/pkg'
+    id: 'untar-mod-cache'
+
+  - name: 'golang:1.13'
+    volumes: *vol
+    args: ['go', 'get', './...']
+    env:
+      - 'GO111MODULE=on'
+    id: 'go-get'
+
+  - name: 'gcr.io/$PROJECT_ID/go-make:0.1.12'
+    args: ['upload-github-release-assets', '-B']
+    env:
+      - 'GO111MODULE=on'
+      - 'TAGGED_VERSION=$TAG_NAME'
+      - 'PROJECT_ROOT=github.com/solo-io/wasme'
+      - 'GOPATH=/workspace/gopath'
+      - 'GCLOUD_PROJECT_ID=$PROJECT_ID'
+      - 'KUBECONFIG=/workspace/kube-e2e'
+    secretEnv: ['GITHUB_TOKEN']
+    id: 'release-assets'
+
+
+secrets:
+  - kmsKeyName: projects/solo-public/locations/global/keyRings/build/cryptoKeys/build-key
+    secretEnv:
+      GITHUB_TOKEN: CiQABlzmSYYiveU0gTxGH2139eaBUedjV3vNCxQmJU+nRPlfQ/YSUQCCPGSGzbGp49fwDYuefAx9V94b8mivdp9AqB7zQAa07VtGJmrGdg9ZuhKGFrrgqxwABE0LLVNHyngCSHYSYMH8Vn/mRtT7wQuEHBlKVGtqPw==
+
+timeout: 1200s
+tags: ['wasme']
+options:
+  machineType: 'N1_HIGHCPU_32'

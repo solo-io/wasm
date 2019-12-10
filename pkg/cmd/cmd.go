@@ -4,6 +4,7 @@ import (
 	"github.com/solo-io/wasme/pkg/cmd/build"
 	"github.com/solo-io/wasme/pkg/cmd/initialize"
 	"github.com/solo-io/wasme/pkg/cmd/list"
+	"github.com/solo-io/wasme/pkg/version"
 	"os"
 
 	"github.com/solo-io/wasme/pkg/cmd/cache"
@@ -18,6 +19,7 @@ import (
 func Run() {
 	cmd := &cobra.Command{
 		Use: "wasme [command]",
+		Version: version.Version,
 	}
 	var opts opts.GeneralOptions
 	cmd.AddCommand(
