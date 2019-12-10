@@ -54,7 +54,7 @@ echo "  export PATH=\$HOME/.wasme/bin:\$PATH"
 echo ""
 echo "Now run:"
 echo "  ap init myproject     # generate a new project directory"
-echo "Please see visit the Web Assembly Hub guides for more:  https://docs.solo.io/web-assembly-hub/latest"
+echo "Please see visit the WebAssembly Hub guides for more:  https://docs.solo.io/web-assembly-hub/latest"
 exit 0
 done
 

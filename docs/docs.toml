@@ -1,6 +1,6 @@
 baseURL = "https://docs.solo.io"
 languageCode = "en-us"
-title = "Web Assembly Hub Docs"
+title = "WebAssembly Hub Docs"
 theme = "hugo-theme-soloio"
 
 contentDir = "content"
@@ -31,7 +31,7 @@ home = [ "HTML", "JSON"]
 
 [params]
 author = "Solo.io"
-description = "Documentation for Web Assembly Hub"
+description = "Documentation for WebAssembly Hub"
 disableSearch = false
 disableAssetsBusting = false
 disableInlineCopyToClipBoard = true
