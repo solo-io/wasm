@@ -4,26 +4,11 @@ weight: 5
 ---
 ## wasme pull
 
-Pull files from remote registry
+Pull wasm filters from remote registry
 
 ### Synopsis
 
-Pull files from remote registry
-
-Example - Pull only files with the "application/vnd.oci.image.layer.v1.tar" media type (default):
-  oras pull localhost:5000/hello:latest
-
-Example - Pull only files with the custom "application/vnd.me.hi" media type:
-  oras pull localhost:5000/hello:latest -t application/vnd.me.hi
-
-Example - Pull all files, any media type:
-  oras pull localhost:5000/hello:latest -a
-
-Example - Pull files from the insecure registry:
-  oras pull localhost:5000/hello:latest --insecure
-
-Example - Pull files from the HTTP registry:
-  oras pull localhost:5000/hello:latest --plain-http
+Pull wasm filters from remote registry
 
 
 ```
