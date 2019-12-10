@@ -3,9 +3,9 @@ package catalog
 import (
 	"context"
 	"fmt"
-	"time"
-
 	"github.com/google/go-github/v28/github"
+	"net/http"
+	"time"
 )
 
 type PullRequestState int
@@ -110,7 +110,16 @@ func (g *githubTransaction) EnsureBranch() error {
 		},
 	}
 
-	_, _, err = g.client.Git.CreateRef(g.ctx, g.forkOwner, g.originalRepo, ref)
+	for i := 0; i < 3; i++ {
+		_, resp, err = g.client.Git.CreateRef(g.ctx, g.forkOwner, g.originalRepo, ref)
+		if err == nil {
+			return nil
+		}
+		if resp.StatusCode < 500 {
+			return err
+		}
+		time.Sleep(time.Second * 5)
+	}
 	return err
 
 }
@@ -153,7 +162,10 @@ func (g *githubTransaction) ModifyBranch(file, content string) error {
 		Message: github.String("update catalog"),
 		Content: []byte(content),
 	}
-	_, _, err := g.client.Repositories.CreateFile(g.ctx, g.forkOwner, g.originalRepo, file, opt)
+	_, resp, err := g.client.Repositories.CreateFile(g.ctx, g.forkOwner, g.originalRepo, file, opt)
+	if resp.StatusCode == http.StatusUnprocessableEntity {
+		return fmt.Errorf("file " + file + " already exists in branch, will not override. Please remove the file and try again.")
+	}
 	return err
 }
 
