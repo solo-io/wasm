@@ -157,7 +157,7 @@ func UpdateCatalogItem(ctx context.Context, ref string) error {
 		Message: message,
 	}
 	var answer bool
-	survey.AskOne(prompt, answer, nil)
+	survey.AskOne(prompt, &answer, nil)
 	if !answer {
 		fmt.Println("aborted")
 		return nil
