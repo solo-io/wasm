@@ -3,7 +3,6 @@ package catalog
 import (
 	"context"
 
-	"github.com/solo-io/wasme/pkg/auth"
 	"github.com/solo-io/wasme/pkg/catalog"
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/spf13/cobra"
@@ -17,14 +16,8 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts catalogOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
-		Use:   "catalog name[:tag|@digest] ...",
+		Use:   "catalog",
 		Short: "interact with catalog",
-		Long: `catalog
-`,
-		//Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCatalog(opts)
-		},
 	}
 
 	cmd.AddCommand(&cobra.Command{
@@ -32,32 +25,17 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 		Short: "add to catalog",
 		Long: `add
 `,
-		//Args: cobra.MinimumNArgs(1),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCatalog(opts)
-		},
-	})
-	cmd.AddCommand(&cobra.Command{
-		Use:   "login name[:tag|@digest] ...",
-		Short: "login to catalog",
-		Long: `login
-`,
-		//Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runLogin(opts)
+			return runCatalog(opts, args[0])
 		},
 	})
 
 	return cmd
 }
 
-func runCatalog(opts catalogOptions) error {
+func runCatalog(opts catalogOptions, ref string) error {
 
-	return catalog.UpdateCatalogItem(context.Background(),
-		"branchname", "testrepo", "solo.foo", "foo: bar")
+	return catalog.UpdateCatalogItem(context.Background(), ref)
 
-}
-
-func runLogin(opts catalogOptions) error {
-	return auth.Login(context.Background())
 }

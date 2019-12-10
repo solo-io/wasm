@@ -9,6 +9,7 @@ import (
 
 	"github.com/solo-io/wasme/pkg/cmd/cache"
 	"github.com/solo-io/wasme/pkg/cmd/catalog"
+	"github.com/solo-io/wasme/pkg/cmd/login"
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/cmd/pull"
 	"github.com/solo-io/wasme/pkg/cmd/push"
@@ -28,6 +29,7 @@ func Run() {
 		pull.PullCmd(&opts),
 		cache.CacheCmd(&opts),
 		catalog.CatalogCmd(&opts),
+		login.LoginCmd(&opts),
 		list.ListCmd(),
 	)
 	cmd.PersistentFlags().StringArrayVarP(&opts.Configs, "config", "c", nil, "auth config path")

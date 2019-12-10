@@ -3,8 +3,6 @@ package list
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -14,6 +12,10 @@ import (
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"github.com/sirupsen/logrus"
+	"github.com/solo-io/wasme/pkg/consts"
+	"github.com/spf13/cobra"
 )
 
 var log = logrus.StandardLogger()
@@ -21,7 +23,7 @@ var log = logrus.StandardLogger()
 func ListCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
-		Short: "List Envoy WASM Filters published to getwasm.io.",
+		Short: "List Envoy WASM Filters published to webassemblyhub.io.",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runList()
@@ -140,7 +142,7 @@ func getTagInfo(repo string) (*tagInfo, error) {
 	if repo != "" {
 		repo = strings.TrimSuffix(repo, "/") + "/"
 	}
-	res, err := http.Get(fmt.Sprintf("https://getwasm.io/v2/%vtags/list", repo))
+	res, err := http.Get(fmt.Sprintf("https://"+consts.HubDomain+"/v2/%vtags/list", repo))
 	if err != nil {
 		return nil, err
 	}
@@ -164,10 +166,10 @@ type tagInfo struct {
 }
 
 type manifest struct {
-	ImageSizeBytes string     `json:"imageSizeBytes"`
-	LayerID        string    `json:"layerId"`
-	MediaType      string    `json:"mediaType"`
-	Tag            []string  `json:"tag"`
-	TimeCreatedMs  string `json:"timeCreatedMs"`
-	TimeUploadedMs string `json:"timeUploadedMs"`
+	ImageSizeBytes string   `json:"imageSizeBytes"`
+	LayerID        string   `json:"layerId"`
+	MediaType      string   `json:"mediaType"`
+	Tag            []string `json:"tag"`
+	TimeCreatedMs  string   `json:"timeCreatedMs"`
+	TimeUploadedMs string   `json:"timeUploadedMs"`
 }
