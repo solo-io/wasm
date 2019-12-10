@@ -50,8 +50,8 @@ $  kubectl apply -f default-virtualservice.yaml
 To get Gloo's external IP, run the following:
 
 ```shell
-$  URL=kubectl get svc -n gloo-system gateway-proxy-v2 \
- -o jsonpath='{.status.loadBalancer.ingress[*].ip}'
+$  URL=$(kubectl get svc -n gloo-system gateway-proxy \
+ -o jsonpath='{.status.loadBalancer.ingress[*].ip}')
 ```
 
 Now let's curl that URL:
@@ -81,7 +81,7 @@ If you're able to get to this point, we have a working Envoy proxy and we're abl
 
 ## Creating a new WASM module
 
-Refer to the [installation guide]() for getting the WebAssembly Hub CLI tools.
+Refer to the [installation guide]({{< versioned_link_path fromRoot="/installation">}}) for getting the WebAssembly Hub CLI tools.
 
 Let's create a new project called `new-filter`:
 
