@@ -16,9 +16,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Run() {
+func Cmd() *cobra.Command {
+
 	cmd := &cobra.Command{
-		Use: "wasme [command]",
+		Use:     "wasme [command]",
 		Version: version.Version,
 	}
 	var opts opts.GeneralOptions
@@ -38,7 +39,11 @@ func Run() {
 	cmd.PersistentFlags().BoolVarP(&opts.Insecure, "insecure", "", false, "allow connections to SSL registry without certs")
 	cmd.PersistentFlags().BoolVarP(&opts.PlainHTTP, "plain-http", "", false, "use plain http and not https")
 
-	if err := cmd.Execute(); err != nil {
+	return cmd
+}
+
+func Run() {
+	if err := Cmd().Execute(); err != nil {
 		os.Exit(1)
 	}
 }
