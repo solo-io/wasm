@@ -17,17 +17,15 @@ steps:
     id: 'go-get'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
-    args: ['upload-github-release-assets', '-B']
+    args: ['upload-github-release-assets', 'publish-docs', '-B']
     env:
       - 'GO111MODULE=on'
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'PROJECT_ROOT=github.com/solo-io/wasme'
       - 'GOPATH=/workspace/gopath'
       - 'GCLOUD_PROJECT_ID=$PROJECT_ID'
-      - 'KUBECONFIG=/workspace/kube-e2e'
     secretEnv: ['GITHUB_TOKEN']
-    id: 'release-assets'
-
+    id: 'release-assets-docs'
 
 secrets:
   - kmsKeyName: projects/solo-public/locations/global/keyRings/build/cryptoKeys/build-key
