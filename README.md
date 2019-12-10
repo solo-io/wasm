@@ -68,7 +68,8 @@ $ curl $(glooctl proxy url)/sample-route-1
 ```
 
 Congrats, you officially used a WASM filter.
-This is a simple stats filter, 
+This is a simple stats filter so all it is doing is updating some basic prometheus statistics on the routes living on this listener.
+For more complex and interesting filters check out https://webassemblyhub.io/.
 
 # emscripten sdk
 If you change the emscripten SDK, an sdk with PR merged is needed:
