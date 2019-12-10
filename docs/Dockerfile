@@ -1,6 +1,6 @@
 FROM nginx:1.13.9-alpine
 
-# NOTE: this sets the product scope of the served resources to match the example.com/autopilot/version/ scope
+# NOTE: this sets the product scope of the served resources to match the example.com/web-assembly-hub/version/ scope
 ARG VERSION
 ARG PRODUCT_SCOPE
 ARG FROM_DIR
