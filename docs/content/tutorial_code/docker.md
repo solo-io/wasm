@@ -8,7 +8,7 @@ description: Run/Test your WebAssembly filter locally with Envoy in docker
 This tutorial will explain in detail how to run and test Envoy wasm filters locally, before deploying them.
 
 For the purposes of this example we will be using a simple stats filter `webassemblyhub.io/yuval-k/metrics:v1`. However, 
-the techniques used here can be applied to any and all wasm filters build this way.
+the techniques used here can be applied to any and all wasm filters built this way.
 
 #### Prerequisites
 * [docker](https://www.docker.com/)
