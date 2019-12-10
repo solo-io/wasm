@@ -157,13 +157,13 @@ func (g *githubTransaction) ModifyBranch(file, content string) error {
 	return err
 }
 
-func (g *githubTransaction) EnsurePr() error {
+func (g *githubTransaction) EnsurePr() (*github.PullRequest, error) {
 	newPR := &github.NewPullRequest{
-		Title: github.String("catalog: add item"),
+		Title: github.String("catalog: add item " + g.forkBranch),
 		Body:  github.String("catalog: add item"),
 		Base:  github.String(g.originalBranch),
 		Head:  github.String(g.forkOwner + ":" + g.forkBranch),
 	}
-	_, _, err := g.client.PullRequests.Create(g.ctx, g.originalOwner, g.originalRepo, newPR)
-	return err
+	pr, _, err := g.client.PullRequests.Create(g.ctx, g.originalOwner, g.originalRepo, newPR)
+	return pr, err
 }

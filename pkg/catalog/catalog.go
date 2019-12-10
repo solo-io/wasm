@@ -139,8 +139,10 @@ func UpdateCatalogItem(ctx context.Context, ref string) error {
 				}
 
 				if prState != Pending {
-					if err := gt.EnsurePr(); err != nil {
+					if pr, err := gt.EnsurePr(); err != nil {
 						return err
+					} else {
+						fmt.Println("Created PR: " + pr.GetURL())
 					}
 				}
 				return nil
