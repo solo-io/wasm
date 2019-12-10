@@ -9,8 +9,6 @@ weight: 1
   The Web Assembly Hub
 </h1>
 
-placeholder text
-
 [**Installation**](https://docs.solo.io/web-assembly-hub/latest/installation/) &nbsp; |
 &nbsp; [**Documentation**](https://docs.solo.io/web-assembly-hub/latest) &nbsp; |
 &nbsp; [**Blog**](TODO LINK) &nbsp; |
