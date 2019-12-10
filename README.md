@@ -18,21 +18,24 @@ Push:
 
 load in to gloo:
 ```
-kubectl edit -n gloo-system gateways.gateway.solo.io.v2 gateway-proxy-v2
+kubectl edit -n gloo-system gateways.gateway.solo.io gateway-proxy
 ```
 
 set the httpGateway field like so:
 ```
   httpGateway:
-    plugins:
-      extensions:
-        configs:
-          wasm:
-            config: yuval
-            image: gcr.io/solo-public/example-filter:v1
-            name: yuval
-            root_id: add_header_root_id
+    options:
+      wasm:
+        config: |
+          {}
+        image: webassemblyhub.io/yuval-k/metrics:v1
+        name: yuval
+        root_id: stats_root_id
 ```
+
+Download the petstore from the following tutorial https://docs.solo.io/gloo/latest/gloo_routing/hello_world/
+
+Then apply the following virtual service to enable routing to the petstore.
 
 ```
 apiVersion: gateway.solo.io/v1
@@ -45,18 +48,27 @@ spec:
     domains:
     - '*'
     routes:
-    - matcher:
-        exact: /sample-route-1
+    - matchers:
+        - exact: /sample-route-1
       routeAction:
         single:
           upstream:
             name: default-petstore-8080
             namespace: gloo-system
-      routePlugins:
-        prefixRewrite:
-          prefixRewrite: /api/pets
+      options:
+        prefixRewrite: /api/pets
 ```
 
+Now call the API with the following command
+```bash
+$ curl $(glooctl proxy url)/sample-route-1
+
+
+[{"id":1,"name":"Dog","status":"available"},{"id":2,"name":"Cat","status":"pending"}]
+```
+
+Congrats, you officially used a WASM filter.
+This is a simple stats filter, 
 
 # emscripten sdk
 If you change the emscripten SDK, an sdk with PR merged is needed:
