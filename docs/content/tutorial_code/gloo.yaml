@@ -1,3 +1,187 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: gloo-system
+spec:
+  finalizers:
+  - kubernetes
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: authconfigs.enterprise.gloo.solo.io
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: enterprise.gloo.solo.io
+  names:
+    kind: AuthConfig
+    listKind: AuthConfigList
+    plural: authconfigs
+    shortNames:
+    - ac
+    singular: authconfig
+  scope: Namespaced
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true  
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: routetables.gateway.solo.io
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: gateway.solo.io
+  names:
+    kind: RouteTable
+    listKind: RouteTableList
+    plural: routetables
+    shortNames:
+    - rt
+    singular: routetable
+  scope: Namespaced
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: upstreamgroups.gloo.solo.io
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: gloo.solo.io
+  names:
+    kind: UpstreamGroup
+    listKind: UpstreamGroupList
+    plural: upstreamgroups
+    shortNames:
+    - ug
+    singular: upstreamgroup
+  scope: Namespaced
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: gateways.gateway.solo.io
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: gateway.solo.io
+  names:
+    kind: Gateway
+    listKind: GatewayList
+    plural: gateways
+    shortNames:
+    - gw
+    singular: gateway
+  scope: Namespaced
+  version: v1
+  versions:
+  - name: v1
+    storage: true
+    served: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: proxies.gloo.solo.io
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: gloo.solo.io
+  names:
+    kind: Proxy
+    listKind: ProxyList
+    plural: proxies
+    shortNames:
+    - px
+    singular: proxy
+  scope: Namespaced
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: settings.gloo.solo.io
+  annotations:
+    "helm.sh/hook": crd-install
+  labels:
+    gloo: settings
+spec:
+  group: gloo.solo.io
+  names:
+    kind: Settings
+    listKind: SettingsList
+    plural: settings
+    shortNames:
+    - st
+  scope: Namespaced
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: upstreams.gloo.solo.io
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: gloo.solo.io
+  names:
+    kind: Upstream
+    listKind: UpstreamList
+    plural: upstreams
+    shortNames:
+    - us
+    singular: upstream
+  scope: Namespaced
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: virtualservices.gateway.solo.io
+  annotations:
+    "helm.sh/hook": crd-install
+spec:
+  group: gateway.solo.io
+  names:
+    kind: VirtualService
+    listKind: VirtualServiceList
+    plural: virtualservices
+    shortNames:
+    - vs
+    singular: virtualservice
+  scope: Namespaced
+  version: v1
+  versions:
+  - name: v1
+    served: true
+    storage: true
 ---
 # Source: gloo/templates/2-gloo-usage-configmap.yaml
 # use this config map to record envoy usage stats
@@ -712,63 +896,7 @@ spec:
         - configMap:
             name: gateway-proxy-envoy-config
           name: envoy-config
----
-# Source: gloo/templates/5-gateway-validation-webhook-configuration.yaml
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: gloo-gateway-validation-webhook-gloo-system
-  labels:
-    app: gloo
-    gloo: gateway
-  annotations:
-    "helm.sh/hook": pre-install,pre-upgrade
-    "helm.sh/hook-weight": "5" # must be executed before cert-gen job
-webhooks:
-  - name: gateway.gloo-system.svc  # must be a domain with at least three segments separated by dots
-    clientConfig:
-      service:
-        name: gateway
-        namespace: gloo-system
-        path: "/validation"
-      caBundle: "" # update manually or use certgen job
-    rules:
-      - operations: [ "CREATE", "UPDATE", "DELETE" ]
-        apiGroups: ["gateway.solo.io"]
-        apiVersions: ["v1"]
-        resources: ["*"]
-    failurePolicy: Ignore
----
-# Source: gloo/templates/5-gateway-validation-webhook-configuration.yaml
-# Resources created as hooks are not considered part of a release by Helm. This means that they
-# will not be cleaned up when running `helm uninstall`.
-# See https://helm.sh/docs/topics/charts_hooks/#hook-resources-are-not-managed-with-corresponding-releases).
-# To be able to clean up the above hook resource, we redefine it as a `post-delete` hook with a `hook-delete-policy`.
-apiVersion: admissionregistration.k8s.io/v1beta1
-kind: ValidatingWebhookConfiguration
-metadata:
-  name: gloo-gateway-validation-webhook-gloo-system
-  labels:
-    app: gloo
-    gloo: gateway
-  annotations:
-    "helm.sh/hook": post-delete
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "solo.io/hook-cleanup": "true" # Used internally to mark "hook cleanup" resources
-webhooks:
-  - name: gateway.gloo-system.svc
-    clientConfig:
-      service:
-        name: gateway
-        namespace: gloo-system
-        path: "/validation"
-      caBundle: ""
-    rules:
-      - operations: [ "CREATE", "UPDATE", "DELETE" ]
-        apiGroups: ["gateway.solo.io"]
-        apiVersions: ["v1"]
-        resources: ["*"]
-    failurePolicy: Ignore
+
 ---
 # Source: gloo/templates/18-settings.yaml
 apiVersion: gloo.solo.io/v1

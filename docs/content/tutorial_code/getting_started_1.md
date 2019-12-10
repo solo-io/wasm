@@ -196,12 +196,12 @@ christian-posta/test        6aef37f3 13 Jan 10 12:54 MST 1.0 MB v0.1
 To deploy this new WASM module into Envoy, using Gloo we can configure the gateway to load the module from the `webassembly.io` registry:
 
 ```yaml
-apiVersion: gateway.solo.io.v2/v2
+apiVersion: gateway.solo.io/v1
 kind: Gateway
 metadata:
   labels:
     app: gloo
-  name: gateway-proxy-v2
+  name: gateway-proxy
   namespace: gloo-system
 spec:
   bindAddress: '::'
@@ -215,7 +215,7 @@ spec:
             name: christian
             root_id: add_header_root_id
   proxyNames:
-  - gateway-proxy-v2
+  - gateway-proxy
   useProxyProto: false
 ```
 
