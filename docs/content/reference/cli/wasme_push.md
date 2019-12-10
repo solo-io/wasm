@@ -4,29 +4,13 @@ weight: 5
 ---
 ## wasme push
 
-Push wasm to remote registry
+Push wasm filter to remote registry
 
 ### Synopsis
 
-Push wasm to remote registry
+Push wasm filter to remote registry. E.g.:
 
-Example - Push file "hi.txt" with the "application/vnd.oci.image.layer.v1.tar" media type (default):
-  oras push localhost:5000/hello:latest hi.txt
-
-Example - Push file "hi.txt" with the custom "application/vnd.me.hi" media type:
-  oras push localhost:5000/hello:latest hi.txt:application/vnd.me.hi
-
-Example - Push multiple files with different media types:
-  oras push localhost:5000/hello:latest hi.txt:application/vnd.me.hi bye.txt:application/vnd.me.bye
-
-Example - Push file "hi.txt" with the custom manifest config "config.json" of the custom "application/vnd.me.config" media type:
-  oras push --manifest-config config.json:application/vnd.me.config localhost:5000/hello:latest hi.txt
-
-Example - Push file to the insecure registry:
-  oras push localhost:5000/hello:latest hi.txt --insecure
-
-Example - Push file to the HTTP registry:
-  oras push localhost:5000/hello:latest hi.txt --plain-http
+wasme push webassemblyhub.io/my/filter:v1 filter.wasm
 
 
 ```

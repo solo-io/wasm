@@ -29,6 +29,6 @@ weight: 5
 * [wasme init](../wasme_init)	 - Initialize a source directory for new Envoy WASM Filter.
 * [wasme list](../wasme_list)	 - List Envoy WASM Filters published to webassemblyhub.io.
 * [wasme login](../wasme_login)	 - login so you can push images to webassemblyhub.io and submit them to the curated catalog
-* [wasme pull](../wasme_pull)	 - Pull files from remote registry
-* [wasme push](../wasme_push)	 - Push wasm to remote registry
+* [wasme pull](../wasme_pull)	 - Pull wasm filters from remote registry
+* [wasme push](../wasme_push)	 - Push wasm filter to remote registry
 
