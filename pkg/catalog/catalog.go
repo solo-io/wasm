@@ -164,6 +164,7 @@ func UpdateCatalogItem(ctx context.Context, ref string) error {
 	}
 
 	for _, step := range steps {
+		fmt.Println(step.name)
 		if err := step.f(); err != nil {
 			return err
 		}
