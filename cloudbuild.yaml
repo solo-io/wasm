@@ -16,7 +16,7 @@ steps:
       - 'GO111MODULE=on'
     id: 'go-get'
 
-  - name: 'gcr.io/$PROJECT_ID/go-make:0.1.12'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
     args: ['upload-github-release-assets', '-B']
     env:
       - 'GO111MODULE=on'
