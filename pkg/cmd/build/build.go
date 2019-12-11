@@ -3,6 +3,7 @@ package build
 import (
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/solo-io/wasme/pkg/version"
 	"io"
 	"io/ioutil"
 	"os"
@@ -18,12 +19,13 @@ type buildOptions struct {
 	sourceDir    string
 	outFile      string
 	builderImage string
+	buildDir string
 }
 
 func BuildCmd() *cobra.Command {
 	var opts buildOptions
 	cmd := &cobra.Command{
-		Use:   "build SOURCE_DIRECTORY [-o OUTPUT_FILE]",
+		Use:   "build SOURCE_DIRECTORY [-b <bazel target>] [-o OUTPUT_FILE]",
 		Short: "Compile the filter to wasm using Bazel-in-Docker",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -36,7 +38,8 @@ func BuildCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&opts.outFile, "output", "o", "_output/filter.wasm", "path to the output .wasm file. Nonexistent directories will be created.")
-	cmd.Flags().StringVarP(&opts.builderImage, "image", "i", "quay.io/solo-io/ee-builder:v1", "Name of the docker image containing the Bazel run instructions. Only be modified if you are an experiejnced user")
+	cmd.Flags().StringVarP(&opts.builderImage, "image", "i", "quay.io/solo-io/ee-builder:"+version.Version, "Name of the docker image containing the Bazel run instructions. Modify to run a custom builder image")
+	cmd.Flags().StringVarP(&opts.buildDir, "build-dir", "b", ".", "Directory containing the target BUILD file. This file must have a target named :filter.wasm and produce a file named filter.wasm")
 	return cmd
 }
 
@@ -62,6 +65,7 @@ func runBuild(opts buildOptions) error {
 		"-v", sourceDir + ":/src/workspace",
 		"-v", tmpDir + ":/tmp/build_output",
 		"-w", "/src/workspace",
+		"-e", "BUILD_BASE="+opts.buildDir,
 		opts.builderImage,
 	}
 

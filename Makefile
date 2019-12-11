@@ -68,7 +68,7 @@ build-cli: wasme-linux-amd64 wasme-darwin-amd64 wasme-windows-amd64
 
 .PHONY: install-cli
 install-cli: enable-gomod
-	go build -o ${GOPATH}/bin/wasme main.go
+	go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o ${GOPATH}/bin/wasme main.go
 
 
 # build Builder image
@@ -99,6 +99,12 @@ ifeq ($(RELEASE),"true")
 		TAGGED_VERSION=$(TAGGED_VERSION) \
 		GCLOUD_PROJECT_ID=$(GCLOUD_PROJECT_ID) \
 		RELEASE=$(RELEASE)
+endif
+
+.PHONY: publish-images
+publish-images:
+ifeq ($(RELEASE),"true")
+	docker push $(BUILDER_IMAGE):$(VERSION)
 endif
 
 #----------------------------------------------------------------------------------

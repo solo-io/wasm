@@ -1,6 +1,5 @@
 .vscode/
 .idea
-*/bazel-*
 
 # go bin
 wasme
