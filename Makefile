@@ -68,7 +68,7 @@ build-cli: wasme-linux-amd64 wasme-darwin-amd64 wasme-windows-amd64
 
 .PHONY: install-cli
 install-cli: enable-gomod
-	go build -o ${GOPATH}/bin/wasme main.go
+	go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o ${GOPATH}/bin/wasme main.go
 
 
 # build Builder image
