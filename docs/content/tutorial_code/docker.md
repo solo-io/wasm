@@ -96,8 +96,8 @@ There are a few things here which are worth highlighting.
 
 1) `root_id: "stats_root_id"`: the root_id is a new concept to wasm filters, but very important. Similar to the "filter_name" in traditional
 Envoy filters, this is how Envoy knows which wasm filter to use. If this id does not match any loaded wasm filter, it will cause Envoy to crash.
-2) `runtime: envoy.wasm.runtime.v8`: the runtime is the type of wasm vm with which Envoy will run the wasm module. Currently the 2 options
-are V8, and WAVM.
+2) `runtime: envoy.wasm.runtime.v8`: the runtime is the type of wasm VM with which Envoy will run the wasm module. Currently the 2 options
+are V8 and WAVM.
 3) The code section in this example loads the wasm filter from a local code source, but this can also be configured to load from a remote source.
 ```yaml
   code:
@@ -112,7 +112,7 @@ configuration: |
   {}
 ```
 
-Now that we have the config, we should save it to a local file called `config.yml`, we are going to need it soon.
+Now that we have the config, we should save it to a local file called `config.yml`.
 
 ## Filter
 
