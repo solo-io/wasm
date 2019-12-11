@@ -11,6 +11,8 @@ weight: 1
 
 The WebAssembly Hub is a meeting place for the community to share and consume WebAssembly Envoy extensions. Easily search and find extensions that meet the functionality you want to add and give them a try.
 
+Please see the [announcement blog](https://medium.com/solo-io/introducing-the-webassembly-hub-a-service-for-building-deploying-sharing-and-discovering-wasm-d461719383ca) that goes into more detail on the motivation for WebAssembly Hub and how we see it driving the future direction of Envoy-based networking projects/products including API Gateways and Service Mesh.
+
 The `wasme` CLI provides a tool for building and sharing Envoy WebAssembly extensions.
 
 [**Installation**](https://docs.solo.io/web-assembly-hub/latest/installation/) &nbsp; |
