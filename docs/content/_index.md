@@ -17,7 +17,7 @@ The `wasme` CLI provides a tool for building and sharing Envoy WebAssembly exten
 
 [**Installation**](https://docs.solo.io/web-assembly-hub/latest/installation/) &nbsp; |
 &nbsp; [**Documentation**](https://docs.solo.io/web-assembly-hub/latest) &nbsp; |
-&nbsp; [**Blog**](TODO LINK) &nbsp; |
+&nbsp; [**Blog**](https://medium.com/solo-io/introducing-the-webassembly-hub-a-service-for-building-deploying-sharing-and-discovering-wasm-d461719383ca) &nbsp; |
 &nbsp; [**Slack**](https://slack.solo.io) &nbsp; |
 &nbsp; [**Twitter**](https://twitter.com/soloio_inc)
 
