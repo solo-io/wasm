@@ -101,6 +101,12 @@ ifeq ($(RELEASE),"true")
 		RELEASE=$(RELEASE)
 endif
 
+.PHONY: publish-images
+publish-images:
+ifeq ($(RELEASE),"true")
+	docker push $(BUILDER_IMAGE):$(VERSION)
+endif
+
 #----------------------------------------------------------------------------------
 # Clean
 #----------------------------------------------------------------------------------
