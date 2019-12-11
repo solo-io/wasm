@@ -70,8 +70,7 @@ static_resources:
     hosts: [{ socket_address: { address: host.docker.internal, port_value: 10101 } }]
 ```
 
-The first part of the config is not particularly interesting. The admin section simply tells Envoy which port to use for 
-the admin interface.
+The first part of the config is not particularly interesting. The admin section simply tells Envoy which port to use for the admin interface.
 
 Below that is where things start to get interesting. Specifically the `http_filters` section of the `envoy.http_connection_manager`.
 This section features a new type of config, specifically the envoy-wasm config. This filter functions similarly to other Envoy filters 
