@@ -183,6 +183,7 @@ spec:
     served: true
     storage: true
 ---
+---
 # Source: gloo/templates/2-gloo-usage-configmap.yaml
 # use this config map to record envoy usage stats
 apiVersion: v1
@@ -194,8 +195,11 @@ metadata:
     app: gloo
     gloo: gloo-usage
 data:
+
 ---
 # Source: gloo/templates/9-gateway-proxy-configmap.yaml
+
+---
 # config_map
 apiVersion: v1
 kind: ConfigMap
@@ -344,6 +348,7 @@ metadata:
     gloo: gloo
   name: gloo
   namespace: gloo-system
+
 ---
 # Source: gloo/templates/3-discovery-service-account.yaml
 apiVersion: v1
@@ -356,6 +361,7 @@ metadata:
   namespace: gloo-system
 ---
 # Source: gloo/templates/5-gateway-service-account.yaml
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -364,8 +370,11 @@ metadata:
     gloo: gateway
   name: gateway
   namespace: gloo-system
+
+
 ---
 # Source: gloo/templates/8-gateway-proxy-service-account.yaml
+
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -374,171 +383,98 @@ metadata:
     gloo: gateway-proxy
   name: gateway-proxy
   namespace: gloo-system
+
+
 ---
 # Source: gloo/templates/20-namespace-clusterrole-gateway.yaml
+
+---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: kube-resource-watcher-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
+    name: kube-resource-watcher-gloo-system
+    labels:
+        app: gloo
+        gloo: rbac
 rules:
-  - apiGroups: [""]
-    resources: ["pods", "services", "secrets", "endpoints", "configmaps", "namespaces"]
-    verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods", "services", "secrets", "endpoints", "configmaps", "namespaces"]
+  verbs: ["get", "list", "watch"]
 ---
-# Source: gloo/templates/20-namespace-clusterrole-gateway.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: gateway-resource-reader-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
+    name: gloo-upstream-mutator-gloo-system
+    labels:
+        app: gloo
+        gloo: rbac
 rules:
-  - apiGroups: ["gateway.solo.io"]
-    resources: ["virtualservices", "routetables"]
-    # update is needed for status updates
-    verbs: ["get", "list", "watch", "update"]
-  - apiGroups: ["gateway.solo.io"]
-    resources: ["gateways"]
-    # update is needed for status updates, create for creating the default ones.
-    verbs: ["get", "list", "watch", "create", "update"]
+- apiGroups: ["gloo.solo.io"]
+  resources: ["upstreams"]
+  # update is needed for status updates
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
 ---
-# Source: gloo/templates/20-namespace-clusterrole-gateway.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: gloo-resource-mutator-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
+    name: gloo-resource-reader-gloo-system
+    labels:
+        app: gloo
+        gloo: rbac
 rules:
-  - apiGroups: ["gloo.solo.io"]
-    resources: ["proxies"]
-    verbs: ["get", "list", "watch", "create", "update", "delete"]
+- apiGroups: ["gloo.solo.io", "enterprise.gloo.solo.io"]
+  resources: ["upstreams","upstreamgroups", "proxies", "authconfigs"]
+  # update is needed for status updates
+  verbs: ["get", "list", "watch", "update"]
+- apiGroups: [""] # get/update on configmaps for recording envoy metrics
+  resources: ["configmaps"]
+  verbs: ["get", "update"]
 ---
-# Source: gloo/templates/20-namespace-clusterrole-gateway.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: gloo-resource-reader-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
+    name: settings-user-gloo-system
+    labels:
+        app: gloo
+        gloo: rbac
 rules:
-  - apiGroups: ["gloo.solo.io", "enterprise.gloo.solo.io"]
-    resources: ["upstreams","upstreamgroups", "proxies", "authconfigs"]
-    # update is needed for status updates
-    verbs: ["get", "list", "watch", "update"]
-  - apiGroups: [""] # get/update on configmaps for recording envoy metrics
-    resources: ["configmaps"]
-    verbs: ["get", "update"]
+- apiGroups: ["gloo.solo.io"]
+  resources: ["settings"]
+  # update is needed for status updates
+  verbs: ["get", "list", "watch", "create"]
 ---
-# Source: gloo/templates/20-namespace-clusterrole-gateway.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: settings-user-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
+    name: gloo-resource-mutator-gloo-system
+    labels:
+        app: gloo
+        gloo: rbac
 rules:
-  - apiGroups: ["gloo.solo.io"]
-    resources: ["settings"]
-    # update is needed for status updates
-    verbs: ["get", "list", "watch", "create"]
+- apiGroups: ["gloo.solo.io"]
+  resources: ["proxies"]
+  verbs: ["get", "list", "watch", "create", "update", "delete"]
 ---
-# Source: gloo/templates/20-namespace-clusterrole-gateway.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: gloo-upstream-mutator-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
+    name: gateway-resource-reader-gloo-system
+    labels:
+        app: gloo
+        gloo: rbac
 rules:
-  - apiGroups: ["gloo.solo.io"]
-    resources: ["upstreams"]
-    # update is needed for status updates
-    verbs: ["get", "list", "watch", "create", "update", "delete"]
+- apiGroups: ["gateway.solo.io"]
+  resources: ["virtualservices", "routetables"]
+  # update is needed for status updates
+  verbs: ["get", "list", "watch", "update"]
+- apiGroups: ["gateway.solo.io"]
+  resources: ["gateways"]
+  # update is needed for status updates, create for creating the default ones.
+  verbs: ["get", "list", "watch", "create", "update"]
 ---
 # Source: gloo/templates/23-namespace-clusterrolebinding-gateway.yaml
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: gloo-resource-mutator-binding-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
-subjects:
-  - kind: ServiceAccount
-    name: gateway
-    namespace: gloo-system
-roleRef:
-  kind: ClusterRole
-  name: gloo-resource-mutator-gloo-system
-  apiGroup: rbac.authorization.k8s.io
+
 ---
-# Source: gloo/templates/23-namespace-clusterrolebinding-gateway.yaml
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: gateway-resource-reader-binding-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
-subjects:
-  - kind: ServiceAccount
-    name: gateway
-    namespace: gloo-system
-roleRef:
-  kind: ClusterRole
-  name: gateway-resource-reader-gloo-system
-  apiGroup: rbac.authorization.k8s.io
----
-# Source: gloo/templates/23-namespace-clusterrolebinding-gateway.yaml
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: settings-user-binding-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
-subjects:
-  - kind: ServiceAccount
-    name: gloo
-    namespace: gloo-system
-  - kind: ServiceAccount
-    name: gateway
-    namespace: gloo-system
-  - kind: ServiceAccount
-    name: discovery
-    namespace: gloo-system
-roleRef:
-  kind: ClusterRole
-  name: settings-user-gloo-system
-  apiGroup: rbac.authorization.k8s.io
----
-# Source: gloo/templates/23-namespace-clusterrolebinding-gateway.yaml
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: gloo-resource-reader-binding-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
-subjects:
-  - kind: ServiceAccount
-    name: gloo
-    namespace: gloo-system
-roleRef:
-  kind: ClusterRole
-  name: gloo-resource-reader-gloo-system
-  apiGroup: rbac.authorization.k8s.io
----
-# Source: gloo/templates/23-namespace-clusterrolebinding-gateway.yaml
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -547,18 +483,17 @@ metadata:
     app: gloo
     gloo: rbac
 subjects:
-  - kind: ServiceAccount
-    name: gloo
-    namespace: gloo-system
-  - kind: ServiceAccount
-    name: discovery
-    namespace: gloo-system
+- kind: ServiceAccount
+  name: gloo
+  namespace: gloo-system
+- kind: ServiceAccount
+  name: discovery
+  namespace: gloo-system
 roleRef:
   kind: ClusterRole
   name: kube-resource-watcher-gloo-system
   apiGroup: rbac.authorization.k8s.io
 ---
-# Source: gloo/templates/23-namespace-clusterrolebinding-gateway.yaml
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -567,12 +502,82 @@ metadata:
     app: gloo
     gloo: rbac
 subjects:
-  - kind: ServiceAccount
-    name: discovery
-    namespace: gloo-system
+- kind: ServiceAccount
+  name: discovery
+  namespace: gloo-system
 roleRef:
   kind: ClusterRole
   name: gloo-upstream-mutator-gloo-system
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: gloo-resource-reader-binding-gloo-system
+  labels:
+    app: gloo
+    gloo: rbac
+subjects:
+- kind: ServiceAccount
+  name: gloo
+  namespace: gloo-system
+roleRef:
+  kind: ClusterRole
+  name: gloo-resource-reader-gloo-system
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: settings-user-binding-gloo-system
+  labels:
+    app: gloo
+    gloo: rbac
+subjects:
+- kind: ServiceAccount
+  name: gloo
+  namespace: gloo-system
+- kind: ServiceAccount
+  name: gateway
+  namespace: gloo-system
+- kind: ServiceAccount
+  name: discovery
+  namespace: gloo-system
+roleRef:
+  kind: ClusterRole
+  name: settings-user-gloo-system
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: gloo-resource-mutator-binding-gloo-system
+  labels:
+    app: gloo
+    gloo: rbac
+subjects:
+- kind: ServiceAccount
+  name: gateway
+  namespace: gloo-system
+roleRef:
+  kind: ClusterRole
+  name: gloo-resource-mutator-gloo-system
+  apiGroup: rbac.authorization.k8s.io
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: gateway-resource-reader-binding-gloo-system
+  labels:
+    app: gloo
+    gloo: rbac
+subjects:
+- kind: ServiceAccount
+  name: gateway
+  namespace: gloo-system
+roleRef:
+  kind: ClusterRole
+  name: gateway-resource-reader-gloo-system
   apiGroup: rbac.authorization.k8s.io
 ---
 # Source: gloo/templates/2-gloo-service.yaml
@@ -586,22 +591,24 @@ metadata:
   namespace: gloo-system
 spec:
   ports:
-    - name: grpc-xds
-      port: 9977
-      protocol: TCP
-    - name: grpc-validation
-      port: 9988
-      protocol: TCP
-    - name: metrics-grpc
-      port: 9966
-      protocol: TCP
-    - name: wasm-cache
-      port: 9979
-      protocol: TCP
+  - name: grpc-xds
+    port: 9977
+    protocol: TCP
+  - name: grpc-validation
+    port: 9988
+    protocol: TCP
+  - name: metrics-grpc
+    port: 9966
+    protocol: TCP
+  - name: wasm-cache
+    port: 9979
+    protocol: TCP
   selector:
     gloo: gloo
+
 ---
 # Source: gloo/templates/5-gateway-service.yaml
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -613,15 +620,18 @@ metadata:
   namespace: gloo-system
 spec:
   ports:
-    - name: https
-      port: 443
-      protocol: TCP
-      # this should map to projects/gateway/pkg/defaults.ValidationWebhookBindPort
-      targetPort: 8443
+  - name: https
+    port: 443
+    protocol: TCP
+    # this should map to projects/gateway/pkg/defaults.ValidationWebhookBindPort
+    targetPort: 8443
   selector:
     gloo: gateway
+
 ---
 # Source: gloo/templates/8-gateway-proxy-service.yaml
+
+---
 apiVersion: v1
 kind: Service
 metadata:
@@ -633,20 +643,23 @@ metadata:
   namespace: gloo-system
 spec:
   ports:
-    - port: 80
-      targetPort: 8080
-      protocol: TCP
-      name: http
-    - port: 443
-      targetPort: 8443
-      protocol: TCP
-      name: https
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  - port: 443
+    targetPort: 8443
+    protocol: TCP
+    name: https
   selector:
     gateway-proxy-id: gateway-proxy
     gateway-proxy: live
   type: LoadBalancer
+
+
 ---
 # Source: gloo/templates/1-gloo-deployment.yaml
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -671,57 +684,61 @@ spec:
     spec:
       serviceAccountName: gloo
       volumes:
-        - name: labels-volume
-          downwardAPI:
-            items:
-              - path: "labels"
-                fieldRef:
-                  fieldPath: metadata.labels
+      - name: labels-volume
+        downwardAPI:
+          items:
+            - path: "labels"
+              fieldRef:
+                fieldPath: metadata.labels
       containers:
-        - image: quay.io/solo-io/gloo:ilackarms
-          imagePullPolicy: IfNotPresent
-          name: gloo
-          resources:
-            requests:
-              cpu: 500m
-              memory: 256Mi
-          securityContext:
-            readOnlyRootFilesystem: true
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 10101
-            capabilities:
-              drop:
-                - ALL
-          ports:
-            - containerPort: 9977
-              name: grpc-xds
-              protocol: TCP
-            - containerPort: 9988
-              name: grpc-validation
-              protocol: TCP
-            - containerPort: 9979
-              name: wasm-cache
-              protocol: TCP
-          volumeMounts:
-            - name: labels-volume
-              mountPath: /etc/gloo
-              readOnly: true
-          env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: START_STATS_SERVER
-              value: "true"
-          readinessProbe:
-            tcpSocket:
-              port: 9977
-            initialDelaySeconds: 1
-            periodSeconds: 2
-            failureThreshold: 10
+      - image: quay.io/solo-io/gloo:1.2.6
+        imagePullPolicy: IfNotPresent
+        name: gloo
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 10101
+          capabilities:
+            drop:
+            - ALL
+        ports:
+        - containerPort: 9977
+          name: grpc-xds
+          protocol: TCP
+        - containerPort: 9988
+          name: grpc-validation
+          protocol: TCP
+        - containerPort: 9979
+          name: wasm-cache
+          protocol: TCP
+        volumeMounts:
+        - name: labels-volume
+          mountPath: /etc/gloo
+          readOnly: true
+        env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: START_STATS_SERVER
+            value: "true"
+          - name: WASM_ENABLED
+            value: "true"
+        readinessProbe:
+          tcpSocket:
+            port: 9977
+          initialDelaySeconds: 1
+          periodSeconds: 2
+          failureThreshold: 10
+
 ---
 # Source: gloo/templates/3-discovery-deployment.yaml
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -746,26 +763,28 @@ spec:
     spec:
       serviceAccountName: discovery
       containers:
-        - image: quay.io/solo-io/discovery:ilackarms
-          imagePullPolicy: IfNotPresent
-          name: discovery
-          securityContext:
-            readOnlyRootFilesystem: true
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 10101
-            capabilities:
-              drop:
-                - ALL
-          env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: START_STATS_SERVER
-              value: "true"
+      - image: quay.io/solo-io/discovery:1.2.6
+        imagePullPolicy: IfNotPresent
+        name: discovery
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 10101
+          capabilities:
+            drop:
+            - ALL
+        env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: START_STATS_SERVER
+            value: "true"
+
 ---
 # Source: gloo/templates/5-gateway-deployment.yaml
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -790,40 +809,40 @@ spec:
     spec:
       serviceAccountName: gateway
       containers:
-        - image: quay.io/solo-io/gateway:ilackarms
-          imagePullPolicy: IfNotPresent
-          name: gateway
-          ports:
-            - containerPort: 8443
-              name: https
-              protocol: TCP
+      - image: quay.io/solo-io/gateway:1.2.6
+        imagePullPolicy: IfNotPresent
+        name: gateway
+        ports:
+          - containerPort: 8443
+            name: https
+            protocol: TCP
 
-          securityContext:
-            readOnlyRootFilesystem: true
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            runAsUser: 10101
-            capabilities:
-              drop:
-                - ALL
-          env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: START_STATS_SERVER
-              value: "true"
-            - name: VALIDATION_MUST_START
-              value: "true"
-          volumeMounts:
-            - mountPath: /etc/gateway/validation-certs
-              name: validation-certs
-          readinessProbe:
-            tcpSocket:
-              port: 8443
-            initialDelaySeconds: 1
-            periodSeconds: 2
-            failureThreshold: 10
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 10101
+          capabilities:
+            drop:
+            - ALL
+        env:
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: START_STATS_SERVER
+            value: "true"
+          - name: VALIDATION_MUST_START
+            value: "true"
+        volumeMounts:
+          - mountPath: /etc/gateway/validation-certs
+            name: validation-certs
+        readinessProbe:
+          tcpSocket:
+            port: 8443
+          initialDelaySeconds: 1
+          periodSeconds: 2
+          failureThreshold: 10
       volumes:
         - name: validation-certs
           secret:
@@ -831,6 +850,8 @@ spec:
             secretName: gateway-validation-certs
 ---
 # Source: gloo/templates/7-gateway-proxy-deployment.yaml
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -860,150 +881,45 @@ spec:
     spec:
       serviceAccountName: gateway-proxy
       containers:
-        - args:
-            - --disable-hot-restart
-          env:
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-          image: quay.io/solo-io/gloo-envoy-wrapper:ilackarms
-          imagePullPolicy: IfNotPresent
-          name: gateway-proxy
-          securityContext:
-            readOnlyRootFilesystem: true
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-              add:
-                - NET_BIND_SERVICE
-          ports:
-            - containerPort: 8080
-              name: http
-              protocol: TCP
-            - containerPort: 8443
-              name: https
-              protocol: TCP
-          volumeMounts:
-            - mountPath: /etc/envoy
-              name: envoy-config
-      volumes:
-        - configMap:
-            name: gateway-proxy-envoy-config
+      - args:
+          - --disable-hot-restart
+        env:
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        image: "quay.io/solo-io/gloo-envoy-wasm-wrapper:1.2.6"
+        imagePullPolicy: IfNotPresent
+        name: gateway-proxy
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+            add:
+            - NET_BIND_SERVICE
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        - containerPort: 8443
+          name: https
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/envoy
           name: envoy-config
+      volumes:
+      - configMap:
+          name: gateway-proxy-envoy-config
+        name: envoy-config
+---
+# Source: gloo/templates/6.5-gateway-certgen-job.yaml
 
----
-# Source: gloo/templates/18-settings.yaml
-apiVersion: gloo.solo.io/v1
-kind: Settings
-metadata:
-  labels:
-    app: gloo
-  name: default
-  namespace: gloo-system
-  # We need this because the Gloo controllers will try to write default settings objects
-  # and if any of them is able to do so before this resource gets applied, installation will fail.
-  annotations:
-    "helm.sh/hook": pre-install
-spec:
-  gloo:
-    xdsBindAddr: "0.0.0.0:9977"
-    invalidConfigPolicy:
-      invalidRouteResponseBody: Gloo Gateway has invalid configuration. Administrators should
-        run `glooctl check` to find and fix config errors.
-      invalidRouteResponseCode: 404
-  discoveryNamespace: gloo-system
-  kubernetesArtifactSource: {}
-  kubernetesConfigSource: {}
-  kubernetesSecretSource: {}
-  refreshRate: 60s
-  gateway:
-    readGatewaysFromAllNamespaces: false
-    validation:
-      proxyValidationServerAddr: gloo:9988
-      alwaysAccept: true
-  discovery:
-    fdsMode: WHITELIST
----
-# Source: gloo/templates/0-namespace.yaml
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: gloo-system
-  labels:
-    app: gloo
-  annotations:
-    "helm.sh/hook": pre-install
----
-# Source: gloo/templates/8-default-gateways.yaml
-apiVersion: gateway.solo.io/v1
-kind: Gateway
-metadata:
-  name: gateway-proxy
-  namespace: gloo-system
-  labels:
-    app: gloo
-  # We need this because the gateway controller will try to write default gateway objects
-  # and if it is able to do so before this resource gets applied, installation will fail.
-  annotations:
-    "helm.sh/hook": pre-install
-spec:
-  bindAddress: "::"
-  bindPort: 8080
-  httpGateway: {}
-  useProxyProto: false
-  ssl: false
-  proxyNames:
-    - gateway-proxy
----
-# Source: gloo/templates/8-default-gateways.yaml
-apiVersion: gateway.solo.io/v1
-kind: Gateway
-metadata:
-  name: gateway-proxy-ssl
-  namespace: gloo-system
-  labels:
-    app: gloo
-  # We need this because the gateway controller will try to write default gateway objects
-  # and if it is able to do so before this resource gets applied, installation will fail.
-  annotations:
-    "helm.sh/hook": pre-install
-spec:
-  bindAddress: "::"
-  bindPort: 8443
-  httpGateway: {}
-  useProxyProto: false
-  ssl: true
-  proxyNames:
-    - gateway-proxy
----
-# Source: gloo/templates/6.5-gateway-certgen-job.yaml
-# The following resources implement the hook cleanup workaround.
-kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: gloo-gateway-secret-create-vwc-update-gloo-system
-  labels:
-    app: gloo
-    gloo: rbac
-  annotations:
-    "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
-    "solo.io/hook-cleanup": "true" # Used internally to mark "hook cleanup" resources
-rules:
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["create", "get", "update"]
-  - apiGroups: ["admissionregistration.k8s.io"]
-    resources: ["validatingwebhookconfigurations"]
-    verbs: ["get", "update"] # .Values.global.glooRbac.create
----
-# Source: gloo/templates/6.5-gateway-certgen-job.yaml
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -1024,7 +940,7 @@ spec:
     spec:
       serviceAccountName: gateway-certgen
       containers:
-        - image: quay.io/solo-io/certgen:ilackarms
+        - image: quay.io/solo-io/certgen:1.2.6
           imagePullPolicy: IfNotPresent
           name: certgen
           env:
@@ -1041,8 +957,8 @@ spec:
   # with --feature-gates="TTLAfterFinished=true". This flag also works with minikube start ...
   # if the feature flag is not enabled in the k8s api server, this setting will be silently ignored at creation time
   ttlSecondsAfterFinished: 60
+
 ---
-# Source: gloo/templates/6.5-gateway-certgen-job.yaml
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -1054,8 +970,9 @@ metadata:
     "helm.sh/hook-weight": "5" # must be executed before cert-gen job
   name: gateway-certgen
   namespace: gloo-system
+
 ---
-# Source: gloo/templates/6.5-gateway-certgen-job.yaml
+
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -1067,15 +984,16 @@ metadata:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "5" # must be executed before cert-gen job
 subjects:
-  - kind: ServiceAccount
-    name: gateway-certgen
-    namespace: gloo-system
+- kind: ServiceAccount
+  name: gateway-certgen
+  namespace: gloo-system
 roleRef:
   kind: ClusterRole
   name: gloo-gateway-secret-create-vwc-update-gloo-system
   apiGroup: rbac.authorization.k8s.io
+
 ---
-# Source: gloo/templates/6.5-gateway-certgen-job.yaml
+
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -1087,14 +1005,15 @@ metadata:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "5" # must be executed before cert-gen job
 rules:
-  - apiGroups: [""]
-    resources: ["secrets"]
-    verbs: ["create", "get", "update"]
-  - apiGroups: ["admissionregistration.k8s.io"]
-    resources: ["validatingwebhookconfigurations"]
-    verbs: ["get", "update"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "get", "update"]
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["validatingwebhookconfigurations"]
+  verbs: ["get", "update"]
+
 ---
-# Source: gloo/templates/6.5-gateway-certgen-job.yaml
+
 # Resources created as hooks are not considered part of a release by Helm. This means that they
 # will not be cleaned up when running `helm uninstall`. The ways to get around this are documented here:
 # https://helm.sh/docs/topics/charts_hooks/#hook-resources-are-not-managed-with-corresponding-releases).
@@ -1121,8 +1040,9 @@ metadata:
     "solo.io/hook-cleanup": "true" # Used internally to mark "hook cleanup" resources
   name: gateway-certgen
   namespace: gloo-system
+
 ---
-# Source: gloo/templates/6.5-gateway-certgen-job.yaml
+
 # The following resources implement the hook cleanup workaround.
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -1136,10 +1056,247 @@ metadata:
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
     "solo.io/hook-cleanup": "true" # Used internally to mark "hook cleanup" resources
 subjects:
-  - kind: ServiceAccount
-    name: gateway-certgen
-    namespace: gloo-system
+- kind: ServiceAccount
+  name: gateway-certgen
+  namespace: gloo-system
 roleRef:
   kind: ClusterRole
   name: gloo-gateway-secret-create-vwc-update-gloo-system
   apiGroup: rbac.authorization.k8s.io
+
+---
+
+# The following resources implement the hook cleanup workaround.
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: gloo-gateway-secret-create-vwc-update-gloo-system
+  labels:
+    app: gloo
+    gloo: rbac
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "solo.io/hook-cleanup": "true" # Used internally to mark "hook cleanup" resources
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "get", "update"]
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["validatingwebhookconfigurations"]
+  verbs: ["get", "update"] # .Values.global.glooRbac.create
+---
+# Source: gloo/templates/8-default-gateways.yaml
+
+
+
+---
+apiVersion: gateway.solo.io/v1
+kind: Gateway
+metadata:
+  name: gateway-proxy
+  namespace: gloo-system
+  labels:
+    app: gloo
+  # We need this because the gateway controller will try to write default gateway objects
+  # and if it is able to do so before this resource gets applied, installation will fail.
+  annotations:
+    "helm.sh/hook": pre-install
+spec:
+  bindAddress: "::"
+  bindPort: 8080
+  httpGateway: {}
+  useProxyProto: false
+  ssl: false
+  proxyNames:
+  - gateway-proxy
+
+---
+
+apiVersion: gateway.solo.io/v1
+kind: Gateway
+metadata:
+  name: gateway-proxy-ssl
+  namespace: gloo-system
+  labels:
+    app: gloo
+  # We need this because the gateway controller will try to write default gateway objects
+  # and if it is able to do so before this resource gets applied, installation will fail.
+  annotations:
+    "helm.sh/hook": pre-install
+spec:
+  bindAddress: "::"
+  bindPort: 8443
+  httpGateway: {}
+  useProxyProto: false
+  ssl: true
+  proxyNames:
+  - gateway-proxy
+---
+# Source: gloo/templates/18-settings.yaml
+
+
+apiVersion: gloo.solo.io/v1
+kind: Settings
+metadata:
+  labels:
+    app: gloo
+  name: default
+  namespace: gloo-system
+  # We need this because the Gloo controllers will try to write default settings objects
+  # and if any of them is able to do so before this resource gets applied, installation will fail.
+  annotations:
+    "helm.sh/hook": pre-install
+spec:
+  gloo:
+    xdsBindAddr: "0.0.0.0:9977"
+    invalidConfigPolicy:
+      invalidRouteResponseBody: Gloo Gateway has invalid configuration. Administrators should
+        run `glooctl check` to find and fix config errors.
+      invalidRouteResponseCode: 404
+      
+  discoveryNamespace: gloo-system
+  kubernetesArtifactSource: {}
+  kubernetesConfigSource: {}
+  kubernetesSecretSource: {}
+  refreshRate: 60s
+  gateway:
+    readGatewaysFromAllNamespaces: false
+    validation:
+      proxyValidationServerAddr: gloo:9988
+      alwaysAccept: true
+  discovery:
+    fdsMode: WHITELIST
+
+---
+# Source: gloo/templates/0-namespace.yaml
+
+---
+# Source: gloo/templates/10-ingress-deployment.yaml
+
+
+---
+# Source: gloo/templates/100-crds.yaml
+
+---
+# Source: gloo/templates/11-ingress-proxy-deployment.yaml
+
+---
+# Source: gloo/templates/12-ingress-proxy-configmap.yaml
+
+---
+# Source: gloo/templates/13-ingress-proxy-service.yaml
+
+---
+# Source: gloo/templates/14-clusteringress-proxy-deployment.yaml
+
+
+---
+# Source: gloo/templates/15-clusteringress-proxy-configmap.yaml
+
+---
+# Source: gloo/templates/16-clusteringress-proxy-service.yaml
+
+
+---
+# Source: gloo/templates/21-namespace-clusterrole-ingress.yaml
+
+---
+# Source: gloo/templates/22-namespace-clusterrole-knative.yaml
+
+---
+# Source: gloo/templates/24-namespace-clusterrolebinding-ingress.yaml
+
+---
+# Source: gloo/templates/25-namespace-clusterrolebinding-knative.yaml
+
+---
+# Source: gloo/templates/26-knative-external-proxy-deployment.yaml
+
+
+---
+# Source: gloo/templates/27-knative-external-proxy-configmap.yaml
+
+
+---
+# Source: gloo/templates/28-knative-external-proxy-service.yaml
+
+
+---
+# Source: gloo/templates/29-knative-internal-proxy-deployment.yaml
+
+
+---
+# Source: gloo/templates/30-knative-internal-proxy-configmap.yaml
+
+
+---
+# Source: gloo/templates/31-knative-internal-proxy-service.yaml
+
+
+---
+# Source: gloo/templates/6-access-logger-deployment.yaml
+
+---
+# Source: gloo/templates/6-access-logger-service.yaml
+
+
+---
+# Source: gloo/templates/5-gateway-validation-webhook-configuration.yaml
+
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: gloo-gateway-validation-webhook-gloo-system
+  labels:
+    app: gloo
+    gloo: gateway
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "5" # must be executed before cert-gen job
+webhooks:
+- name: gateway.gloo-system.svc  # must be a domain with at least three segments separated by dots
+  clientConfig:
+    service:
+      name: gateway
+      namespace: gloo-system
+      path: "/validation"
+    caBundle: "" # update manually or use certgen job
+  rules:
+  - operations: [ "CREATE", "UPDATE", "DELETE" ]
+    apiGroups: ["gateway.solo.io"]
+    apiVersions: ["v1"]
+    resources: ["*"]
+  failurePolicy: Ignore
+
+---
+
+# Resources created as hooks are not considered part of a release by Helm. This means that they
+# will not be cleaned up when running `helm uninstall`.
+# See https://helm.sh/docs/topics/charts_hooks/#hook-resources-are-not-managed-with-corresponding-releases).
+# To be able to clean up the above hook resource, we redefine it as a `post-delete` hook with a `hook-delete-policy`.
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: gloo-gateway-validation-webhook-gloo-system
+  labels:
+    app: gloo
+    gloo: gateway
+  annotations:
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "solo.io/hook-cleanup": "true" # Used internally to mark "hook cleanup" resources
+webhooks:
+- name: gateway.gloo-system.svc
+  clientConfig:
+    service:
+      name: gateway
+      namespace: gloo-system
+      path: "/validation"
+    caBundle: ""
+  rules:
+  - operations: [ "CREATE", "UPDATE", "DELETE" ]
+    apiGroups: ["gateway.solo.io"]
+    apiVersions: ["v1"]
+    resources: ["*"]
+  failurePolicy: Ignore
