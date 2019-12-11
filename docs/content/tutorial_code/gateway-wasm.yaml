@@ -1,0 +1,21 @@
+apiVersion: gateway.solo.io/v1
+kind: Gateway
+metadata:
+  labels:
+    app: gloo
+  name: gateway-proxy
+  namespace: gloo-system
+spec:
+  bindAddress: '::'
+  bindPort: 8080
+  httpGateway:
+    plugins:
+      extensions:
+        configs:
+          wasm:
+            image: webassemblyhub.io/christian-posta/test:v0.1
+            name: christian
+            root_id: add_header_root_id
+  proxyNames:
+  - gateway-proxy
+  useProxyProto: false
