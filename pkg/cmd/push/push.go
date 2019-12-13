@@ -51,8 +51,10 @@ wasme push webassemblyhub.io/my/filter:v1 filter.wasm
 }
 
 func runPush(opts pushOptions) error {
+	resolver, authorizer := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
 	pusher := push.PusherImpl{
-		Resolver: resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...),
+		Resolver:   resolver,
+		Authorizer: authorizer,
 	}
 	return pusher.Push(context.Background(), push.NewLocalFilter(opts.code, opts.config, opts.targetRef))
 }

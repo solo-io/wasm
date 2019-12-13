@@ -7,7 +7,8 @@ import (
 )
 
 func NewDefaultCache() cache.Cache {
-	resolver := resolver.NewResolver("", "", true, false)
+	// cache doesn't need authorizer as it doesn't push
+	resolver, _ := resolver.NewResolver("", "", true, false)
 	puller := pull.NewPuller(resolver)
 
 	return &cache.CacheImpl{
