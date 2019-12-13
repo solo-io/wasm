@@ -1,9 +1,9 @@
 package defaults
 
 import (
-	"github.com/solo-io/extend-envoy/pkg/cache"
-	"github.com/solo-io/extend-envoy/pkg/pull"
-	"github.com/solo-io/extend-envoy/pkg/resolver"
+	"github.com/solo-io/wasme/pkg/cache"
+	"github.com/solo-io/wasme/pkg/pull"
+	"github.com/solo-io/wasme/pkg/resolver"
 )
 
 func NewDefaultCache() cache.Cache {

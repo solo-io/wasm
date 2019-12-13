@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/solo-io/extend-envoy/pkg/cmd"
+	"github.com/solo-io/wasme/pkg/cmd"
 )
 
 /*
-extend-envoy create
+wasme create
 -> initializes a bazel repo template
 
-extend-envoy push
+wasme push
 
 */
 

@@ -1,8 +1,11 @@
 .vscode/
-*/bazel-*
+.idea
 
 # go bin
-extend-envoy
+wasme
 
 # rust output
 target
+
+# example output
+_output/
