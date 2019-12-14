@@ -29,20 +29,31 @@ petstore-5dcf5d6b66-n8tjt   1/1     Running   0          2m20s
 
 ### Deploying Envoy
 
-In this tutorial, we'll use Gloo, an API Gateway based on Envoy that has built-in wasm support but these steps should also work for base Envoy. 
+In this tutorial, we'll use Gloo, an API Gateway based on Envoy that has built-in wasm support but these steps should also work for base Envoy.
+
+First, install gloo by applying [the manifest](/tutorial_code/gloo.yaml).
 
 ```shell
 $  kubectl apply -f gloo.yaml
 ```
 
-*****
-This section needs love... it's not working yet ^^ we need a nice way to install Gloo
-****
+Gloo will be installed to the `gloo-system` namespace.
+
+{{% notice note %}}
+You can deploy your own gloo (version 1.2.10 and above), by enabling the experimental WASM support when 
+installing. When installing you need to set the "global.wasm.enabled" flag to true. If installing
+with glooctl, you can use the following command:
+```shell
+glooctl install gateway -n gloo-system --values <(echo '{"namespace":{"create":true},"crds":{"create":true},"global":{"wasm":{"enabled":true}}}')
+```
+You can add the `--dry-run` flag to glooctl to generate a yaml for you instead of installing directly.
+{{% /notice %}}
 
 ### Verify set up
 
 Lastly, we'll set up our routing rules to be able to call our `petstore` service. Let's add a route to the routing table:
 
+Download and apply the [virtual service manifest](/tutorial_code/default-virtualservice.yaml)
 ```shell
 $  kubectl apply -f default-virtualservice.yaml
 ```
@@ -178,9 +189,10 @@ Now let's push to the webassemblyhub.io registry.
 ```shell
 $  wasme push webassemblyhub.io/christian-posta/test:v0.1 ./_output_/filter.wasm
 ```
-
-NOTE: The tag name to use is
+{{% notice note %}}
+The tag name to use is
 `webassemblyhub.io/<your-git-username>/<whatever-name>:<whatever-version>`
+{{% /notice %}}
 
 When you've pushed, you should be able to see your new module in the registry:
 
