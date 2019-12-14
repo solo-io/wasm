@@ -31,7 +31,7 @@ petstore-5dcf5d6b66-n8tjt   1/1     Running   0          2m20s
 
 In this tutorial, we'll use Gloo, an API Gateway based on Envoy that has built-in wasm support but these steps should also work for base Envoy.
 
-First, install gloo by applying [the manifest](/tutorial_code/gloo.yaml).
+First, install gloo by applying [the manifest](../gloo.yaml).
 
 ```shell
 $  kubectl apply -f gloo.yaml
@@ -53,7 +53,7 @@ You can add the `--dry-run` flag to glooctl to generate a yaml for you instead o
 
 Lastly, we'll set up our routing rules to be able to call our `petstore` service. Let's add a route to the routing table:
 
-Download and apply the [virtual service manifest](/tutorial_code/default-virtualservice.yaml)
+Download and apply the [virtual service manifest](../default-virtualservice.yaml)
 ```shell
 $  kubectl apply -f default-virtualservice.yaml
 ```
@@ -174,7 +174,7 @@ Opening browser for login. If the browser did not open for you, please go to:  h
 
 You should see a GitHub OAuth screen:
 
-![](/img/wasme_login.png)
+![](../../img/wasme_login.png)
 
 Click the "Authorize" button at the bottom and continue.
 
@@ -326,7 +326,7 @@ Created PR: https://github.com/solo-io/wasme/pull/17
 
 If you open the `https://github.com/solo-io/wasme/pull/17` URL, you should see a PR was created in the `wasme` GitHub repo:
 
-![](/img/test-pr.png)
+![](../../img/test-pr.png)
 
 ## Pull Request
 
