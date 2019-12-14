@@ -138,7 +138,7 @@ func (p *PusherImpl) checkAuth(ctx context.Context, ref string) {
 		url.Scheme = "http"
 	}
 	resp, err := http.Get(url.String())
-	if resp.StatusCode == http.StatusUnauthorized {
+	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
 		p.Authorizer.AddResponses(ctx, []*http.Response{resp})
 	}
 }
