@@ -42,7 +42,7 @@ steps:
       - 'GOPATH=/workspace/gopath'
       - 'GCLOUD_PROJECT_ID=$PROJECT_ID'
     secretEnv: ['GITHUB_TOKEN']
-    id: 'release-assets-docs'
+    id: 'release-build-container'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
     args: ['upload-github-release-assets', 'publish-docs', '-B']
