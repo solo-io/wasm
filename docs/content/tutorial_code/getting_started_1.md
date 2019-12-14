@@ -219,13 +219,11 @@ spec:
   bindAddress: '::'
   bindPort: 8080
   httpGateway:
-    plugins:
-      extensions:
-        configs:
-          wasm:
-            image: webassemblyhub.io/christian-posta/test:v0.1
-            name: christian
-            root_id: add_header_root_id
+    options:
+      wasm:
+        image: webassemblyhub.io/christian-posta/test:v0.1
+        name: christian
+        root_id: add_header_root_id
   proxyNames:
   - gateway-proxy
   useProxyProto: false
