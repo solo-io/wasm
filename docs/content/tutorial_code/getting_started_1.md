@@ -166,7 +166,7 @@ Before we use our new filter.wasm module, let's push it into a registry that can
 To do that, let's login to the `webassemblyhub.io` using GitHub as the OAuth provider. From the CLI:
 
 ```shell
-$  wasm login
+$  wasme login
 
 Using port: 60632
 Opening browser for login. If the browser did not open for you, please go to:  https://webassemblyhub.io/authorize?port=60632
