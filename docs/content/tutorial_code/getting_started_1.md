@@ -155,7 +155,7 @@ From the docker container using the `wasme` tooling:
 $  wasme build . 
 ```
 
-This will download all of the necessary dependencies and compile the output `filter.wasm` into the `_output` folder if using the `wasme` tooling. Otherwise you can find filter in `./bazel-bin/filter.wasm`.
+This will download all of the necessary dependencies and compile the output `filter.wasm` into the current folder if using the `wasme` tooling. Otherwise you can find filter in `./bazel-bin/filter.wasm`.
 
 Now that we've built the `wasm` module, let's package it and load it into a registry so we can consume it in our Envoy proxy.
 
@@ -187,7 +187,7 @@ success ! you are now authenticated
 Now let's push to the webassemblyhub.io registry. 
 
 ```shell
-$  wasme push webassemblyhub.io/christian-posta/test:v0.1 ./_output_/filter.wasm
+$  wasme push webassemblyhub.io/christian-posta/test:v0.1 ./filter.wasm
 ```
 {{% notice note %}}
 The tag name to use is
