@@ -5,19 +5,21 @@ go 1.13
 require (
 	github.com/containerd/containerd v1.3.0
 	github.com/deislabs/oras v0.7.0
-	github.com/docker/distribution v2.7.1+incompatible
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/google/go-github/v28 v28.1.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
+	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
 	github.com/solo-io/gloo v1.2.10
 	github.com/solo-io/go-utils v0.11.0
 	github.com/spf13/cobra v0.0.5
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	gopkg.in/AlecAivazis/survey.v1 v1.8.7
+	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
+	k8s.io/api v0.0.0
 )
 
 // Pinned to kubernetes-1.14.1
