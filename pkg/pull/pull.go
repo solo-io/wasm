@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/solo-io/wasme/pkg/config"
 	"io"
 
 	"github.com/containerd/containerd/images"
@@ -26,7 +27,9 @@ func (f *FilterImpl) Configs() []FilterConfig {
 }
 
 type Puller interface {
-	Pull(ctx context.Context, image string) (Filter, error)
+	Pull(ctx context.Context, ref string) ([]ocispec.Descriptor, error)
+	PullFilter(ctx context.Context, image string) (Filter, error)
+	PullConfigFile(ctx context.Context, ref string) (*config.Config, error)
 	PullCodeDescriptor(ctx context.Context, ref string) (ocispec.Descriptor, error)
 }
 type PullerImpl struct {
@@ -39,29 +42,38 @@ func NewPuller(resolver remotes.Resolver) *PullerImpl {
 	}
 }
 
-func (p *PullerImpl) PullCodeDescriptor(ctx context.Context, ref string) (ocispec.Descriptor, error) {
+func (p *PullerImpl) Pull(ctx context.Context, ref string) ([]ocispec.Descriptor, error) {
 
 	store := content.NewMemoryStore()
 
 	name, desc, err := p.Resolver.Resolve(ctx, ref)
 	if err != nil {
-		return ocispec.Descriptor{}, err
+		return nil, err
 	}
 
 	fetcher, err := p.Resolver.Fetcher(ctx, ref)
 	if err != nil {
-		return ocispec.Descriptor{}, err
+		return nil, err
 	}
 	_, err = remotes.FetchHandler(store, fetcher)(ctx, desc)
 	if err != nil {
-		return ocispec.Descriptor{}, err
+		return nil, err
 	}
 
 	children, err := images.ChildrenHandler(store)(ctx, desc)
 	if err != nil {
-		return ocispec.Descriptor{}, err
+		return nil, err
 	}
 	fmt.Printf("%+v %+v %+v %+v\n", name, children, desc, err)
+	return children, nil
+}
+
+func (p *PullerImpl) PullCodeDescriptor(ctx context.Context, ref string) (ocispec.Descriptor, error) {
+
+	children, err := p.Pull(ctx, ref)
+	if err != nil {
+		return ocispec.Descriptor{}, err
+	}
 
 	for _, child := range children {
 		if child.MediaType == model.CodeMediaType {
@@ -71,7 +83,22 @@ func (p *PullerImpl) PullCodeDescriptor(ctx context.Context, ref string) (ocispe
 	return ocispec.Descriptor{}, errors.New("code not found")
 }
 
-func (p *PullerImpl) Pull(ctx context.Context, ref string) (Filter, error) {
+func (p *PullerImpl) PullConfigFile(ctx context.Context, ref string) (*config.Config, error) {
+	children, err := p.Pull(ctx, ref)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, child := range children {
+		if child.MediaType == model.ConfigMediaType {
+
+			return child, nil
+		}
+	}
+	return nil, errors.New("config not found")
+}
+
+func (p *PullerImpl) PullFilter(ctx context.Context, ref string) (Filter, error) {
 
 	desc, err := p.PullCodeDescriptor(ctx, ref)
 	if err != nil {

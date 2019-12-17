@@ -2,8 +2,9 @@ package push
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"github.com/solo-io/gloo/pkg/utils/protoutils"
+	"github.com/solo-io/wasme/pkg/config"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -19,34 +20,34 @@ import (
 	"github.com/solo-io/wasme/pkg/model"
 )
 
-const (
-	annotationConfig   = "$config"
-	annotationManifest = "$manifest"
-)
 
 type LocalFilter interface {
 	CodeFilename() string
-	ConfigFilename() string
+	DescriptorsFilename() string
 	Image() string
+	RootId() string
 }
 
 type localFilterImpl struct {
-	codeFilename   string
-	configFilename string
-	image          string
+	codeFilename        string
+	descriptorsFilename string
+	image               string
+	rootId              string
 }
 
-func NewLocalFilter(codeFilename, configFilename, image string) *localFilterImpl {
+func NewLocalFilter(codeFilename, descriptorsFilename, image, rootId string) *localFilterImpl {
 	return &localFilterImpl{
-		codeFilename:   codeFilename,
-		configFilename: configFilename,
-		image:          image,
+		codeFilename:        codeFilename,
+		descriptorsFilename: descriptorsFilename,
+		image:               image,
+		rootId:              rootId,
 	}
 }
 
-func (l *localFilterImpl) CodeFilename() string   { return l.codeFilename }
-func (l *localFilterImpl) ConfigFilename() string { return l.configFilename }
-func (l *localFilterImpl) Image() string          { return l.image }
+func (l *localFilterImpl) CodeFilename() string        { return l.codeFilename }
+func (l *localFilterImpl) DescriptorsFilename() string { return l.descriptorsFilename }
+func (l *localFilterImpl) Image() string               { return l.image }
+func (l *localFilterImpl) RootId() string              { return l.rootId }
 
 type Pusher interface {
 	Push(ctx context.Context, f LocalFilter) error
@@ -57,17 +58,15 @@ type PusherImpl struct {
 	Authorizer docker.Authorizer
 }
 
-type Config struct {
+func makeConfig(localFilter LocalFilter) *config.Config {
+	return &config.Config{
+		Roots: []*config.Root{{Id: localFilter.RootId()}},
+	}
 }
 
-func makeConfig(localFilter LocalFilter) Config {
-	// TODO: something smarter
-	return Config{}
-}
+func writeConfig(cfg *config.Config) (string, func(), error) {
 
-func writeConfig(cfg Config) (string, func(), error) {
-
-	bytes, err := json.Marshal(&cfg)
+	bytes, err := protoutils.MarshalBytes(cfg)
 	if err != nil {
 		return "", nil, err
 	}
@@ -100,7 +99,7 @@ func (p *PusherImpl) Push(ctx context.Context, localFilter LocalFilter) error {
 	}
 	defer cleanup()
 
-	file, err := store.Add(annotationConfig, model.ConfigMediaType, filename)
+	file, err := store.Add(config.ConfigFilename, model.ConfigMediaType, filename)
 	if err != nil {
 		return err
 	}
@@ -146,8 +145,8 @@ func (p *PusherImpl) checkAuth(ctx context.Context, ref string) {
 func getFiles(localFilter LocalFilter, store *content.FileStore) ([]ocispec.Descriptor, error) {
 	var files []ocispec.Descriptor
 
-	if cfg := localFilter.ConfigFilename(); cfg != "" { // TODO : error here instead?
-		cfgFile, err := store.Add("config.proto.bin", model.ProtoSchemaMediaType, cfg)
+	if descriptors := localFilter.DescriptorsFilename(); descriptors != "" { // TODO : error here instead?
+		cfgFile, err := store.Add("config.proto.bin", model.ProtoSchemaMediaType, descriptors)
 		if err != nil {
 			return nil, err
 		}
