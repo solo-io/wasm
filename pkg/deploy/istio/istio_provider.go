@@ -1,13 +1,9 @@
 package istio
 
 import (
-	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
-	"github.com/gogo/protobuf/types"
-	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/api/v2/config"
 	"github.com/solo-io/go-utils/protoutils"
-	"github.com/solo-io/solo-kit/pkg/api/external/envoy/api/v2/core"
 	"github.com/solo-io/wasme/pkg/deploy"
-	"github.com/solo-io/wasme/pkg/util"
+	envoyfilter "github.com/solo-io/wasme/pkg/deploy/filter"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	versionedclient "istio.io/client-go/pkg/clientset/versioned"
@@ -15,7 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// selects the istio proxies to which to deploy the wasm filter(s)
+// selects the istio proxies (and their listeners) to which to deploy the wasm filter(s)
 type Selector struct {
 	Namespaces     []string
 	WorkloadLabels map[string]string
@@ -89,46 +85,9 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 
 // create the spec for the EnvoyFilter crd
 func makeSpec(filter *deploy.Filter, listenerType networkingv1alpha3.EnvoyFilter_PatchContext, labels map[string]string) networkingv1alpha3.EnvoyFilter {
-	filterCfg := &config.WasmService{
-		Config: &config.PluginConfig{
-			Name:          filter.ID,
-			RootId:        filter.RootID,
-			Configuration: filter.Config,
-			VmConfig: &config.VmConfig{
-				Runtime: "envoy.wasm.runtime.v8",
-				Code: &core.AsyncDataSource{
-					Specifier: &core.AsyncDataSource_Remote{
-						Remote: &core.RemoteDataSource{
-							HttpUri: &core.HttpUri{
-								Uri: "TODO: URI",
-								HttpUpstreamType: &core.HttpUri_Cluster{
-									Cluster: "TODO: CLUSTER",
-								},
-								Timeout: &types.Duration{
-									Seconds: 5, // TODO: customize
-								},
-							},
-							Sha256: "TODO: SHA256",
-						},
-					},
-				},
-			},
-		},
-	}
+	wasmFilterConfig := envoyfilter.MakeWasmFilter(filter)
 
-	marshalledConf, err := util.MarshalStruct(filterCfg)
-	if err != nil {
-		// this should NEVER HAPPEN!
-		panic(err)
-	}
-
-	wasmFilterConfig := &envoyhttp.HttpFilter{
-		Name: "envoy.filters.http.wasm",
-		ConfigType: &envoyhttp.HttpFilter_Config{
-			Config: marshalledConf,
-		},
-	}
-
+	// here we need to use the gogo proto marshal
 	patchValue, err := protoutils.MarshalStruct(wasmFilterConfig)
 	if err != nil {
 		// this should NEVER HAPPEN!
@@ -158,12 +117,8 @@ func makeSpec(filter *deploy.Filter, listenerType networkingv1alpha3.EnvoyFilter
 			},
 			Patch: &networkingv1alpha3.EnvoyFilter_Patch{
 				Operation: networkingv1alpha3.EnvoyFilter_Patch_INSERT_BEFORE,
-				Value: patchValue,
+				Value:     patchValue,
 			},
 		}},
 	}
 }
-
-/*
-
- */

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/solo-io/wasme/pkg/config"
 	"io"
+	"io/ioutil"
 
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/remotes"
@@ -92,7 +93,22 @@ func (p *PullerImpl) PullConfigFile(ctx context.Context, ref string) (*config.Co
 	for _, child := range children {
 		if child.MediaType == model.ConfigMediaType {
 
-			return child, nil
+			fetcher, err := p.Resolver.Fetcher(ctx, ref)
+			if err != nil {
+				return nil, err
+			}
+
+			rc, err := fetcher.Fetch(ctx, child)
+			if err != nil {
+				return nil, err
+			}
+
+			b, err := ioutil.ReadAll(rc)
+			if err != nil {
+				return nil, err
+			}
+
+			return config.FromBytes(b)
 		}
 	}
 	return nil, errors.New("config not found")
