@@ -17,12 +17,6 @@ import (
 	"io/ioutil"
 )
 
-// selects the listeners to which to deploy the wasm filter(s)
-type Selector struct {
-	// if empty, select all
-	Listeners []string
-}
-
 type Provider struct {
 	Ctx context.Context
 
@@ -32,11 +26,11 @@ type Provider struct {
 	// output config
 	Output io.Writer
 
+	// the destination for storing the filter on the local filesystem
+	FilterPath string
+
 	// Use JSON instead of YAML for config (defaults to false)
 	UseJsonConfig bool
-
-	// used to determine the listeners to which we apply the filters
-	Selector Selector
 }
 
 func (p *Provider) getConfig() (*envoy_config_bootstrap_v2.Bootstrap, error) {
@@ -80,7 +74,7 @@ func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
 		return err
 	}
 
-	if err := addFilterToListeners(filter, cfg.GetStaticResources().GetListeners()); err != nil {
+	if err := addFilterToListeners(filter, cfg.GetStaticResources().GetListeners(), p.FilterPath); err != nil {
 		return err
 	}
 
@@ -123,7 +117,10 @@ func forEachHcm(listeners []*envoy_api_v2.Listener, fn func(networkFilter *envoy
 	return nil
 }
 
-func addFilterToListeners(filter *deploy.Filter, listeners []*envoy_api_v2.Listener) error {
+func addFilterToListeners(filter *deploy.Filter, listeners []*envoy_api_v2.Listener, filterPath string) error {
+
+	wasmFilter := envoyfilter.MakeWasmFilter(filter, envoyfilter.MakeLocalDatasource(filterPath))
+
 	return forEachHcm(listeners, func(networkFilter *envoy_api_v2_listener.Filter, cfg *envoy_config_filter_network_http_connection_manager_v2.HttpConnectionManager) error {
 		for i, httpFilter := range cfg.GetHttpFilters() {
 			if httpFilter.GetName() == wasmeutil.WasmFilterName {
@@ -141,7 +138,7 @@ func addFilterToListeners(filter *deploy.Filter, listeners []*envoy_api_v2.Liste
 
 			if httpFilter.GetName() == util.Router {
 				// insert the filter before the router
-				cfg.HttpFilters = append(cfg.HttpFilters[:i], envoyfilter.MakeWasmFilter(filter), httpFilter)
+				cfg.HttpFilters = append(cfg.HttpFilters[:i], wasmFilter, httpFilter)
 
 				// update the HCM with our filter
 				cfgStruct, err := wasmeutil.MarshalStruct(cfg)

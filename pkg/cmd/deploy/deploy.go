@@ -1,31 +1,16 @@
 package deploy
 
 import (
-	"bytes"
 	"fmt"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	v1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
-	"github.com/solo-io/wasme/pkg/util"
 	"github.com/spf13/cobra"
-	"path/filepath"
 )
 
 var log = logrus.StandardLogger()
 
-const (
-	Provider_Gloo  = "gloo"
-	Provider_Istio = "istio"
-	Provider_Envoy = "envoy"
-)
-
-var SupportedProviders = []string{
-	Provider_Gloo,
-	Provider_Istio,
-	Provider_Envoy,
-}
-
 type deployOptions struct {
-	provider    string
+	provider        string
 	operation       string
 	dryRun          bool
 	injectName      string
@@ -33,50 +18,93 @@ type deployOptions struct {
 }
 
 func DeployCmd() *cobra.Command {
-	var opts deployOptions
+	opts := &options{}
 	cmd := &cobra.Command{
-		Use:   "deploy DEST_DIRECTORY",
+		Use:   "deploy gloo|istio|envoy <image> --id=<unique id> [--config=<inline string>] [--root-id=<root id>]",
 		Short: "Deploy an Envoy WASM Filter to the data plane (Envoy proxies).",
 		Long: `Deploys an Envoy WASM Filter to Envoy instances.
 
-Deploy contains a subcommand for each 
+You must provide a value for --id which will become the unique ID of the deployed filter. When using --provider=istio, the ID must be a valid Kubernetes resource name.
+
+You must specify --root-id unless a default root id is provided in the image configuration. Use --root-id to select the filter to run if the wasm image contains more than one filter.
+
 `,
 		Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return fmt.Errorf("invalid number of arguments")
 			}
-			opts.destDir = args[0]
+			opts.filter.Image = args[0]
+			if opts.filter.ID == "" {
+				return errors.Errorf("--id cannot be empty")
+			}
 			return runDeploy(opts)
 		},
 	}
-	cmd.Flags().StringVarP(&opts.operation, "operation", "o", "_output/filter.wasm", "path to the output .wasm file. Nonexistent directories will be created.")
+	opts.addToFlags(cmd.PersistentFlags())
+
+	cmd.AddCommand(
+		deployGlooCmd(opts),
+	)
 
 	return cmd
 }
 
-func runDeploy(opts deployOptions) error {
-	destDir, err := filepath.Abs(opts.destDir)
+func deployGlooCmd(opts *options) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "gloo <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels <key1=val1,key2=val2>",
+		Short: "Deploy an Envoy WASM Filter to the Gloo Gateway Proxies (Envoy).",
+		Long: `Deploys an Envoy WASM Filter to Gloo Gateway Proxies.
+
+wasme uses the Gloo Gateway CR to pull and run wasm filters.
+
+Use --namespaces to constrain the namespaces of Gateway CRs to update.
+
+Use --labels to use a match Gateway CRs by label.
+`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.providerType = Provider_Gloo
+			return runDeploy(opts)
+		},
+	}
+
+	opts.glooOpts.addToFlags(cmd.Flags())
+
+	return cmd
+}
+
+func deployLocalCmd(opts *options) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "envoy <>",
+		Short: "Configure a local instance of Envoy to run a WASM Filter.",
+		Long: `
+Unlike ` + "`" + `wasme deploy gloo` + "`" + ` and ` + "`" + `wasme deploy istio` + "`" + `, ` + "`" + `wasme deploy envoy` + "`" + ` only outputs the Envoy configuration required to run the filter with Envoy.
+
+Launch Envoy using the output configuration to run the wasm filter.
+
+`,
+		Args: cobra.MinimumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.providerType = Provider_Envoy
+			return runDeploy(opts)
+		},
+	}
+
+	opts.localOpts.addToFlags(cmd.Flags())
+
+	return cmd
+}
+
+func runDeploy(opts *options) error {
+	deployer, err := makeDeployer(opts)
 	if err != nil {
 		return err
 	}
 
-	// currently only supports CPP
-	reader := bytes.NewBuffer(cppTarBytes)
+	if opts.remove {
+		return deployer.RemoveFilter(&opts.filter)
+	}
 
-	log.Infof("extracting %v bytes to %v", len(cppTarBytes), destDir)
-
-	return util.Untar(destDir, reader)
-}
-
-func makeDeployCommand(provider Provider) {
-
-}
-
-func deployGloo() error {
-
-}
-
-func updateGateway(gw *v1.Gateway) error {
-
+	return deployer.ApplyFilter(&opts.filter)
 }

@@ -58,7 +58,11 @@ func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
 			write = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(ns).Create
 		}
 
-		envoyFilter.Spec = makeSpec(filter, p.Selector.ListenerType, p.Selector.WorkloadLabels)
+		// TODO: finish these when istio ready
+		cacheURI := "TODO"
+		cacheCluster := "TODO"
+
+		envoyFilter.Spec = makeSpec(filter, p.Selector.ListenerType, p.Selector.WorkloadLabels, cacheURI, cacheCluster)
 
 		// write the created/updated EnvoyFilter
 		if _, err := write(envoyFilter); err != nil {
@@ -84,8 +88,9 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 }
 
 // create the spec for the EnvoyFilter crd
-func makeSpec(filter *deploy.Filter, listenerType networkingv1alpha3.EnvoyFilter_PatchContext, labels map[string]string) networkingv1alpha3.EnvoyFilter {
-	wasmFilterConfig := envoyfilter.MakeWasmFilter(filter)
+func makeSpec(filter *deploy.Filter, listenerType networkingv1alpha3.EnvoyFilter_PatchContext, labels map[string]string, cacheUri, cacheCluster string) networkingv1alpha3.EnvoyFilter {
+
+	wasmFilterConfig := envoyfilter.MakeWasmFilter(filter, envoyfilter.MakeRemoteDataSource(cacheUri, cacheCluster))
 
 	// here we need to use the gogo proto marshal
 	patchValue, err := protoutils.MarshalStruct(wasmFilterConfig)

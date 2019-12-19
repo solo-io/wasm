@@ -4,14 +4,12 @@ import (
 	"context"
 	"github.com/pkg/errors"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
-	"github.com/solo-io/gloo/projects/gateway/pkg/api/v1/kube/client/clientset/versioned"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/options/wasm"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
 	"github.com/solo-io/wasme/pkg/deploy"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // selects the gateways to which to deploy the wasm filter(s)
@@ -23,7 +21,7 @@ type Selector struct {
 type Provider struct {
 	Ctx context.Context
 
-	GatewayClient versioned.Interface
+	GatewayClient gatewayv1.GatewayClient
 
 	// used to determine the workloads and gateways to which we apply the filters
 	Selector Selector
@@ -36,14 +34,17 @@ func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
 		namespaces = []string{v1.NamespaceAll}
 	}
 	for _, ns := range namespaces {
-		gateways, err := p.GatewayClient.GatewayV1().Gateways(ns).List(metav1.ListOptions{})
+		gateways, err := p.GatewayClient.List(ns, clients.ListOpts{
+			Ctx:      p.Ctx,
+			Selector: p.Selector.GatewayLabels,
+		})
 		if err != nil {
 			return err
 		}
 
 		for _, gw := range gateways {
-			if err := appendWasmConfig(filter, gw); err != nil {
-				contextutils.LoggerFrom(p.Ctx).Warnf("skipping gateway %v.%v", gw.Metadata.Ref())
+			if err := AppendWasmConfig(filter, gw); err != nil {
+				contextutils.LoggerFrom(p.Ctx).Warnf("skipping gateway %v", gw.Metadata.Ref())
 				continue
 			}
 		}
@@ -83,7 +84,7 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 
 // TODO: currently gloo only supports 1 wasm filter
 // when it is updated, this should become an APPEND
-func appendWasmConfig(filter *deploy.Filter, gateway *gatewayv1.Gateway) error {
+func AppendWasmConfig(filter *deploy.Filter, gateway *gatewayv1.Gateway) error {
 	httpGw := gateway.GetHttpGateway()
 	if httpGw == nil {
 		return errors.Errorf("must contain httpGateway field")

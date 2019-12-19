@@ -9,7 +9,37 @@ import (
 	"github.com/solo-io/wasme/pkg/util"
 )
 
-func MakeWasmFilter(filter *deploy.Filter) *envoyhttp.HttpFilter{
+func MakeRemoteDataSource(uri, cluster string) *core.AsyncDataSource {
+	return &core.AsyncDataSource{
+		Specifier: &core.AsyncDataSource_Remote{
+			Remote: &core.RemoteDataSource{
+				HttpUri: &core.HttpUri{
+					Uri: uri,
+					HttpUpstreamType: &core.HttpUri_Cluster{
+						Cluster: cluster,
+					},
+					Timeout: &types.Duration{
+						Seconds: 5, // TODO: customize
+					},
+				},
+			},
+		},
+	}
+}
+
+func MakeLocalDatasource(path string) *core.AsyncDataSource {
+	return &core.AsyncDataSource{
+		Specifier: &core.AsyncDataSource_Local{
+			Local: &core.DataSource{
+				Specifier: &core.DataSource_Filename{
+					Filename: path,
+				},
+			},
+		},
+	}
+}
+
+func MakeWasmFilter(filter *deploy.Filter, dataSrc *core.AsyncDataSource) *envoyhttp.HttpFilter {
 	filterCfg := &config.WasmService{
 		Config: &config.PluginConfig{
 			Name:          filter.ID,
@@ -17,22 +47,7 @@ func MakeWasmFilter(filter *deploy.Filter) *envoyhttp.HttpFilter{
 			Configuration: filter.Config,
 			VmConfig: &config.VmConfig{
 				Runtime: "envoy.wasm.runtime.v8", // default to v8
-				Code: &core.AsyncDataSource{
-					Specifier: &core.AsyncDataSource_Remote{
-						Remote: &core.RemoteDataSource{
-							HttpUri: &core.HttpUri{
-								Uri: "TODO: URI",
-								HttpUpstreamType: &core.HttpUri_Cluster{
-									Cluster: "TODO: CLUSTER",
-								},
-								Timeout: &types.Duration{
-									Seconds: 5, // TODO: customize
-								},
-							},
-							Sha256: "TODO: SHA256",
-						},
-					},
-				},
+				Code:    dataSrc,
 			},
 		},
 	}
