@@ -5,17 +5,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 var log = logrus.StandardLogger()
-
-type deployOptions struct {
-	provider        string
-	operation       string
-	dryRun          bool
-	injectName      string
-	injectNamespace string
-}
 
 func DeployCmd() *cobra.Command {
 	opts := &options{}
@@ -45,55 +38,68 @@ You must specify --root-id unless a default root id is provided in the image con
 
 	cmd.AddCommand(
 		deployGlooCmd(opts),
+		deployLocalCmd(opts),
 	)
 
 	return cmd
 }
 
-func deployGlooCmd(opts *options) *cobra.Command {
+func makeDeployCommand(opts *options, provider, use, short, long string, minArgs int, addFlags ...func(flags *pflag.FlagSet)) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "gloo <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels <key1=val1,key2=val2>",
-		Short: "Deploy an Envoy WASM Filter to the Gloo Gateway Proxies (Envoy).",
-		Long: `Deploys an Envoy WASM Filter to Gloo Gateway Proxies.
+		Use:   use,
+		Short: short,
+		Long:  long,
+		Args:  cobra.MinimumNArgs(minArgs),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.providerType = provider
+			return runDeploy(opts)
+		},
+	}
+
+	for _, f := range addFlags {
+		f(cmd.PersistentFlags())
+	}
+
+	return cmd
+}
+
+func deployGlooCmd(opts *options) *cobra.Command {
+	use := "gloo <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels <key1=val1,key2=val2>"
+	short := "Deploy an Envoy WASM Filter to the Gloo Gateway Proxies (Envoy)."
+	long := `Deploys an Envoy WASM Filter to Gloo Gateway Proxies.
 
 wasme uses the Gloo Gateway CR to pull and run wasm filters.
 
 Use --namespaces to constrain the namespaces of Gateway CRs to update.
 
 Use --labels to use a match Gateway CRs by label.
-`,
-		Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.providerType = Provider_Gloo
-			return runDeploy(opts)
-		},
-	}
-
-	opts.glooOpts.addToFlags(cmd.Flags())
-
-	return cmd
+`
+	return makeDeployCommand(opts,
+		Provider_Gloo,
+		use,
+		short,
+		long,
+		1,
+		opts.glooOpts.addToFlags,
+	)
 }
 
 func deployLocalCmd(opts *options) *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "envoy <>",
-		Short: "Configure a local instance of Envoy to run a WASM Filter.",
-		Long: `
+	use := "envoy <image> --id=<unique id> [--config=<inline string>] [--root-id=<root id>] --in=<input config file> --out=<output config file> --filter <path to filter wasm> [--use-json]"
+	short := "Configure a local instance of Envoy to run a WASM Filter."
+	long := `
 Unlike ` + "`" + `wasme deploy gloo` + "`" + ` and ` + "`" + `wasme deploy istio` + "`" + `, ` + "`" + `wasme deploy envoy` + "`" + ` only outputs the Envoy configuration required to run the filter with Envoy.
 
 Launch Envoy using the output configuration to run the wasm filter.
-
-`,
-		Args: cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.providerType = Provider_Envoy
-			return runDeploy(opts)
-		},
-	}
-
-	opts.localOpts.addToFlags(cmd.Flags())
-
-	return cmd
+`
+	return makeDeployCommand(opts,
+		Provider_Gloo,
+		use,
+		short,
+		long,
+		1,
+		opts.localOpts.addToFlags,
+	)
 }
 
 func runDeploy(opts *options) error {
