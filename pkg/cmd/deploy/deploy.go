@@ -23,7 +23,7 @@ You must specify --root-id unless a default root id is provided in the image con
 
 `,
 		Args: cobra.MinimumNArgs(1),
-		PreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return fmt.Errorf("invalid number of arguments")
 			}
@@ -31,7 +31,7 @@ You must specify --root-id unless a default root id is provided in the image con
 			if opts.filter.ID == "" {
 				return errors.Errorf("--id cannot be empty")
 			}
-			return runDeploy(opts)
+			return nil
 		},
 	}
 	opts.addToFlags(cmd.PersistentFlags())
@@ -64,7 +64,7 @@ func makeDeployCommand(opts *options, provider, use, short, long string, minArgs
 }
 
 func deployGlooCmd(opts *options) *cobra.Command {
-	use := "gloo <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels <key1=val1,key2=val2>"
+	use := "gloo <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels <key1=val1,key2=val2>]"
 	short := "Deploy an Envoy WASM Filter to the Gloo Gateway Proxies (Envoy)."
 	long := `Deploys an Envoy WASM Filter to Gloo Gateway Proxies.
 

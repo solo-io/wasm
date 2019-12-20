@@ -50,9 +50,6 @@ func (d *Deployer) ApplyFilter(filter *Filter) error {
 }
 
 func (d *Deployer) RemoveFilter(filter *Filter) error {
-	if err := d.setRootID(filter); err != nil {
-		return err
-	}
 	return d.Provider.RemoveFilter(filter)
 }
 

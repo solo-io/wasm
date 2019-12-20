@@ -29,31 +29,18 @@ type Provider struct {
 
 // applies the filter to all selected workloads in selected namespaces
 func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
-	namespaces := p.Selector.Namespaces
-	if len(namespaces) == 0 {
-		namespaces = []string{v1.NamespaceAll}
-	}
-	for _, ns := range namespaces {
-		gateways, err := p.GatewayClient.List(ns, clients.ListOpts{
-			Ctx:      p.Ctx,
-			Selector: p.Selector.GatewayLabels,
-		})
-		if err != nil {
-			return err
-		}
-
-		for _, gw := range gateways {
-			if err := AppendWasmConfig(filter, gw); err != nil {
-				contextutils.LoggerFrom(p.Ctx).Warnf("skipping gateway %v", gw.Metadata.Ref())
-				continue
-			}
-		}
-	}
-	return nil
+	return p.updateGateways(func(gateway *gatewayv1.Gateway) error {
+		return apendWasmConfig(filter, gateway)
+	})
 }
 
 // removes the filter from all selected workloads in selected namespaces
 func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
+	return p.updateGateways(func(gateway *gatewayv1.Gateway) error {
+		return removeWasmConfig(filter.ID, gateway)
+	})
+}
+func (p *Provider) updateGateways(updateFunc func(gateway *gatewayv1.Gateway) error ) error {
 	namespaces := p.Selector.Namespaces
 	if len(namespaces) == 0 {
 		namespaces = []string{v1.NamespaceAll}
@@ -68,7 +55,7 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 		}
 
 		for _, gw := range gateways {
-			if err := removeWasmConfig(filter.ID, gw); err != nil {
+			if err := updateFunc(gw); err != nil {
 				contextutils.LoggerFrom(p.Ctx).Warnf("skipping gateway %v", gw.Metadata.Ref())
 			}
 			if _, err := p.GatewayClient.Write(gw, clients.WriteOpts{
@@ -84,7 +71,7 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 
 // TODO: currently gloo only supports 1 wasm filter
 // when it is updated, this should become an APPEND
-func AppendWasmConfig(filter *deploy.Filter, gateway *gatewayv1.Gateway) error {
+func apendWasmConfig(filter *deploy.Filter, gateway *gatewayv1.Gateway) error {
 	httpGw := gateway.GetHttpGateway()
 	if httpGw == nil {
 		return errors.Errorf("must contain httpGateway field")
@@ -92,6 +79,7 @@ func AppendWasmConfig(filter *deploy.Filter, gateway *gatewayv1.Gateway) error {
 	opts := httpGw.GetOptions()
 	if opts == nil {
 		opts = &gloov1.HttpListenerOptions{}
+		httpGw.Options = opts
 	}
 
 	// this SET should become an APPEND

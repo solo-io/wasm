@@ -34,15 +34,18 @@ type options struct {
 }
 
 func (opts *options) addToFlags(flags *pflag.FlagSet) {
-
 	flags.StringVarP(&opts.filter.Config, "config", "", "", "optional config that will be passed to the filter. accepts an inline string.")
 	flags.StringVarP(&opts.filter.RootID, "root-id", "", "", "optional root ID used to bind the filter at the Envoy level. this value is normally read from the filter image directly.")
-	flags.StringVar(&opts.filter.ID, "id", "", "unique id for naming the deployed filter. this is used for logging as well as removing the filter. when running wasme deploy istio, this name must be a valid Kubernetes resource name.")
+	opts.addIdToFlags(flags)
 	opts.addDryRunToFlags(flags)
 }
 
 func (opts *options) addDryRunToFlags(flags *pflag.FlagSet) {
 	flags.BoolVarP(&opts.dryRun, "dry-run", "", false, "print output any configuration changes to stdout rather than applying them to the target file / kubernetes cluster")
+}
+
+func (opts *options) addIdToFlags(flags *pflag.FlagSet) {
+	flags.StringVar(&opts.filter.ID, "id", "", "unique id for naming the deployed filter. this is used for logging as well as removing the filter. when running wasme deploy istio, this name must be a valid Kubernetes resource name.")
 }
 
 type providerOptions struct {
@@ -87,7 +90,7 @@ var SupportedProviders = []string{
 	Provider_Envoy,
 }
 
-func (opts options) makeProvider(ctx context.Context) (deploy.Provider, error) {
+func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) {
 	switch opts.providerType {
 	case Provider_Gloo:
 		var gwClient gatewayv1.GatewayClient

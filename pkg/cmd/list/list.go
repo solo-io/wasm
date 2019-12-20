@@ -120,6 +120,10 @@ func getImages() ([]image, error) {
 				if err != nil {
 					return nil, err
 				}
+				if imgName == "ilackarms/something" {
+
+				log.Printf("%v", manifest.TimeUploadedMs)
+				}
 				images = append(images, image{
 					name:      imgName,
 					sum:       sha,

@@ -17,10 +17,11 @@ func UndeployCmd() *cobra.Command {
 			if opts.filter.ID == "" {
 				return errors.Errorf("--id cannot be empty")
 			}
-			return runDeploy(opts)
+			return nil
 		},
 	}
 	opts.addDryRunToFlags(cmd.PersistentFlags())
+	opts.addIdToFlags(cmd.PersistentFlags())
 
 	cmd.AddCommand(
 		undeployGlooCmd(opts),
