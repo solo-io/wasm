@@ -16,7 +16,7 @@ import (
 
 const basicAuthToTokenUser = "basic2token"
 
-func NewResolver(username, password string, insecure bool, plainHTTP bool, configs ...string) remotes.Resolver {
+func NewResolver(username, password string, insecure bool, plainHTTP bool, configs ...string) (remotes.Resolver, docker.Authorizer) {
 
 	opts := docker.ResolverOptions{
 		PlainHTTP: plainHTTP,
@@ -36,7 +36,7 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 		opts.Credentials = func(hostName string) (string, string, error) {
 			return username, password, nil
 		}
-		return docker.NewResolver(opts)
+		return docker.NewResolver(opts), nil
 	}
 	var dockerCreds func(hostname string) (string, string, error)
 	if cli, err := auth.NewClient(configs...); err != nil {
@@ -47,7 +47,7 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 
 	token, _ := store.GetToken()
 
-	opts.Credentials = func(hostName string) (string, string, error) {
+	credentials := func(hostName string) (string, string, error) {
 
 		if token != "" {
 			if hostName == consts.HubDomain {
@@ -64,5 +64,7 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 		return "", "", nil
 	}
 
-	return docker.NewResolver(opts)
+	opts.Authorizer = docker.NewDockerAuthorizer(docker.WithAuthClient(opts.Client), docker.WithAuthHeader(opts.Headers), docker.WithAuthCreds(credentials))
+
+	return docker.NewResolver(opts), opts.Authorizer
 }

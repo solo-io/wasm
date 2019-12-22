@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/containerd/containerd v1.3.0
 	github.com/deislabs/oras v0.7.0
+	github.com/docker/distribution v2.7.1+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2

@@ -98,3 +98,11 @@ For more complex and interesting filters check out https://webassemblyhub.io/.
 # emscripten sdk
 If you change the emscripten SDK, an sdk with PR merged is needed:
 https://github.com/emscripten-core/emscripten/pull/9812/files
+
+# Problems?
+
+WASM support in envoy is in a very initial stage as of now (Dec 2019). As it is being upstreamed to 
+main envoy, breaking API changes can happen. If and when they happen, your wasm code will not load.
+
+While these errors might look intimidating, fixing them is something we would love to help with! 
+If this happens to you please reach out to us! [Open an issue](https://github.com/solo-io/wasme/issues/new) here, or [join our slack](https://slack.solo.io) and ask us directly.

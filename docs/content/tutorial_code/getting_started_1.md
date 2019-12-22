@@ -29,20 +29,31 @@ petstore-5dcf5d6b66-n8tjt   1/1     Running   0          2m20s
 
 ### Deploying Envoy
 
-In this tutorial, we'll use Gloo, an API Gateway based on Envoy that has built-in wasm support but these steps should also work for base Envoy. 
+In this tutorial, we'll use Gloo, an API Gateway based on Envoy that has built-in wasm support but these steps should also work for base Envoy.
+
+First, install gloo by applying [the manifest](../gloo.yaml).
 
 ```shell
 $  kubectl apply -f gloo.yaml
 ```
 
-*****
-This section needs love... it's not working yet ^^ we need a nice way to install Gloo
-****
+Gloo will be installed to the `gloo-system` namespace.
+
+{{% notice note %}}
+You can deploy your own gloo (version 1.2.10 and above), by enabling the experimental WASM support when 
+installing. When installing you need to set the "global.wasm.enabled" flag to true. If installing
+with glooctl, you can use the following command:
+```shell
+glooctl install gateway -n gloo-system --values <(echo '{"namespace":{"create":true},"crds":{"create":true},"global":{"wasm":{"enabled":true}}}')
+```
+You can add the `--dry-run` flag to glooctl to generate a yaml for you instead of installing directly.
+{{% /notice %}}
 
 ### Verify set up
 
 Lastly, we'll set up our routing rules to be able to call our `petstore` service. Let's add a route to the routing table:
 
+Download and apply the [virtual service manifest](../default-virtualservice.yaml)
 ```shell
 $  kubectl apply -f default-virtualservice.yaml
 ```
@@ -144,7 +155,7 @@ From the docker container using the `wasme` tooling:
 $  wasme build . 
 ```
 
-This will download all of the necessary dependencies and compile the output `filter.wasm` into the `_output` folder if using the `wasme` tooling. Otherwise you can find filter in `./bazel-bin/filter.wasm`.
+This will download all of the necessary dependencies and compile the output `filter.wasm` into the current folder if using the `wasme` tooling. Otherwise you can find filter in `./bazel-bin/filter.wasm`.
 
 Now that we've built the `wasm` module, let's package it and load it into a registry so we can consume it in our Envoy proxy.
 
@@ -155,7 +166,7 @@ Before we use our new filter.wasm module, let's push it into a registry that can
 To do that, let's login to the `webassemblyhub.io` using GitHub as the OAuth provider. From the CLI:
 
 ```shell
-$  wasm login
+$  wasme login
 
 Using port: 60632
 Opening browser for login. If the browser did not open for you, please go to:  https://webassemblyhub.io/authorize?port=60632
@@ -163,7 +174,7 @@ Opening browser for login. If the browser did not open for you, please go to:  h
 
 You should see a GitHub OAuth screen:
 
-![](/img/wasme_login.png)
+![](../../img/wasme_login.png)
 
 Click the "Authorize" button at the bottom and continue.
 
@@ -176,11 +187,12 @@ success ! you are now authenticated
 Now let's push to the webassemblyhub.io registry. 
 
 ```shell
-$  wasme push webassemblyhub.io/christian-posta/test:v0.1 ./_output_/filter.wasm
+$  wasme push webassemblyhub.io/christian-posta/test:v0.1 ./filter.wasm
 ```
-
-NOTE: The tag name to use is
+{{% notice note %}}
+The tag name to use is
 `webassemblyhub.io/<your-git-username>/<whatever-name>:<whatever-version>`
+{{% /notice %}}
 
 When you've pushed, you should be able to see your new module in the registry:
 
@@ -207,13 +219,11 @@ spec:
   bindAddress: '::'
   bindPort: 8080
   httpGateway:
-    plugins:
-      extensions:
-        configs:
-          wasm:
-            image: webassemblyhub.io/christian-posta/test:v0.1
-            name: christian
-            root_id: add_header_root_id
+    options:
+      wasm:
+        image: webassemblyhub.io/christian-posta/test:v0.1
+        name: christian
+        root_id: add_header_root_id
   proxyNames:
   - gateway-proxy
   useProxyProto: false
@@ -314,7 +324,7 @@ Created PR: https://github.com/solo-io/wasme/pull/17
 
 If you open the `https://github.com/solo-io/wasme/pull/17` URL, you should see a PR was created in the `wasme` GitHub repo:
 
-![](/img/test-pr.png)
+![](../../img/test-pr.png)
 
 ## Pull Request
 

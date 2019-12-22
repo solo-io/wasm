@@ -51,7 +51,8 @@ func PullCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 func runPull(opts pullOptions) error {
 
 	ctx := context.Background()
-	puller := pull.NewPuller(resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...))
+	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
+	puller := pull.NewPuller(resolver)
 
 	filter, err := puller.Pull(ctx, opts.targetRef)
 	if err != nil {

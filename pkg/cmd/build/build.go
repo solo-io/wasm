@@ -20,6 +20,8 @@ type buildOptions struct {
 	outFile      string
 	builderImage string
 	buildDir string
+	bazelOutput string
+	bazelTarget string
 }
 
 func BuildCmd() *cobra.Command {
@@ -37,9 +39,11 @@ func BuildCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.outFile, "output", "o", "_output/filter.wasm", "path to the output .wasm file. Nonexistent directories will be created.")
+	cmd.Flags().StringVarP(&opts.outFile, "output", "o", "filter.wasm", "path to the output .wasm file. Nonexistent directories will be created.")
 	cmd.Flags().StringVarP(&opts.builderImage, "image", "i", "quay.io/solo-io/ee-builder:"+version.Version, "Name of the docker image containing the Bazel run instructions. Modify to run a custom builder image")
-	cmd.Flags().StringVarP(&opts.buildDir, "build-dir", "b", ".", "Directory containing the target BUILD file. This file must have a target named :filter.wasm and produce a file named filter.wasm")
+	cmd.Flags().StringVarP(&opts.buildDir, "build-dir", "b", ".", "Directory containing the target BUILD file.")
+	cmd.Flags().StringVarP(&opts.bazelOutput, "bazel-ouptut", "f", "filter.wasm", "Path relative to `bazel-bin` to the wasm file produced by running the Bazel target.")
+	cmd.Flags().StringVarP(&opts.bazelTarget, "bazel-target", "t", ":filter.wasm", "Name of the bazel target to run.")
 	return cmd
 }
 
@@ -66,6 +70,8 @@ func runBuild(opts buildOptions) error {
 		"-v", tmpDir + ":/tmp/build_output",
 		"-w", "/src/workspace",
 		"-e", "BUILD_BASE="+opts.buildDir,
+		"-e", "BAZEL_OUTPUT="+opts.bazelOutput,
+		"-e", "TARGET="+opts.bazelTarget,
 		opts.builderImage,
 	}
 

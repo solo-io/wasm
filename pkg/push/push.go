@@ -5,9 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/url"
 	"os"
+	"strings"
 
+	"github.com/containerd/containerd/reference"
 	"github.com/containerd/containerd/remotes"
+	"github.com/containerd/containerd/remotes/docker"
 	"github.com/deislabs/oras/pkg/content"
 	"github.com/deislabs/oras/pkg/oras"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -48,7 +53,8 @@ type Pusher interface {
 }
 
 type PusherImpl struct {
-	Resolver remotes.Resolver
+	Resolver   remotes.Resolver
+	Authorizer docker.Authorizer
 }
 
 type Config struct {
@@ -106,15 +112,35 @@ func (p *PusherImpl) Push(ctx context.Context, localFilter LocalFilter) error {
 		return err
 	}
 
+	p.checkAuth(ctx, localFilter.Image())
+
 	desc, err := oras.Push(ctx, p.Resolver, localFilter.Image(), store, files, pushOpts...)
 	if err != nil {
 		return err
 	}
-
 	fmt.Println("Pushed", localFilter.Image())
 	fmt.Println("Digest:", desc.Digest)
 
 	return err
+}
+
+func (p *PusherImpl) checkAuth(ctx context.Context, ref string) {
+	refspec, err := reference.Parse(ref)
+	if err != nil {
+		return
+	}
+	url := url.URL{
+		Host:   refspec.Hostname(),
+		Path:   "/v2/",
+		Scheme: "https",
+	}
+	if strings.HasPrefix(url.Host, "localhost:") || url.Host == "localhost" {
+		url.Scheme = "http"
+	}
+	resp, err := http.Get(url.String())
+	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
+		p.Authorizer.AddResponses(ctx, []*http.Response{resp})
+	}
 }
 
 func getFiles(localFilter LocalFilter, store *content.FileStore) ([]ocispec.Descriptor, error) {
