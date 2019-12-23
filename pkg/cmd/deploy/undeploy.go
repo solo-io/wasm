@@ -62,6 +62,7 @@ func undeployLocalCmd(opts *options) *cobra.Command {
 		short,
 		long,
 		0,
+		opts.localOpts.addFilesToFlags,
 	)
 }
 

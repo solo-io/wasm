@@ -72,9 +72,13 @@ type localOpts struct {
 }
 
 func (opts *localOpts) addToFlags(flags *pflag.FlagSet) {
+	flags.StringVarP(&opts.filterPath, "filter", "f", "filter.wasm", "the path to the compiled filter wasm file.")
+	opts.addFilesToFlags(flags)
+}
+
+func (opts *localOpts) addFilesToFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&opts.infile, "in", "", "envoy.yaml", "the input configuration file. the filter config will be added to each listener found in the file. Set -in=- to use stdin.")
 	flags.StringVarP(&opts.outfile, "out", "", "envoy.yaml", "the output configuration file. the resulting config will be written to the file. Set -out=- to use stdout.")
-	flags.StringVarP(&opts.filterPath, "filter", "f", "filter.wasm", "the path to the compiled filter wasm file.")
 	flags.BoolVarP(&opts.useJsonConfig, "use-json", "", false, "parse the input file as JSON instead of YAML")
 }
 
@@ -106,7 +110,7 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			Selector:      opts.glooOpts.selector,
 		}, nil
 	case Provider_Envoy:
-		var in io.Reader
+		var in io.ReadCloser
 		if opts.localOpts.infile == "-" {
 			// use stdin
 			in = os.Stdin
@@ -118,22 +122,10 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			in = f
 		}
 
-		var out io.Writer
-		if opts.localOpts.infile == "-" {
-			// use stdout
-			out = os.Stdout
-		} else {
-			f, err := os.Open(opts.localOpts.outfile)
-			if err != nil {
-				return nil, err
-			}
-			out = f
-		}
-
 		return &local.Provider{
 			Ctx:           ctx,
 			Input:         in,
-			Output:        out,
+			OutFile:       opts.localOpts.outfile,
 			FilterPath:    opts.localOpts.filterPath,
 			UseJsonConfig: opts.localOpts.useJsonConfig,
 		}, nil

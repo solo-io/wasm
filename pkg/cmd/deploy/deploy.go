@@ -93,7 +93,7 @@ Unlike ` + "`" + `wasme deploy gloo` + "`" + ` and ` + "`" + `wasme deploy istio
 Launch Envoy using the output configuration to run the wasm filter.
 `
 	return makeDeployCommand(opts,
-		Provider_Gloo,
+		Provider_Envoy,
 		use,
 		short,
 		long,
