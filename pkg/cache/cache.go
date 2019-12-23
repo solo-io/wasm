@@ -25,7 +25,7 @@ type Cache interface {
 }
 
 type CacheImpl struct {
-	Puller   pull.Puller
+	Puller   pull.ImagePuller
 	Resolver remotes.Resolver
 
 	cacheState cacheState

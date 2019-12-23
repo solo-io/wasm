@@ -38,7 +38,7 @@ type Provider interface {
 
 type Deployer struct {
 	Ctx      context.Context
-	Puller   pull.Puller
+	Puller   pull.ImagePuller
 	Provider Provider
 }
 

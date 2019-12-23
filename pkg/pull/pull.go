@@ -27,12 +27,16 @@ func (f *FilterImpl) Configs() []FilterConfig {
 	return nil
 }
 
-type Puller interface {
+// ImagePuller pulls oci image descriptors by their ref.
+// Given the image as a wasme image,
+// can also download files from those images
+type ImagePuller interface {
 	Pull(ctx context.Context, ref string) ([]ocispec.Descriptor, error)
 	PullFilter(ctx context.Context, image string) (Filter, error)
 	PullConfigFile(ctx context.Context, ref string) (*config.Config, error)
 	PullCodeDescriptor(ctx context.Context, ref string) (ocispec.Descriptor, error)
 }
+
 type PullerImpl struct {
 	Resolver remotes.Resolver
 }

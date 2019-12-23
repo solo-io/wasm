@@ -52,7 +52,7 @@ func runPull(opts pullOptions) error {
 
 	ctx := context.Background()
 	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
-	var puller pull.Puller = pull.NewPuller(resolver)
+	var puller pull.ImagePuller = pull.NewPuller(resolver)
 
 	filter, err := puller.PullFilter(ctx, opts.targetRef)
 	if err != nil {
