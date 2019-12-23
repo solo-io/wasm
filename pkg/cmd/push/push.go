@@ -11,10 +11,11 @@ import (
 )
 
 type pushOptions struct {
-	targetRef string
-	code      string
-	config    string
-	verbose   bool
+	targetRef   string
+	code        string
+	descriptors string
+	rootId      string
+	verbose     bool
 
 	debug bool
 
@@ -39,12 +40,13 @@ wasme push webassemblyhub.io/my/filter:v1 filter.wasm
 			opts.targetRef = args[0]
 			opts.code = args[1]
 			if len(args) == 3 {
-				opts.config = args[2]
+				opts.descriptors = args[2]
 			}
 			return runPush(opts)
 		},
 	}
 
+	cmd.Flags().StringVarP(&opts.rootId, "root-id", "r", "", "Specify the root_id of the filter to be loaded by Envoy. If not specified, users of this filter will have to specify the --root-id flag to the `wasme deploy` command.")
 	cmd.Flags().BoolVarP(&opts.verbose, "verbose", "v", false, "verbose output")
 	cmd.Flags().BoolVarP(&opts.debug, "debug", "d", false, "debug mode")
 	return cmd
@@ -56,5 +58,5 @@ func runPush(opts pushOptions) error {
 		Resolver:   resolver,
 		Authorizer: authorizer,
 	}
-	return pusher.Push(context.Background(), push.NewLocalFilter(opts.code, opts.config, opts.targetRef))
+	return pusher.Push(context.Background(), push.NewLocalFilter(opts.code, opts.descriptors, opts.targetRef, opts.rootId))
 }

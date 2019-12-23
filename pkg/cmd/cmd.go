@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/solo-io/wasme/pkg/cmd/build"
+	"github.com/solo-io/wasme/pkg/cmd/deploy"
 	"github.com/solo-io/wasme/pkg/cmd/initialize"
 	"github.com/solo-io/wasme/pkg/cmd/list"
 	"github.com/solo-io/wasme/pkg/version"
@@ -32,6 +33,8 @@ func Cmd() *cobra.Command {
 		catalog.CatalogCmd(&opts),
 		login.LoginCmd(&opts),
 		list.ListCmd(),
+		deploy.DeployCmd(),
+		deploy.UndeployCmd(),
 	)
 	cmd.PersistentFlags().StringArrayVarP(&opts.Configs, "config", "c", nil, "auth config path")
 	cmd.PersistentFlags().StringVarP(&opts.Username, "username", "u", "", "registry username")
