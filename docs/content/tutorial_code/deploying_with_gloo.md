@@ -106,7 +106,7 @@ ilackarms/hello:v0.1 3753eeaf 15 Sep 19 23:41 EST 1.0 MB v0.1
 Let's try deploying one of these to Gloo:
 
 ```bash
-wasme deploy gloo webassemblyhub.io/ilackarms/hello:v0.1 --id=myfilter --dry-run
+wasme deploy gloo webassemblyhub.io/ilackarms/hello:v0.1 --id=myfilter
 ```
 
 This filter adds the header `hello: World!` to responses.
