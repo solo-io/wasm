@@ -1,6 +1,6 @@
 ---
-title: "Envoy WASM in docker"
-weight: 2
+title: "Envoy WASM Deep Dive"
+weight: 5
 description: Run/Test your WebAssembly filter locally with Envoy in docker
 ---
 
