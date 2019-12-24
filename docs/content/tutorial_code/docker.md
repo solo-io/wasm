@@ -129,7 +129,7 @@ it into Envoy.
 
 Now it is time to actually run Envoy. 
 ```shell script
-docker run  --rm --name e2e_envoy -p 8080:8080 -p 8443:8443 -p 19001:19001 -v $(pwd)/filter.wasm:/etc/filter.wasm --entrypoint=envoy quay.io/solo-io/gloo-envoy-wasm-wrapper:v1.2.5 --disable-hot-restart --log-level debug --config-yaml "$(cat config.yml)"
+docker run  --rm --name e2e_envoy -p 8080:8080 -p 8443:8443 -p 19001:19001 -v $(pwd)/filter.wasm:/etc/filter.wasm --entrypoint=envoy quay.io/solo-io/gloo-envoy-wasm-wrapper:1.2.10 --disable-hot-restart --log-level debug --config-yaml "$(cat config.yml)"
 ```
 
 Run the above command and then open up a new terminal to communicate with Envoy.
