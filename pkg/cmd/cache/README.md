@@ -40,6 +40,15 @@ Edit your pod to include the cached filters as a volume:
 sidecar.istio.io/userVolume: '[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]'
 sidecar.istio.io/userVolumeMount: '[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]'
 ```
+In istio 1.4, wasm filters only get loaded to TPROXY enabled listeners. so we'll need the following 
+annotations:
+```
+sidecar.istio.io/interceptionMode: TPROXY
+sidecar.istio.io/includeInboundPorts: "9080"
+```
+
+Note: includeInboundPorts is needed as otherwise communication to pilot is sent to the TPROXY rule,
+which doesn't end well for envoy. This port may need to be adjusted to your workload.
 
 Note that these should be on the annotations of the pod template: e.g.:
 
@@ -61,7 +70,9 @@ spec:
     metadata:
       annotations:
         sidecar.istio.io/userVolume: '[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache","type":"Directory"}}]'
-        sidecar.istio.io/userVolumeMount: '[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]'
+        sidecar.istio.io/userVolumeMount: '[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]',
+        sidecar.istio.io/interceptionMode: TPROXY
+        sidecar.istio.io/includeInboundPorts: "9080"
       labels:
         app: details
         version: v1
@@ -77,7 +88,7 @@ spec:
 
 you can use the following command to apply:
 ```
-kubectl -n default patch deploy/details-v1 --type=merge -p='{"spec":{"template":{"metadata":{"annotations":{"sidecar.istio.io/userVolume":"[{\"name\":\"cache-dir\",\"hostPath\":{\"path\":\"/var/local/lib/wasme-cache\",\"type\":\"Directory\"}}]","sidecar.istio.io/userVolumeMount":"[{\"mountPath\":\"/var/local/lib/wasme-cache\",\"name\":\"cache-dir\"}]"}}}}}'
+kubectl -n default patch deploy/details-v1 --type=merge -p='{"spec":{"template":{"metadata":{"annotations":{"traffic.sidecar.istio.io/includeInboundPorts":"9080","sidecar.istio.io/interceptionMode":"TPROXY","sidecar.istio.io/userVolume":"[{\"name\":\"cache-dir\",\"hostPath\":{\"path\":\"/var/local/lib/wasme-cache\",\"type\":\"Directory\"}}]","sidecar.istio.io/userVolumeMount":"[{\"mountPath\":\"/var/local/lib/wasme-cache\",\"name\":\"cache-dir\"}]"}}}}}'
 ```
 
 # Apply filter - EnvoyFilter CRD
@@ -130,8 +141,7 @@ kubectl apply -n default -f pkg/cmd/cache/filter.yaml
 Test:
 
 ```
-kubectl proxy &
-curl -v http://localhost:8001/api/v1/namespaces/default/services/details:9080/proxy/details/123
+kubectl exec -ti -n default deploy/productpage-v1 -c istio-proxy -- curl -v http://details.default:9080/details/123
 ```
 
 # debugging

@@ -24,9 +24,6 @@ private:
 
   AddHeaderRootContext* root_;
 };
-static RegisterContextFactory register_AddHeaderContext(CONTEXT_FACTORY(AddHeaderContext),
-                                                      ROOT_FACTORY(AddHeaderRootContext),
-                                                      "add_header_root_id");
 
 bool AddHeaderRootContext::onConfigure(std::unique_ptr<WasmData> conf) { 
   Config config;
@@ -48,3 +45,7 @@ FilterHeadersStatus AddHeaderContext::onResponseHeaders() {
   addResponseHeader("newheader", root_->header_value_);
   return FilterHeadersStatus::Continue;
 }
+
+static RegisterContextFactory register_AddHeaderContext(CONTEXT_FACTORY(AddHeaderContext),
+                                                      ROOT_FACTORY(AddHeaderRootContext),
+                                                      "add_header_root_id");
