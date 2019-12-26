@@ -1,0 +1,33 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: details-wasm
+spec:
+  workloadSelector:
+    labels:
+      app: details
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        portNumber: 9080
+        filterChain:
+          filter:
+            name: "envoy.http_connection_manager"
+            subFilter:
+              name: "envoy.router"
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.wasm
+        config:
+          config:
+            name: "test"
+            root_id: "add_header_root_id"
+            configuration: '{"value":"hi-from-wasme"}'
+            vm_config:
+              runtime: envoy.wasm.runtime.v8
+              code:
+                filename:
+                  /var/local/lib/wasme-cache/bbfdf674f5cf2e413a4b701ae865dd4569502f60af5647f2f47ca4f38e2b40af

@@ -4,7 +4,7 @@ metadata:
   name: wasme-cache
 data:
   images: |
-    webassemblyhub.io/yuval-k/test:v0.2
+    webassemblyhub.io/yuval-k/istio-example:1.4.2
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -22,8 +22,8 @@ spec:
       volumes:
         - name: cache-dir
           hostPath:
-            path: /tmp/wasme-cache
-            type: Directory
+            path: /var/local/lib/wasme-cache
+            type: DirectoryOrCreate
         - name: config
           configMap:
             name: wasme-cache
@@ -32,15 +32,15 @@ spec:
                 path: images.txt
       containers:
       - name: wasme-cache
-        image: quay.io/solo-io/wasme:foo
+        image: quay.io/solo-io/wasme:0.0.1
         args:
           - cache
           - --directory
-          - /tmp/wasme-cache
+          - /var/local/lib/wasme-cache
           - --ref-file
           - /etc/wasme-cache/images.txt
         volumeMounts:
-          - mountPath: /tmp/wasme-cache
+          - mountPath: /var/local/lib/wasme-cache
             name: cache-dir
           - mountPath: /etc/wasme-cache
             name: config
