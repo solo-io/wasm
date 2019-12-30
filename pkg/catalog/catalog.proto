@@ -16,7 +16,7 @@ message ExtensionSpec {
     string documentation_url = 5;
     // Link to repository containing the extension's source code.
     string repository_url = 6;
-    // Link to repository containing the extension's source code.
+    // Link to compiled wasm module for this extension.
     string extension_ref = 7;
     // The name of the entity that authored the extension.
     string creator_name = 8;
@@ -24,6 +24,12 @@ message ExtensionSpec {
     string creator_url = 9;
     // Install instructions for this extension.
     InstallInstructions install_instructions = 10;
+    // List of tags to help identify the extension.
+    // TODO joekelley do not merge -- this should be a separate file, meta.yaml or similar, not per-version?
+    repeated string tags = 11;
+    // Whether this extension is coming soon
+    // TODO should this also come from a separate file?
+    bool coming_soon = 12;
 }
 
 // Set of install instructions for each supported envoy flavor
