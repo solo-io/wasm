@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/opencontainers/go-digest"
+	"github.com/pkg/errors"
+
 	"github.com/solo-io/wasme/pkg/cache"
 )
 
@@ -44,10 +46,11 @@ func (f *fileWatcher) watchFileAndGetRefs(ctx context.Context, refFile string) <
 				return
 			case <-time.After(time.Second * 10):
 				var err error
+				// read refs from file
 				refs, err = fileToRefs(refFile)
 				if err != nil {
 					// TODO: log? panic?
-					fmt.Fprintln(os.Stderr, err.Error())
+					fmt.Fprintln(os.Stderr, "failed parsing refs file: "+err.Error())
 				}
 			}
 
@@ -66,30 +69,31 @@ func (f *fileWatcher) watchFileAndGetRefs(ctx context.Context, refFile string) <
 func (f *fileWatcher) watchFile(ctx context.Context) error {
 	for ref := range f.watchFileAndGetRefs(ctx, f.refFile) {
 		desc, err := f.imageCache.Add(ctx, ref)
-		if err == nil {
-			err = f.addDirectory(ctx, ref, desc)
-		}
 		if err != nil {
-			// TODO: log? panic?
-			fmt.Fprintln(os.Stderr, err.Error())
+			return err
+		}
+		err = f.addToDirectory(ctx, desc)
+		if err != nil {
+			return errors.Wrapf(err, "adding digest to directory %v", f.directory)
 		}
 	}
 	return nil
 }
 
-func (f *fileWatcher) addDirectory(ctx context.Context, ref string, digest digest.Digest) error {
+func (f *fileWatcher) addToDirectory(ctx context.Context, digest digest.Digest) error {
 	if f.directory == "" {
 		return nil
 	}
 	// get filename from ref
 	// check if filename exists
-	filename := filepath.Join(f.directory, ref2filename(ref, digest))
+	filename := filepath.Join(f.directory, Digest2filename(digest))
 
 	err := f.copyToFile(ctx, filename, digest)
 	if err != nil {
 	}
 	return err
 }
+
 func (f *fileWatcher) copyToFile(ctx context.Context, filename string, digest digest.Digest) error {
 
 	if _, err := os.Stat(filename); err == nil {
@@ -117,7 +121,7 @@ func (f *fileWatcher) copyToFile(ctx context.Context, filename string, digest di
 	return err
 }
 
-func ref2filename(ref string, digest digest.Digest) string {
+func Digest2filename(digest digest.Digest) string {
 	return digest.Encoded()
 }
 

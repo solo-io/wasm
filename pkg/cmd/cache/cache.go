@@ -33,7 +33,6 @@ func CacheCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 		Short: "Expose images using http and their sha",
 		Long: `cache
 `,
-		//		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 && opts.refFile == "" {
 				return fmt.Errorf("invalid number of arguments")
