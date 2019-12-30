@@ -141,7 +141,7 @@ In production environments, it's better to use dynamic configuration when possib
 To add our wasm filter to the config, simply run:
 
 ```bash
-deploy envoy webassemblyhub.io/ilackarms/hello:v0.1 \
+wasme deploy envoy webassemblyhub.io/ilackarms/hello:v0.1 \
   --id=myfilter \
   --in=envoy.yaml \
   --out=envoy.yaml \

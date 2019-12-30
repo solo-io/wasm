@@ -37,34 +37,50 @@ type fetchableDescriptor struct {
 }
 
 type cacheState struct {
-	descriptors     []fetchableDescriptor
+	descriptors     map[string]*fetchableDescriptor
 	descriptorsLock sync.RWMutex
 }
 
-func (c *cacheState) add(d fetchableDescriptor) {
+func (c *cacheState) add(image string, d fetchableDescriptor) {
 	if c.find(d.Digest) != nil {
 		// check existance for idempotency
 		// technically metadata can be different, but its fine for now.
 		return
 	}
 	c.descriptorsLock.Lock()
-	c.descriptors = append(c.descriptors, d)
+	if c.descriptors == nil {
+		c.descriptors = make(map[string]*fetchableDescriptor)
+	}
+	c.descriptors[image] = &d
 	c.descriptorsLock.Unlock()
 }
 
 func (c *cacheState) find(digest digest.Digest) *fetchableDescriptor {
 	c.descriptorsLock.RLock()
 	defer c.descriptorsLock.RUnlock()
+	if c.descriptors == nil {
+		return nil
+	}
 	for _, d := range c.descriptors {
 		if d.Digest == digest {
 			d := d
-			return &d
+			return d
 		}
 	}
 	return nil
 }
+func (c *cacheState) findImage(image string) *fetchableDescriptor {
+	c.descriptorsLock.RLock()
+	defer c.descriptorsLock.RUnlock()
+	return c.descriptors[image]
+}
 
 func (c *CacheImpl) Add(ctx context.Context, image string) (digest.Digest, error) {
+
+	if d := c.cacheState.findImage(image); d != nil {
+		return d.Digest, nil
+	}
+
 	desc, err := c.Puller.PullCodeDescriptor(ctx, image)
 	if err != nil {
 		return digest.Digest(""), err
@@ -81,7 +97,7 @@ func (c *CacheImpl) Add(ctx context.Context, image string) (digest.Digest, error
 		},
 	}
 
-	c.cacheState.add(fd)
+	c.cacheState.add(image, fd)
 
 	return desc.Digest, err
 }

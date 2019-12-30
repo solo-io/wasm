@@ -20,6 +20,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
+	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	gopkg.in/AlecAivazis/survey.v1 v1.8.7
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
