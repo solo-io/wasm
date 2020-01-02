@@ -3,9 +3,10 @@ package catalog
 import (
 	"context"
 	"fmt"
-	"github.com/google/go-github/v28/github"
 	"net/http"
 	"time"
+
+	"github.com/google/go-github/v28/github"
 )
 
 type PullRequestState int

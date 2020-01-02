@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/solo-io/wasme/pkg/config"
 	"io"
 	"io/ioutil"
+
+	"github.com/solo-io/wasme/pkg/config"
 
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/remotes"
@@ -28,7 +29,7 @@ func (f *FilterImpl) Configs() []FilterConfig {
 }
 
 // CodePuller Pulls the .wasm file descriptor from the image ref
-type CodePuller interface{
+type CodePuller interface {
 	PullCodeDescriptor(ctx context.Context, ref string) (ocispec.Descriptor, error)
 }
 

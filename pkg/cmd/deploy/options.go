@@ -2,6 +2,9 @@ package deploy
 
 import (
 	"context"
+	"io"
+	"os"
+
 	"github.com/pkg/errors"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
@@ -15,9 +18,7 @@ import (
 	"github.com/solo-io/wasme/pkg/pull"
 	"github.com/solo-io/wasme/pkg/resolver"
 	"github.com/spf13/pflag"
-	"io"
 	"istio.io/client-go/pkg/clientset/versioned"
-	"os"
 )
 
 type options struct {

@@ -4,13 +4,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/solo-io/wasme/pkg/util"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+
+	"github.com/sirupsen/logrus"
+	"github.com/solo-io/wasme/pkg/util"
 )
 
 //go:generate go run generate.go

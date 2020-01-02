@@ -1,6 +1,9 @@
 package cache_test
 
 import (
+	"os"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/kubeutils"
@@ -8,8 +11,6 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
-	"os"
-	"time"
 
 	. "github.com/solo-io/wasme/pkg/cache"
 )

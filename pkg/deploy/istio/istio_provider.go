@@ -2,6 +2,9 @@ package istio
 
 import (
 	"context"
+	"path/filepath"
+	"strings"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/go-utils/kubeerrutils"
@@ -17,8 +20,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"path/filepath"
-	"strings"
 )
 
 const (

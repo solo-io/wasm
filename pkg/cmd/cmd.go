@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/solo-io/wasme/pkg/cmd/build"
 	"github.com/solo-io/wasme/pkg/cmd/deploy"
 	"github.com/solo-io/wasme/pkg/cmd/initialize"
 	"github.com/solo-io/wasme/pkg/cmd/list"
 	"github.com/solo-io/wasme/pkg/version"
-	"os"
 
 	"github.com/solo-io/wasme/pkg/cmd/cache"
 	"github.com/solo-io/wasme/pkg/cmd/catalog"

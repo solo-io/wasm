@@ -2,6 +2,10 @@ package local
 
 import (
 	"context"
+	"io"
+	"io/ioutil"
+	"os"
+
 	envoy_api_v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoy_api_v2_listener "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	envoy_config_bootstrap_v2 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
@@ -13,9 +17,6 @@ import (
 	"github.com/solo-io/wasme/pkg/deploy"
 	envoyfilter "github.com/solo-io/wasme/pkg/deploy/filter"
 	wasmeutil "github.com/solo-io/wasme/pkg/util"
-	"io"
-	"io/ioutil"
-	"os"
 )
 
 type Provider struct {
@@ -40,7 +41,7 @@ func (p *Provider) getConfig() (*envoy_config_bootstrap_v2.Bootstrap, error) {
 		return nil, err
 	}
 
-	if err := p.Input.Close(); err != nil{
+	if err := p.Input.Close(); err != nil {
 		return nil, err
 	}
 
@@ -187,7 +188,6 @@ func removeFilterFromListeners(filter *deploy.Filter, listeners []*envoy_api_v2.
 				if wasmFilterConfig.GetConfig().GetName() == filter.ID {
 					cfg.HttpFilters = append(cfg.HttpFilters[:i], cfg.HttpFilters[i+1:]...)
 
-
 					// update the HCM minus the filter
 					cfgStruct, err := wasmeutil.MarshalStruct(cfg)
 					if err != nil {
@@ -200,7 +200,6 @@ func removeFilterFromListeners(filter *deploy.Filter, listeners []*envoy_api_v2.
 
 					break
 				}
-
 
 			}
 		}

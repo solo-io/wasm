@@ -2,10 +2,11 @@ package istio
 
 import (
 	"context"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opencontainers/go-digest"
-	"github.com/opencontainers/image-spec/specs-go/v1"
+	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/solo-io/wasme/pkg/deploy"
 	"istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/clientset/versioned"
@@ -19,7 +20,7 @@ import (
 
 var _ = Describe("IstioProvider", func() {
 	var (
-		kube kubernetes.Interface
+		kube  kubernetes.Interface
 		istio versioned.Interface
 
 		cache = Cache{
@@ -86,7 +87,7 @@ var _ = Describe("IstioProvider", func() {
 
 		Expect(dep.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations))
 
-		cacheConfig, err := kube.CoreV1().ConfigMaps(cache.Namespace).Get(cache.Name,  metav1.GetOptions{})
+		cacheConfig, err := kube.CoreV1().ConfigMaps(cache.Namespace).Get(cache.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(cacheConfig.Data).To(Equal(map[string]string{"images": filter.Image}))
