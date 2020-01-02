@@ -143,7 +143,50 @@ func (p *Provider) applyToWorkloadTemplate(do func(spec *v1.PodTemplateSpec)) er
 
 }
 
+func (p *Provider) addImageToCacheConfigMap(image string) error {
+	cm, err := p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	logger := logrus.WithFields(logrus.Fields{
+		"cache": p.Cache,
+	})
+
+	if cm.Data == nil {
+		cm.Data = map[string]string{}
+	}
+
+	images := strings.Split(cm.Data[cachedeployment.ImagesKey], "\n")
+
+	for _, existingImage := range images {
+		if image == existingImage {
+			logger.Info("image is already cached")
+			// already exists
+			return nil
+		}
+	}
+
+	images = append(images, image)
+
+	cm.Data[cachedeployment.ImagesKey] = strings.Trim(strings.Join(images, "\n"), "\n")
+
+	_, err = p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Update(cm)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("added image to cache")
+
+	return nil
+
+}
+
 func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
+	if err := p.addImageToCacheConfigMap(filter.Image); err != nil {
+		return errors.Wrap(err, "adding image to cache")
+	}
+
 	var labels map[string]string
 	// update annotations and grab labels
 	err := p.applyToWorkloadTemplate(func(spec *v1.PodTemplateSpec) {
