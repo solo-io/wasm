@@ -6,6 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/go-utils/kubeerrutils"
 	"github.com/solo-io/go-utils/protoutils"
+	cachedeployment "github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/cmd/cache"
 	"github.com/solo-io/wasme/pkg/deploy"
 	envoyfilter "github.com/solo-io/wasme/pkg/deploy/filter"
@@ -20,8 +21,6 @@ import (
 	"strings"
 )
 
-type WorkloadType string
-
 const (
 	WorkloadTypeDeployment = "deployment"
 	WorkloadTypeDaemonSet  = "daemonset"
@@ -29,11 +28,20 @@ const (
 	backupAnnotationPrefix = "wasme_backup."
 )
 
+// the target workload to deploy the filter to
+// can select all workloads in a namespace
 type Workload struct {
 	// leave name empty to select ALL workloads in the namespace
 	Name      string
 	Namespace string
-	Type      WorkloadType
+	Type      string
+}
+
+// reference to the wasme cache
+// we need to update the configmap
+type Cache struct {
+	Name      string
+	Namespace string
 }
 
 type Provider struct {
@@ -43,10 +51,13 @@ type Provider struct {
 
 	// pulls the image descriptor so we can get the
 	// name of the file created by the cache
-	Puller pull.DescriptorPuller
+	Puller pull.CodePuller
 
 	// the target workload to deploy the filter
 	Workload Workload
+
+	// reference to the wasme cache
+	Cache Cache
 }
 
 // the sidecar annotations required on the pod
