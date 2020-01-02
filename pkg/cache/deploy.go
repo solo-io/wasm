@@ -2,6 +2,7 @@ package cache
 
 import (
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/solo-io/go-utils/kubeerrutils"
 	"github.com/solo-io/wasme/pkg/version"
 	appsv1 "k8s.io/api/apps/v1"
@@ -30,6 +31,7 @@ var (
 		}
 		return version.Version
 	}()
+	ImagesKey        = "images"
 	DefaultCacheArgs = []string{
 		"cache",
 		"--directory",
@@ -42,13 +44,18 @@ var (
 type deployer struct {
 	kube      kubernetes.Interface
 	namespace string
+	name      string
 	image     string
 	args      []string
+	logger    *logrus.Entry
 }
 
-func NewDeployer(kube kubernetes.Interface, namespace, imageRepo, imageTag string, args []string) *deployer {
+func NewDeployer(kube kubernetes.Interface, namespace, name string, imageRepo, imageTag string, args []string) *deployer {
 	if namespace == "" {
 		namespace = CacheNamespace
+	}
+	if name == "" {
+		name = CacheName
 	}
 	if imageRepo == "" {
 		imageRepo = CacheImageRepository
@@ -59,17 +66,21 @@ func NewDeployer(kube kubernetes.Interface, namespace, imageRepo, imageTag strin
 	if args == nil {
 		args = DefaultCacheArgs
 	}
-	return &deployer{kube: kube, namespace: namespace, image: imageRepo + ":" + imageTag, args: args}
+	image := imageRepo + ":" + imageTag
+	return &deployer{kube: kube, namespace: namespace, name: name, image: image, args: args, logger: logrus.WithFields(logrus.Fields{
+		"cache": name + "." + namespace,
+		"image": image,
+	})}
 }
 
 func (d *deployer) EnsureCache() error {
-	if err := d.createNamespaceIfNotExist(); err != nil{
+	if err := d.createNamespaceIfNotExist(); err != nil {
 		return errors.Wrap(err, "ensuring namespace")
 	}
-	if err := d.createConfigMapIfNotExist(); err != nil{
+	if err := d.createConfigMapIfNotExist(); err != nil {
 		return errors.Wrap(err, "ensuring configmap")
 	}
-	if err := d.createOrUpdateDaemonSet(); err != nil{
+	if err := d.createOrUpdateDaemonSet(); err != nil {
 		return errors.Wrap(err, "ensuring daemonset")
 	}
 	return nil
@@ -82,39 +93,49 @@ func (d *deployer) createNamespaceIfNotExist() error {
 		},
 	})
 	// ignore already exists err
-	if err != nil && kubeerrutils.IsAlreadyExists(err) {
-		return nil
+	if err != nil {
+		if kubeerrutils.IsAlreadyExists(err) {
+			d.logger.Info("cache namespace already exists")
+			return nil
+		}
+		return err
 	}
-	return err
+	d.logger.Info("cache namespace created")
+	return nil
 }
 
 func (d *deployer) createConfigMapIfNotExist() error {
 	_, err := d.kube.CoreV1().ConfigMaps(d.namespace).Create(&v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      CacheName,
+			Name:      d.name,
 			Namespace: d.namespace,
 		},
 		Data: map[string]string{
-			"images": "",
+			ImagesKey: "",
 		},
 	})
 	// ignore already exists err
-	if err != nil && kubeerrutils.IsAlreadyExists(err) {
-		return nil
+	if err != nil {
+		if kubeerrutils.IsAlreadyExists(err) {
+			d.logger.Info("cache configmap already exists")
+			return nil
+		}
+		return err
 	}
+	d.logger.Info("cache configmap created")
 	return err
 }
 
 func (d *deployer) createOrUpdateDaemonSet() error {
 	labels := map[string]string{
-		"app": CacheName,
+		"app": d.name,
 	}
 
 	hostPathType := v1.HostPathDirectoryOrCreate
 
 	desiredDaemonSet := &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      CacheName,
+			Name:      d.name,
 			Namespace: d.namespace,
 		},
 		Spec: appsv1.DaemonSetSpec{
@@ -141,7 +162,7 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 							VolumeSource: v1.VolumeSource{
 								ConfigMap: &v1.ConfigMapVolumeSource{
 									LocalObjectReference: v1.LocalObjectReference{
-										Name: CacheName,
+										Name: d.name,
 									},
 									Items: []v1.KeyToPath{
 										{
@@ -154,7 +175,7 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 						},
 					},
 					Containers: []v1.Container{{
-						Name:  CacheName,
+						Name:  d.name,
 						Image: d.image,
 						Args:  d.args,
 						VolumeMounts: []v1.VolumeMount{
