@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 	"os"
+	"time"
 
 	. "github.com/solo-io/wasme/pkg/cache"
 )
@@ -40,8 +41,7 @@ var _ = Describe("Deploy", func() {
 	})
 	It("creates the cache namespace, configmap, and daemonset", func() {
 
-		deployer := NewDeployer(
-			kube, "", "", "", nil)
+		deployer := NewDeployer(kube, cacheNamespace, "", "", "", nil)
 
 		err := deployer.EnsureCache()
 		Expect(err).NotTo(HaveOccurred())
@@ -70,7 +70,7 @@ var _ = Describe("Deploy", func() {
 				return 0, err
 			}
 			return cacheDaemonSet.Status.NumberReady, nil
-		}).Should(Equal(1))
+		}, time.Second*30).Should(Equal(int32(1)))
 
 	})
 })
