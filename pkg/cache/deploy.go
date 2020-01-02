@@ -206,7 +206,10 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 
 	_, err := d.kube.AppsV1().DaemonSets(d.namespace).Create(desiredDaemonSet)
 	// update on already exists err
-	if err != nil && kubeerrutils.IsAlreadyExists(err) {
+	if err != nil {
+		if !kubeerrutils.IsAlreadyExists(err) {
+			return err
+		}
 		existing, err := d.kube.AppsV1().DaemonSets(d.namespace).Get(desiredDaemonSet.Name, metav1.GetOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to get existing cache daemonset")
@@ -216,7 +219,16 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 		existing.Spec = desiredDaemonSet.Spec
 
 		_, err = d.kube.AppsV1().DaemonSets(d.namespace).Update(existing)
-		return err
+		if err != nil {
+			return err
+		}
+
+		d.logger.Info("cache daemonset updated")
+
+		return nil
 	}
-	return err
+
+	d.logger.Info("cache daemonset created")
+
+	return nil
 }
