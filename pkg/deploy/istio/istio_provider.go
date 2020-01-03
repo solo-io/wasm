@@ -77,82 +77,86 @@ func requiredSidecarAnnotations(ports []uint32) map[string]string {
 	}
 }
 
-func (p *Provider) setAnnotations(template *v1.PodTemplateSpec) {
-	if template.Annotations == nil {
-		template.Annotations = map[string]string{}
+// applies the filter to all selected workloads and updates the image cache configmap
+func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
+	if err := p.addImageToCacheConfigMap(filter.Image); err != nil {
+		return errors.Wrap(err, "adding image to cache")
 	}
-	ports := collectContainerPorts(template)
-	for k, v := range requiredSidecarAnnotations(ports) {
-		// create backups of the existing annotations if they exist
-		if currentVal, ok := template.Annotations[k]; ok {
-			template.Annotations[backupAnnotationPrefix+k] = currentVal
-		}
-		template.Annotations[k] = v
+
+	err := p.forEachWorkload(func(meta metav1.ObjectMeta, spec *v1.PodTemplateSpec) error {
+		return p.applyFilterToWorkload(filter, meta, spec)
+	})
+	if err != nil {
+		return errors.Wrap(err, "applying filter to workload")
 	}
-}
 
-// runs a function on the workload pod template spec
-// selects all workloads in a namespace if workload.Name == ""
-func (p *Provider) applyToWorkloadTemplate(do func(spec *v1.PodTemplateSpec)) error {
-	switch p.Workload.Type {
-	case WorkloadTypeDeployment:
-		if p.Workload.Name == "" {
-			workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(metav1.ListOptions{})
-			if err != nil {
-				return err
-			}
-			for _, workload := range workloads.Items {
-				do(&workload.Spec.Template)
-
-				if _, err = p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Update(&workload); err != nil {
-					return err
-				}
-			}
-		} else {
-			workload, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Get(p.Workload.Name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-
-			do(&workload.Spec.Template)
-
-			if _, err = p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Update(workload); err != nil {
-				return err
-			}
-		}
-	case WorkloadTypeDaemonSet:
-		if p.Workload.Name == "" {
-			workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{})
-			if err != nil {
-				return err
-			}
-			for _, workload := range workloads.Items {
-				do(&workload.Spec.Template)
-
-				if _, err = p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Update(&workload); err != nil {
-					return err
-				}
-			}
-		} else {
-			workload, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Get(p.Workload.Name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-
-			do(&workload.Spec.Template)
-
-			if _, err = p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Update(workload); err != nil {
-				return err
-			}
-		}
-	default:
-		return errors.Errorf("unknown workload type %v, must be %v or %v", p.Workload.Type, WorkloadTypeDeployment, WorkloadTypeDaemonSet)
-
-	}
 	return nil
-
 }
 
+// applies the filter to the target workload: adds annotations and creates the EnvoyFilter CR
+func (p *Provider) applyFilterToWorkload(filter *deploy.Filter, meta metav1.ObjectMeta, spec *v1.PodTemplateSpec) error {
+	p.setAnnotations(spec)
+	labels := spec.Labels
+	ports := collectContainerPorts(spec)
+	workloadName := meta.Name
+
+	logger := logrus.WithFields(logrus.Fields{
+		"filter":   filter,
+		"workload": p.Workload,
+		"ports":    ports,
+	})
+
+	if len(ports) == 0 {
+		logger.Info("no ports detected on workload, skipping")
+		return nil
+	}
+
+	logger.Info("updated workload sidecar annotations")
+
+	istioEnvoyFilter, err := p.makeIstioEnvoyFilter(
+		filter,
+		workloadName,
+		labels,
+		ports,
+	)
+	if err != nil {
+		return err
+	}
+
+	filterLogger := logger.WithFields(logrus.Fields{
+		"envoy_filter_resource": istioEnvoyFilter.Name + "." + istioEnvoyFilter.Namespace,
+	})
+
+	_, err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Create(istioEnvoyFilter)
+	if err != nil {
+		if kubeerrutils.IsAlreadyExists(err) {
+
+			// attempt to update if exists
+			existing, err := p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Get(istioEnvoyFilter.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			istioEnvoyFilter.ResourceVersion = existing.ResourceVersion
+
+			_, err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Update(istioEnvoyFilter)
+			if err != nil {
+				return err
+			}
+
+			filterLogger.Info("updated Istio EnvoyFilter resource")
+		} else {
+			return err
+		}
+	} else {
+		filterLogger.Info("created Istio EnvoyFilter resource")
+	}
+
+	return nil
+}
+
+// updates the deployed wasme-cache configmap
+// if configmap does not exist (cache not deployed), this will error
 func (p *Provider) addImageToCacheConfigMap(image string) error {
 	cm, err := p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
 	if err != nil {
@@ -192,84 +196,93 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 
 }
 
-func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
-	if err := p.addImageToCacheConfigMap(filter.Image); err != nil {
-		return errors.Wrap(err, "adding image to cache")
-	}
-
-	var labels map[string]string
-	var ports []uint32
-	// update annotations and grab labels
-	err := p.applyToWorkloadTemplate(func(spec *v1.PodTemplateSpec) {
-		p.setAnnotations(spec)
-		labels = spec.Labels
-		ports = collectContainerPorts(spec)
-	})
-	if err != nil {
-		return errors.Wrap(err, "updating workload annotations")
-	}
-
-	logger := logrus.WithFields(logrus.Fields{
-		"filter":   filter,
-		"workload": p.Workload,
-		"ports":    ports,
-	})
-
-	if len(ports) == 0 {
-		logger.Info("no ports detected on workload, skipping")
-		return nil
-	}
-
-	logger.Info("updated workload sidecar annotations")
-
-	istioEnvoyFilter, err := p.makeIstioEnvoyFilter(
-		filter,
-		labels,
-		ports,
-	)
-	if err != nil {
-		return err
-	}
-
-	if p.Workload.Name == "" {
-		// select all workloads in the namespace
-		istioEnvoyFilter.Spec.WorkloadSelector = nil
-	}
-
-	filterLogger := logger.WithFields(logrus.Fields{
-		"envoy_filter_resource": istioEnvoyFilter.Name + "." + istioEnvoyFilter.Namespace,
-	})
-
-	_, err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Create(istioEnvoyFilter)
-	if err != nil {
-		if kubeerrutils.IsAlreadyExists(err) {
-
-			// attempt to update if exists
-			existing, err := p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Get(istioEnvoyFilter.Name, metav1.GetOptions{})
+// runs a function on the workload pod template spec
+// selects all workloads in a namespace if workload.Name == ""
+func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *v1.PodTemplateSpec) error) error {
+	switch p.Workload.Type {
+	case WorkloadTypeDeployment:
+		if p.Workload.Name == "" {
+			workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(metav1.ListOptions{})
 			if err != nil {
 				return err
 			}
+			for _, workload := range workloads.Items {
+				if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
+					return err
+				}
 
-			istioEnvoyFilter.ResourceVersion = existing.ResourceVersion
-
-			_, err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Update(istioEnvoyFilter)
-			if err != nil {
-				return err
+				if _, err = p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Update(&workload); err != nil {
+					return err
+				}
 			}
-
-			filterLogger.Info("updated Istio EnvoyFilter resource")
 		} else {
-			return err
+			workload, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Get(p.Workload.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
+				return err
+			}
+
+			if _, err = p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Update(workload); err != nil {
+				return err
+			}
 		}
-	} else {
-		filterLogger.Info("created Istio EnvoyFilter resource")
+	case WorkloadTypeDaemonSet:
+		if p.Workload.Name == "" {
+			workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{})
+			if err != nil {
+				return err
+			}
+			for _, workload := range workloads.Items {
+				if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
+					return err
+				}
+
+				if _, err = p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Update(&workload); err != nil {
+					return err
+				}
+			}
+		} else {
+			workload, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Get(p.Workload.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
+				return err
+			}
+
+			if _, err = p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Update(workload); err != nil {
+				return err
+			}
+		}
+	default:
+		return errors.Errorf("unknown workload type %v, must be %v or %v", p.Workload.Type, WorkloadTypeDeployment, WorkloadTypeDaemonSet)
 	}
 
 	return nil
+
 }
 
-// make Istio EnvoyFilter Custom Resource
-func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, labels map[string]string, ports []uint32) (*v1alpha3.EnvoyFilter, error) {
+// set sidecar annotations on the workload
+func (p *Provider) setAnnotations(template *v1.PodTemplateSpec) {
+	if template.Annotations == nil {
+		template.Annotations = map[string]string{}
+	}
+	ports := collectContainerPorts(template)
+	for k, v := range requiredSidecarAnnotations(ports) {
+		// create backups of the existing annotations if they exist
+		if currentVal, ok := template.Annotations[k]; ok {
+			template.Annotations[backupAnnotationPrefix+k] = currentVal
+		}
+		template.Annotations[k] = v
+	}
+}
+
+// construct Istio EnvoyFilter Custom Resource
+func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, workloadName string, labels map[string]string, ports []uint32) (*v1alpha3.EnvoyFilter, error) {
 	descriptor, err := p.Puller.PullCodeDescriptor(p.Ctx, filter.Image)
 	if err != nil {
 		return nil, err
@@ -347,7 +360,7 @@ func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, labels map[string
 	return &v1alpha3.EnvoyFilter{
 		ObjectMeta: metav1.ObjectMeta{
 			// in istio's case, filter ID must be a kube-compliant name
-			Name:      istioEnvoyFilterName(p.Workload.Name, filter.ID),
+			Name:      istioEnvoyFilterName(workloadName, filter.ID),
 			Namespace: p.Workload.Namespace,
 		},
 		Spec: spec,
@@ -355,9 +368,6 @@ func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, labels map[string
 }
 
 func istioEnvoyFilterName(workloadName, filterId string) string {
-	if workloadName == "" {
-		return filterId
-	}
 	return workloadName + "-" + filterId
 }
 
@@ -368,14 +378,20 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 		"workload": p.Workload,
 	})
 
+	var workloads []string
 	// remove annotations from workload
-	err := p.applyToWorkloadTemplate(func(spec *v1.PodTemplateSpec) {
+	err := p.forEachWorkload(func(meta metav1.ObjectMeta, spec *v1.PodTemplateSpec) error {
+		// collect the name of the workload so we can delete its filter
+		workloads = append(workloads, meta.Name)
+
 		// annotate the inbound ports on the spec
 		ports := collectContainerPorts(spec)
 
 		for k := range requiredSidecarAnnotations(ports) {
 			delete(spec.Annotations, k)
 		}
+
+		// restore backup annotations
 		for k, v := range spec.Annotations {
 			if strings.HasPrefix(backupAnnotationPrefix, k) {
 				key := strings.TrimPrefix(k, backupAnnotationPrefix)
@@ -383,23 +399,28 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 				delete(spec.Annotations, key)
 			}
 		}
+
+		return nil
 	})
 	if err != nil {
 		return errors.Wrap(err, "removing annotations from workload")
 	}
 
-	logger.Info("removed sidecar annotations from workload")
+	logger.Info("removed sidecar annotations from workloads")
 
-	filterName := istioEnvoyFilterName(p.Workload.Name, filter.ID)
+	for _, workloadName := range workloads {
 
-	err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Delete(filterName, nil)
-	if err != nil {
-		return err
+		filterName := istioEnvoyFilterName(workloadName, filter.ID)
+
+		err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Delete(filterName, nil)
+		if err != nil {
+			return err
+		}
+
+		logger.WithFields(logrus.Fields{
+			"filter": filterName,
+		}).Info("deleted Istio EnvoyFilter resource")
 	}
-
-	logger.WithFields(logrus.Fields{
-		"filter": filterName,
-	}).Info("deleted Istio EnvoyFilter resource")
 
 	return nil
 }

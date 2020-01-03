@@ -140,17 +140,53 @@ var _ = Describe("IstioProvider", func() {
 			Cache:       cache,
 		}
 
+		makeSpec := func(labels map[string]string) appsv1.DeploymentSpec {
+			return appsv1.DeploymentSpec{
+				Template: kubev1.PodTemplateSpec{
+					ObjectMeta: metav1.ObjectMeta{
+						Labels: labels,
+					},
+					Spec: kubev1.PodSpec{
+						Containers: []kubev1.Container{
+							{
+								Ports: []kubev1.ContainerPort{
+									{
+										ContainerPort: 123,
+									},
+									{
+										ContainerPort: 456,
+									},
+								},
+							},
+							{
+								Ports: []kubev1.ContainerPort{
+									{
+										ContainerPort: 789,
+									},
+								},
+							},
+						},
+					},
+				},
+			}
+		}
+
+		labels1 := map[string]string{"hi": "there"}
 		dep1, _ := kube.AppsV1().Deployments(workload.Namespace).Create(&appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: workload.Namespace,
 				Name:      "one",
 			},
+			Spec: makeSpec(labels1),
 		})
+
+		labels2 := map[string]string{"good": "bye"}
 		dep2, _ := kube.AppsV1().Deployments(workload.Namespace).Create(&appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: workload.Namespace,
 				Name:      "two",
 			},
+			Spec: makeSpec(labels2),
 		})
 
 		err := p.ApplyFilter(filter)
@@ -159,18 +195,24 @@ var _ = Describe("IstioProvider", func() {
 		dep1, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep1.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations))
+		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations([]uint32{123, 456, 789})))
 
 		dep2, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep2.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations))
+		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations([]uint32{123, 456, 789})))
 
-		ef, err := istio.NetworkingV1alpha3().EnvoyFilters(workload.Namespace).Get(istioEnvoyFilterName(workload.Name, filter.ID), metav1.GetOptions{})
+		ef1, err := istio.NetworkingV1alpha3().EnvoyFilters(workload.Namespace).Get(istioEnvoyFilterName(dep1.Name, filter.ID), metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(ef.Spec.WorkloadSelector).To(BeNil())
-		Expect(ef.Spec.ConfigPatches).To(HaveLen(1))
+		Expect(ef1.Spec.WorkloadSelector.Labels).To(Equal(labels1))
+		Expect(ef1.Spec.ConfigPatches).To(HaveLen(3))
+
+		ef2, err := istio.NetworkingV1alpha3().EnvoyFilters(workload.Namespace).Get(istioEnvoyFilterName(dep2.Name, filter.ID), metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(ef2.Spec.WorkloadSelector.Labels).To(Equal(labels2))
+		Expect(ef2.Spec.ConfigPatches).To(HaveLen(3))
 	})
 })
 
