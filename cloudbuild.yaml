@@ -8,7 +8,7 @@ steps:
         path: '/go/pkg'
     id: 'untar-mod-cache'
 
-  - name: 'golang:1.13'
+  - name: 'golang:1.14'
     volumes: *vol
     args: ['go', 'get', './...']
     env:
