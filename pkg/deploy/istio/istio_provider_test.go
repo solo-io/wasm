@@ -75,6 +75,27 @@ var _ = Describe("IstioProvider", func() {
 					ObjectMeta: metav1.ObjectMeta{
 						Labels: podLabels,
 					},
+					Spec: kubev1.PodSpec{
+						Containers: []kubev1.Container{
+							{
+								Ports: []kubev1.ContainerPort{
+									{
+										ContainerPort: 123,
+									},
+									{
+										ContainerPort: 456,
+									},
+								},
+							},
+							{
+								Ports: []kubev1.ContainerPort{
+									{
+										ContainerPort: 789,
+									},
+								},
+							},
+						},
+					},
 				},
 			},
 		})
@@ -85,7 +106,7 @@ var _ = Describe("IstioProvider", func() {
 		dep, err := kube.AppsV1().Deployments(workload.Namespace).Get(workload.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(dep.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations))
+		Expect(dep.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations([]uint32{123, 456, 789})))
 
 		cacheConfig, err := kube.CoreV1().ConfigMaps(cache.Namespace).Get(cache.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
@@ -98,7 +119,10 @@ var _ = Describe("IstioProvider", func() {
 		Expect(ef.Spec.WorkloadSelector).To(Equal(&v1alpha3.WorkloadSelector{
 			Labels: podLabels,
 		}))
-		Expect(ef.Spec.ConfigPatches).To(HaveLen(1))
+		Expect(ef.Spec.ConfigPatches).To(HaveLen(3))
+		Expect(ef.Spec.ConfigPatches[0].Match.GetListener().PortNumber).To(Equal(uint32(123)))
+		Expect(ef.Spec.ConfigPatches[1].Match.GetListener().PortNumber).To(Equal(uint32(456)))
+		Expect(ef.Spec.ConfigPatches[2].Match.GetListener().PortNumber).To(Equal(uint32(789)))
 	})
 	It("given an empty workload name, annotates all workloads in the namespace and creates a generic EnvoyFilter", func() {
 		workload := Workload{

@@ -41,6 +41,7 @@ You must specify --root-id unless a default root id is provided in the image con
 
 	cmd.AddCommand(
 		deployGlooCmd(opts),
+		deployIstioCmd(opts),
 		deployLocalCmd(opts),
 	)
 
@@ -55,6 +56,9 @@ func makeDeployCommand(opts *options, provider, use, short, long string, minArgs
 		Args:  cobra.MinimumNArgs(minArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.providerType = provider
+			if minArgs == 1 {
+				opts.filter.Image = args[0]
+			}
 			return runDeploy(opts)
 		},
 	}
@@ -93,11 +97,7 @@ func deployIstioCmd(opts *options) *cobra.Command {
 	long := `Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).
 
 wasme uses the EnvoyFilter Istio Custom Resource to pull and run wasm filters.
-wasme deploys a server-side cache component which runs in cluster and pulls 
-
-Use --namespaces to constrain the namespaces of Gateway CRs to update.
-
-Use --labels to use a match Gateway CRs by label.
+wasme deploys a server-side cache component which runs in cluster and pulls filter images.
 `
 	cmd := makeDeployCommand(opts,
 		Provider_Istio,
@@ -112,8 +112,8 @@ Use --labels to use a match Gateway CRs by label.
 	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		cacheDeployer := cachedeployment.NewDeployer(
 			helpers.MustKubeClient(),
-			opts.cacheOpts.name,
 			opts.cacheOpts.namespace,
+			opts.cacheOpts.name,
 			opts.cacheOpts.imageRepo,
 			opts.cacheOpts.imageTag,
 			opts.cacheOpts.customArgs,
@@ -121,6 +121,8 @@ Use --labels to use a match Gateway CRs by label.
 
 		return cacheDeployer.EnsureCache()
 	}
+
+	return cmd
 }
 
 func deployLocalCmd(opts *options) *cobra.Command {

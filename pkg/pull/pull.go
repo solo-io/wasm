@@ -7,12 +7,11 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/solo-io/wasme/pkg/config"
-
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/remotes"
 	"github.com/deislabs/oras/pkg/content"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/solo-io/wasme/pkg/config"
 	"github.com/solo-io/wasme/pkg/model"
 )
 

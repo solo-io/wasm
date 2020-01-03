@@ -2,6 +2,7 @@ package istio
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -26,7 +27,7 @@ const (
 	WorkloadTypeDeployment = "deployment"
 	WorkloadTypeDaemonSet  = "daemonset"
 
-	backupAnnotationPrefix = "wasme_backup."
+	backupAnnotationPrefix = "wasme-backup."
 )
 
 // the target workload to deploy the filter to
@@ -62,18 +63,26 @@ type Provider struct {
 }
 
 // the sidecar annotations required on the pod
-var requiredSidecarAnnotations = map[string]string{
-	"sidecar.istio.io/userVolume":          `[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
-	"sidecar.istio.io/userVolumeMount":     `[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
-	"sidecar.istio.io/interceptionMode":    "TPROXY",
-	"sidecar.istio.io/includeInboundPorts": "*",
+func requiredSidecarAnnotations(ports []uint32) map[string]string {
+	var portStrings []string
+	for _, p := range ports {
+		portStrings = append(portStrings, fmt.Sprintf("%v", p))
+	}
+
+	return map[string]string{
+		"sidecar.istio.io/userVolume":                  `[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
+		"sidecar.istio.io/userVolumeMount":             `[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
+		"sidecar.istio.io/interceptionMode":            "TPROXY",
+		"traffic.sidecar.istio.io/includeInboundPorts": strings.Join(portStrings, ","),
+	}
 }
 
 func (p *Provider) setAnnotations(template *v1.PodTemplateSpec) {
 	if template.Annotations == nil {
 		template.Annotations = map[string]string{}
 	}
-	for k, v := range requiredSidecarAnnotations {
+	ports := collectContainerPorts(template)
+	for k, v := range requiredSidecarAnnotations(ports) {
 		// create backups of the existing annotations if they exist
 		if currentVal, ok := template.Annotations[k]; ok {
 			template.Annotations[backupAnnotationPrefix+k] = currentVal
@@ -189,10 +198,12 @@ func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
 	}
 
 	var labels map[string]string
+	var ports []uint32
 	// update annotations and grab labels
 	err := p.applyToWorkloadTemplate(func(spec *v1.PodTemplateSpec) {
 		p.setAnnotations(spec)
 		labels = spec.Labels
+		ports = collectContainerPorts(spec)
 	})
 	if err != nil {
 		return errors.Wrap(err, "updating workload annotations")
@@ -201,13 +212,20 @@ func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
 	logger := logrus.WithFields(logrus.Fields{
 		"filter":   filter,
 		"workload": p.Workload,
+		"ports":    ports,
 	})
+
+	if len(ports) == 0 {
+		logger.Info("no ports detected on workload, skipping")
+		return nil
+	}
 
 	logger.Info("updated workload sidecar annotations")
 
 	istioEnvoyFilter, err := p.makeIstioEnvoyFilter(
 		filter,
 		labels,
+		ports,
 	)
 	if err != nil {
 		return err
@@ -225,8 +243,9 @@ func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
 	_, err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Create(istioEnvoyFilter)
 	if err != nil {
 		if kubeerrutils.IsAlreadyExists(err) {
+
 			// attempt to update if exists
-			existing, err := p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Create(istioEnvoyFilter)
+			existing, err := p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Get(istioEnvoyFilter.Name, metav1.GetOptions{})
 			if err != nil {
 				return err
 			}
@@ -234,14 +253,14 @@ func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
 			istioEnvoyFilter.ResourceVersion = existing.ResourceVersion
 
 			_, err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Update(istioEnvoyFilter)
-
 			if err != nil {
 				return err
 			}
 
 			filterLogger.Info("updated Istio EnvoyFilter resource")
+		} else {
+			return err
 		}
-		return err
 	} else {
 		filterLogger.Info("created Istio EnvoyFilter resource")
 	}
@@ -250,7 +269,7 @@ func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
 }
 
 // make Istio EnvoyFilter Custom Resource
-func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
+func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, labels map[string]string, ports []uint32) (*v1alpha3.EnvoyFilter, error) {
 	descriptor, err := p.Puller.PullCodeDescriptor(p.Ctx, filter.Image)
 	if err != nil {
 		return nil, err
@@ -263,7 +282,11 @@ func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, labels map[string
 		cache.Digest2filename(descriptor.Digest),
 	)
 
-	wasmFilterConfig := envoyfilter.MakeWasmFilter(filter, envoyfilter.MakeLocalDatasource(filename))
+	wasmFilterConfig := envoyfilter.MakeHackyIstioWasmFilter(filter,
+		// use Filename datasource as Istio doesn't yet support
+		// AsyncDatasource
+		envoyfilter.MakeFilenameDatasource(filename),
+	)
 
 	// here we need to use the gogo proto marshal
 	patchValue, err := protoutils.MarshalStruct(wasmFilterConfig)
@@ -272,32 +295,53 @@ func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, labels map[string
 		panic(err)
 	}
 
-	spec := networkingv1alpha3.EnvoyFilter{
-		WorkloadSelector: &networkingv1alpha3.WorkloadSelector{
-			Labels: labels,
-		},
-		ConfigPatches: []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{{
-			ApplyTo: networkingv1alpha3.EnvoyFilter_HTTP_FILTER,
-			Match: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-				Context: networkingv1alpha3.EnvoyFilter_SIDECAR_INBOUND,
-				ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
-					Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
-						FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
-							Filter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-								Name: "envoy.http_connection_manager",
-								SubFilter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_SubFilterMatch{
-									Name: "envoy.router",
-								},
+	// helper func to create a matcher for the target port
+	// we need a separate match for each port
+	makeMatch := func(port uint32) *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch {
+		return &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+			Context: networkingv1alpha3.EnvoyFilter_SIDECAR_INBOUND,
+			ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
+				Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
+					PortNumber: port,
+					FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
+						Filter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
+							Name: "envoy.http_connection_manager",
+							SubFilter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_SubFilterMatch{
+								Name: "envoy.router",
 							},
 						},
 					},
 				},
 			},
+		}
+	}
+
+	// each config patch only allows one match, so we
+	// have to duplicate the config patch for each port we want
+	makeConfigPatch := func(match *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch) *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch {
+		return &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
+			ApplyTo: networkingv1alpha3.EnvoyFilter_HTTP_FILTER,
+			Match:   match,
 			Patch: &networkingv1alpha3.EnvoyFilter_Patch{
 				Operation: networkingv1alpha3.EnvoyFilter_Patch_INSERT_BEFORE,
 				Value:     patchValue,
 			},
-		}},
+		}
+	}
+
+	// create a config patch for each port
+	var configPatches []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch
+	for _, port := range ports {
+		configPatches = append(configPatches,
+			makeConfigPatch(makeMatch(port)),
+		)
+	}
+
+	spec := networkingv1alpha3.EnvoyFilter{
+		WorkloadSelector: &networkingv1alpha3.WorkloadSelector{
+			Labels: labels,
+		},
+		ConfigPatches: configPatches,
 	}
 
 	return &v1alpha3.EnvoyFilter{
@@ -326,7 +370,10 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 
 	// remove annotations from workload
 	err := p.applyToWorkloadTemplate(func(spec *v1.PodTemplateSpec) {
-		for k := range requiredSidecarAnnotations {
+		// annotate the inbound ports on the spec
+		ports := collectContainerPorts(spec)
+
+		for k := range requiredSidecarAnnotations(ports) {
 			delete(spec.Annotations, k)
 		}
 		for k, v := range spec.Annotations {
@@ -355,4 +402,14 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 	}).Info("deleted Istio EnvoyFilter resource")
 
 	return nil
+}
+
+func collectContainerPorts(spec *v1.PodTemplateSpec) []uint32 {
+	var ports []uint32
+	for _, container := range spec.Spec.Containers {
+		for _, port := range container.Ports {
+			ports = append(ports, uint32(port.ContainerPort))
+		}
+	}
+	return ports
 }

@@ -93,11 +93,11 @@ type cacheOpts struct {
 }
 
 func (opts *cacheOpts) addToFlags(flags *pflag.FlagSet) {
-	flags.StringVarP(&opts.name, "name", "", cachedeployment.CacheName, "name of resources for the wasm image cache server")
-	flags.StringVarP(&opts.namespace, "namespace", "n", cachedeployment.CacheNamespace, "namespace of resources for the wasm image cache server")
-	flags.StringVarP(&opts.imageRepo, "repo", "", cachedeployment.CacheImageRepository, "name of the image repository to use for the cache server daemonset")
-	flags.StringVarP(&opts.imageRepo, "tag", "", cachedeployment.CacheImageTag, "image tag to use for the cache server daemonset")
-	flags.StringSliceVarP(&opts.customArgs, "custom-command", "", nil, "custom command to provide to the cache server image")
+	flags.StringVarP(&opts.name, "cache-name", "", cachedeployment.CacheName, "name of resources for the wasm image cache server")
+	flags.StringVarP(&opts.namespace, "cache-namespace", "", cachedeployment.CacheNamespace, "namespace of resources for the wasm image cache server")
+	flags.StringVarP(&opts.imageRepo, "cache-repo", "", cachedeployment.CacheImageRepository, "name of the image repository to use for the cache server daemonset")
+	flags.StringVarP(&opts.imageTag, "cache-tag", "", cachedeployment.CacheImageTag, "image tag to use for the cache server daemonset")
+	flags.StringSliceVarP(&opts.customArgs, "cache-custom-command", "", nil, "custom command to provide to the cache server image")
 }
 
 type localOpts struct {
