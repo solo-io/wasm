@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/solo-kit/test/helpers"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
 	cachedeployment "github.com/solo-io/wasme/pkg/cache"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"

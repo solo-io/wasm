@@ -6,6 +6,7 @@ OUTDIR?=_output
 PROJECT?=wasme
 
 BUILDER_IMAGE?=quay.io/solo-io/ee-builder
+CACHE_IMAGE?=quay.io/solo-io/wasme
 
 SOURCES := $(shell find . -name "*.go" | grep -v test.go | grep -v '\.\#*')
 RELEASE := "true"
@@ -81,6 +82,15 @@ builder-image:
 builder-image-push:
 	docker push $(BUILDER_IMAGE):$(VERSION)
 
+# build Cache image
+.PHONY: cache-image
+cache-image:
+	docker build -t $(CACHE_IMAGE):$(VERSION) .
+
+.PHONY: cache-image-push
+cache-image-push:
+	docker push $(CACHE_IMAGE):$(VERSION)
+
 
 #----------------------------------------------------------------------------------
 # Release
@@ -105,6 +115,7 @@ endif
 publish-images:
 ifeq ($(RELEASE),"true")
 	docker push $(BUILDER_IMAGE):$(VERSION)
+	docker push $(CACHE_IMAGE):$(VERSION)
 endif
 
 #----------------------------------------------------------------------------------
