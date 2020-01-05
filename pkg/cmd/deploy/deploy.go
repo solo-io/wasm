@@ -56,9 +56,6 @@ func makeDeployCommand(opts *options, provider, use, short, long string, minArgs
 		Args:  cobra.MinimumNArgs(minArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.providerType = provider
-			if minArgs == 1 {
-				opts.filter.Image = args[0]
-			}
 			return runDeploy(opts)
 		},
 	}
@@ -98,6 +95,8 @@ func deployIstioCmd(opts *options) *cobra.Command {
 
 wasme uses the EnvoyFilter Istio Custom Resource to pull and run wasm filters.
 wasme deploys a server-side cache component which runs in cluster and pulls filter images.
+
+Note: currently only Istio 1.4 is supported.
 `
 	cmd := makeDeployCommand(opts,
 		Provider_Istio,
@@ -109,7 +108,7 @@ wasme deploys a server-side cache component which runs in cluster and pulls filt
 		opts.cacheOpts.addToFlags,
 	)
 
-	cmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		cacheDeployer := cachedeployment.NewDeployer(
 			helpers.MustKubeClient(),
 			opts.cacheOpts.namespace,
