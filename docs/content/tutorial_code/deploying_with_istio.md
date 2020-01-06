@@ -32,6 +32,7 @@ bin/istioctl manifest apply --set profile=demo
 
 ```bash
 kubectl create ns bookinfo
+kubectl label namespace bookinfo istio-injection=enabled --overwrite
 kubectl apply -n bookinfo \
   -f samples/bookinfo/platform/kube/bookinfo.yaml 
 ```
