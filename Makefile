@@ -72,6 +72,9 @@ install-cli: enable-gomod
 	go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o ${GOPATH}/bin/wasme main.go
 
 
+.PHONY: build-images
+build-images: builder-image cache-image
+
 # build Builder image
 .PHONY: builder-image
 builder-image:

@@ -16,14 +16,14 @@ steps:
     id: 'go-get'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
-    args: ['builder-image']
+    args: ['build-images']
     env:
       - 'GO111MODULE=on'
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'PROJECT_ROOT=github.com/solo-io/wasme'
       - 'GOPATH=/workspace/gopath'
       - 'GCLOUD_PROJECT_ID=$PROJECT_ID'
-    id: 'builder-image'
+    id: 'build-images'
 
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
