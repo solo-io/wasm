@@ -6,7 +6,9 @@ import (
 )
 
 func UndeployCmd() *cobra.Command {
-	opts := &options{remove: true}
+	opts := &options{
+		remove: true,
+	}
 	cmd := &cobra.Command{
 		Use:   "undeploy gloo|istio|envoy --id=<unique id>",
 		Short: "Remove a deployed Envoy WASM Filter from the data plane (Envoy proxies).",
@@ -25,6 +27,7 @@ func UndeployCmd() *cobra.Command {
 
 	cmd.AddCommand(
 		undeployGlooCmd(opts),
+		undeployIstioCmd(opts),
 		undeployLocalCmd(opts),
 	)
 
@@ -47,6 +50,26 @@ Use --labels to use a match Gateway CRs by label.
 		long,
 		0,
 		opts.glooOpts.addToFlags,
+	)
+}
+
+
+func undeployIstioCmd(opts *options) *cobra.Command {
+	use := "istio --id=<unique name> --namespace=<deployment namespace> [--name=<deployment name>]"
+	short := "Remove an Envoy WASM Filter from the Istio Sidecar Proxies (Envoy)."
+	long := `wasme uses the Istio EnvoyFilter CR to pull and run wasm filters.
+
+Use --namespace to target workload(s) in a the namespaces of Gateway CRs to update.
+Use --name to target a specific workload (deployment or daemonset) in the target namespace. If unspecified, all deployments 
+in the namespace will be targeted.
+`
+	return makeDeployCommand(opts,
+		Provider_Istio,
+		use,
+		short,
+		long,
+		0,
+		opts.providerOptions.istioOpts.addToFlags,
 	)
 }
 

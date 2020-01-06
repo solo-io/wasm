@@ -42,25 +42,28 @@ func getCallerDirectory(skip ...int) (string, error) {
 }
 
 // add to this set to add more example types
-var examples = []string{
-	"cpp",
+// key is the prefix of the variable name
+// value is the directory name
+var examples = map[string]string{
+	"cpp": "cpp",
+	"cppIstio1_4": "cpp-istio-1.4",
 }
 
-func generateEmbeddedArchiveFile(example string) error {
-	// tar example
+func generateEmbeddedArchiveFile(prefix, dir string) error {
+	// tar dir
 	archive, err := ioutil.TempFile("", "")
 	if err != nil {
 		return err
 	}
-	if err := util.Tar(example, archive); err != nil {
+	if err := util.Tar(dir, archive); err != nil {
 		return err
 	}
 
 	// generate embedded file with 2goarray
 
-	destFile := examplesDir + "/../pkg/cmd/initialize/" + example + "_archive_2gobytes.go"
+	destFile := examplesDir + "/../pkg/cmd/initialize/" + dir + "_archive_2gobytes.go"
 
-	script := fmt.Sprintf("2goarray %sTarBytes initialize < %s | sed 's@// date.*@@g' > %s ", example, archive.Name(), destFile)
+	script := fmt.Sprintf("2goarray %sTarBytes initialize < %s | sed 's@// date.*@@g' > %s ", prefix, archive.Name(), destFile)
 
 	genCmd := exec.Command("sh", "-c", script)
 
@@ -74,8 +77,8 @@ func generateEmbeddedArchiveFile(example string) error {
 }
 
 func run() error {
-	for _, example := range examples {
-		if err := generateEmbeddedArchiveFile(example); err != nil {
+	for prefix, dir := range examples {
+		if err := generateEmbeddedArchiveFile(prefix, dir); err != nil {
 			return err
 		}
 	}

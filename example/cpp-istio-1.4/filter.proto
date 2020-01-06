@@ -2,5 +2,6 @@ syntax = "proto3";
 
 // this proto represents configuration for the example filter
 message Config {
-    string value = 1;
+    string name = 1;
+    string value = 2;
 }
