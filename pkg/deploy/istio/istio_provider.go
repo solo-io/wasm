@@ -102,7 +102,7 @@ func (p *Provider) applyFilterToWorkload(filter *deploy.Filter, meta metav1.Obje
 
 	logger := logrus.WithFields(logrus.Fields{
 		"filter":   filter,
-		"workload": p.Workload,
+		"workload": workloadName,
 		"ports":    ports,
 	})
 
@@ -374,9 +374,12 @@ func istioEnvoyFilterName(workloadName, filterId string) string {
 // removes the filter from all selected workloads in selected namespaces
 func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 	logger := logrus.WithFields(logrus.Fields{
-		"filter":   filter,
-		"workload": p.Workload,
+		"filter": filter.ID,
 	})
+
+	logger.WithFields(logrus.Fields{
+		"params": p.Workload,
+	}).Info("removing filter from one or more workloads...")
 
 	var workloads []string
 	// remove annotations from workload
@@ -384,12 +387,17 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 		// collect the name of the workload so we can delete its filter
 		workloads = append(workloads, meta.Name)
 
+		logger := logger.WithFields(logrus.Fields{
+			"workload": meta.Name,
+		})
+
 		// annotate the inbound ports on the spec
 		ports := collectContainerPorts(spec)
 
 		for k := range requiredSidecarAnnotations(ports) {
 			delete(spec.Annotations, k)
 		}
+		logger.Info("removing sidecar annotations from workload")
 
 		// restore backup annotations
 		for k, v := range spec.Annotations {
@@ -405,8 +413,6 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 	if err != nil {
 		return errors.Wrap(err, "removing annotations from workload")
 	}
-
-	logger.Info("removed sidecar annotations from workloads")
 
 	for _, workloadName := range workloads {
 
