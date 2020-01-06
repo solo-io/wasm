@@ -2,13 +2,14 @@ package build
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"github.com/solo-io/wasme/pkg/version"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
+	"github.com/solo-io/wasme/pkg/version"
 
 	"github.com/spf13/cobra"
 )
@@ -19,9 +20,9 @@ type buildOptions struct {
 	sourceDir    string
 	outFile      string
 	builderImage string
-	buildDir string
-	bazelOutput string
-	bazelTarget string
+	buildDir     string
+	bazelOutput  string
+	bazelTarget  string
 }
 
 func BuildCmd() *cobra.Command {
@@ -69,9 +70,9 @@ func runBuild(opts buildOptions) error {
 		"-v", sourceDir + ":/src/workspace",
 		"-v", tmpDir + ":/tmp/build_output",
 		"-w", "/src/workspace",
-		"-e", "BUILD_BASE="+opts.buildDir,
-		"-e", "BAZEL_OUTPUT="+opts.bazelOutput,
-		"-e", "TARGET="+opts.bazelTarget,
+		"-e", "BUILD_BASE=" + opts.buildDir,
+		"-e", "BAZEL_OUTPUT=" + opts.bazelOutput,
+		"-e", "TARGET=" + opts.bazelTarget,
 		opts.builderImage,
 	}
 
@@ -99,7 +100,7 @@ func runBuild(opts buildOptions) error {
 		return err
 	}
 
-	if err := os.Chmod(outFile, 0644); err != nil{
+	if err := os.Chmod(outFile, 0644); err != nil {
 		return err
 	}
 

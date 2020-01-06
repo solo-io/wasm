@@ -3,11 +3,12 @@ package initialize
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/wasme/pkg/util"
 	"github.com/spf13/cobra"
-	"path/filepath"
 )
 
 var log = logrus.StandardLogger()

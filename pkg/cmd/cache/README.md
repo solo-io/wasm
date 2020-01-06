@@ -44,7 +44,7 @@ In istio 1.4, wasm filters only get loaded to TPROXY enabled listeners. so we'll
 annotations:
 ```
 sidecar.istio.io/interceptionMode: TPROXY
-sidecar.istio.io/includeInboundPorts: "9080"
+traffic.sidecar.istio.io/includeInboundPorts: "9080"
 ```
 
 Note: includeInboundPorts is needed as otherwise communication to pilot is sent to the TPROXY rule,
@@ -72,7 +72,7 @@ spec:
         sidecar.istio.io/userVolume: '[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache","type":"Directory"}}]'
         sidecar.istio.io/userVolumeMount: '[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]',
         sidecar.istio.io/interceptionMode: TPROXY
-        sidecar.istio.io/includeInboundPorts: "9080"
+        traffic.sidecar.istio.io/includeInboundPorts: "9080"
       labels:
         app: details
         version: v1

@@ -50,7 +50,6 @@ Use --labels to use a match Gateway CRs by label.
 	)
 }
 
-
 func undeployLocalCmd(opts *options) *cobra.Command {
 	use := "envoy --id=<unique name>"
 	short := "Remove an Envoy WASM Filter from the Envoy listeners."
@@ -65,4 +64,3 @@ func undeployLocalCmd(opts *options) *cobra.Command {
 		opts.localOpts.addFilesToFlags,
 	)
 }
-
