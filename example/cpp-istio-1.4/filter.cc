@@ -11,6 +11,7 @@ public:
   explicit AddHeaderRootContext(uint32_t id, StringView root_id) : RootContext(id, root_id) {}
   bool onConfigure(std::unique_ptr<WasmData> conf) override;
 
+  std::string header_name_;
   std::string header_value_;
 };
 
@@ -34,15 +35,16 @@ bool AddHeaderRootContext::onConfigure(std::unique_ptr<WasmData> conf) {
 
   google::protobuf::util::JsonStringToMessage(conf->toString(), &config, options);
   LOG_DEBUG("onConfigure " + config.value());
+  header_name_ = config.name();
   header_value_ = config.value();
-  return true; 
+  return true;
 }
 
 void AddHeaderContext::onCreate() { LOG_DEBUG(std::string("onCreate " + std::to_string(id()))); }
 
 FilterHeadersStatus AddHeaderContext::onResponseHeaders() {
   LOG_DEBUG(std::string("onResponseHeaders ") + std::to_string(id()));
-  addResponseHeader("newheader", root_->header_value_);
+  addResponseHeader(root_->header_name_, root_->header_value_);
   return FilterHeadersStatus::Continue;
 }
 
