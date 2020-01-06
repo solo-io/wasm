@@ -53,7 +53,6 @@ Use --labels to use a match Gateway CRs by label.
 	)
 }
 
-
 func undeployIstioCmd(opts *options) *cobra.Command {
 	use := "istio --id=<unique name> --namespace=<deployment namespace> [--name=<deployment name>]"
 	short := "Remove an Envoy WASM Filter from the Istio Sidecar Proxies (Envoy)."

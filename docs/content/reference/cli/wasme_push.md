@@ -20,9 +20,10 @@ wasme push name[:tag|@digest] code.wasm [config_proto-descriptor-set.proto.bin] 
 ### Options
 
 ```
-  -d, --debug     debug mode
-  -h, --help      help for push
-  -v, --verbose   verbose output
+  -d, --debug                  debug mode
+  -h, --help                   help for push
+  -r, --root-id wasme deploy   Specify the root_id of the filter to be loaded by Envoy. If not specified, users of this filter will have to specify the --root-id flag to the wasme deploy command.
+  -v, --verbose                verbose output
 ```
 
 ### Options inherited from parent commands

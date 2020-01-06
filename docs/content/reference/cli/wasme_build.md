@@ -11,15 +11,18 @@ Compile the filter to wasm using Bazel-in-Docker
 Compile the filter to wasm using Bazel-in-Docker
 
 ```
-wasme build SOURCE_DIRECTORY [-o OUTPUT_FILE] [flags]
+wasme build SOURCE_DIRECTORY [-b <bazel target>] [-o OUTPUT_FILE] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help            help for build
-  -i, --image string    Name of the docker image containing the Bazel run instructions. Only be modified if you are an experiejnced user (default "quay.io/solo-io/ee-builder:v1")
-  -o, --output string   path to the output .wasm file. Nonexistent directories will be created. (default "_output/filter.wasm")
+  -f, --bazel-ouptut bazel-bin   Path relative to bazel-bin to the wasm file produced by running the Bazel target. (default "filter.wasm")
+  -t, --bazel-target string      Name of the bazel target to run. (default ":filter.wasm")
+  -b, --build-dir string         Directory containing the target BUILD file. (default ".")
+  -h, --help                     help for build
+  -i, --image string             Name of the docker image containing the Bazel run instructions. Modify to run a custom builder image (default "quay.io/solo-io/ee-builder:dev")
+  -o, --output string            path to the output .wasm file. Nonexistent directories will be created. (default "filter.wasm")
 ```
 
 ### Options inherited from parent commands
