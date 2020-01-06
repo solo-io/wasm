@@ -2,6 +2,7 @@ package gloo
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	gloov1 "github.com/solo-io/gloo/projects/gloo/pkg/api/v1"
@@ -40,7 +41,7 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 		return removeWasmConfig(filter.ID, gateway)
 	})
 }
-func (p *Provider) updateGateways(updateFunc func(gateway *gatewayv1.Gateway) error ) error {
+func (p *Provider) updateGateways(updateFunc func(gateway *gatewayv1.Gateway) error) error {
 	namespaces := p.Selector.Namespaces
 	if len(namespaces) == 0 {
 		namespaces = []string{v1.NamespaceAll}

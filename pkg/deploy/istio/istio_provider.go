@@ -1,96 +1,305 @@
 package istio
 
 import (
+	"context"
+	"fmt"
+	"path/filepath"
+	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/solo-io/go-utils/kubeerrutils"
 	"github.com/solo-io/go-utils/protoutils"
+	cachedeployment "github.com/solo-io/wasme/pkg/cache"
+	"github.com/solo-io/wasme/pkg/cmd/cache"
 	"github.com/solo-io/wasme/pkg/deploy"
 	envoyfilter "github.com/solo-io/wasme/pkg/deploy/filter"
+	"github.com/solo-io/wasme/pkg/pull"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	versionedclient "istio.io/client-go/pkg/clientset/versioned"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
 
-// selects the istio proxies (and their listeners) to which to deploy the wasm filter(s)
-type Selector struct {
-	Namespaces     []string
-	WorkloadLabels map[string]string
-	ListenerType   networkingv1alpha3.EnvoyFilter_PatchContext
+const (
+	WorkloadTypeDeployment = "deployment"
+	WorkloadTypeDaemonSet  = "daemonset"
+
+	backupAnnotationPrefix = "wasme-backup."
+)
+
+// the target workload to deploy the filter to
+// can select all workloads in a namespace
+type Workload struct {
+	// leave name empty to select ALL workloads in the namespace
+	Name      string
+	Namespace string
+	Type      string
+}
+
+// reference to the wasme cache
+// we need to update the configmap
+type Cache struct {
+	Name      string
+	Namespace string
 }
 
 type Provider struct {
+	Ctx         context.Context
+	KubeClient  kubernetes.Interface
 	IstioClient versionedclient.Interface
 
-	//global config namespace
-	IstioConfigNamespace string
+	// pulls the image descriptor so we can get the
+	// name of the file created by the cache
+	Puller pull.CodePuller
 
-	// used to determine the workloads and listeners to which we apply the filters
-	Selector Selector
+	// the target workload to deploy the filter
+	Workload Workload
+
+	// reference to the wasme cache
+	Cache Cache
 }
 
-// applies the filter to all selected workloads in selected namespaces
+// the sidecar annotations required on the pod
+func requiredSidecarAnnotations(ports []uint32) map[string]string {
+	var portStrings []string
+	for _, p := range ports {
+		portStrings = append(portStrings, fmt.Sprintf("%v", p))
+	}
+
+	return map[string]string{
+		"sidecar.istio.io/userVolume":                  `[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
+		"sidecar.istio.io/userVolumeMount":             `[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
+		"sidecar.istio.io/interceptionMode":            "TPROXY",
+		"traffic.sidecar.istio.io/includeInboundPorts": strings.Join(portStrings, ","),
+	}
+}
+
+// applies the filter to all selected workloads and updates the image cache configmap
 func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
-	namespaces := p.Selector.Namespaces
-	if len(namespaces) == 0 {
-		namespaces = []string{v1.NamespaceAll}
+	if err := p.addImageToCacheConfigMap(filter.Image); err != nil {
+		return errors.Wrap(err, "adding image to cache")
 	}
-	for _, ns := range namespaces {
-		// store the write function so we can swap it with Create interchangeably
-		write := p.IstioClient.NetworkingV1alpha3().EnvoyFilters(ns).Update
 
-		// see if an envoyFilter CRD exists already for this filter
-		envoyFilter, err := p.IstioClient.NetworkingV1alpha3().EnvoyFilters(ns).Get(filter.ID, metav1.GetOptions{})
-		if err != nil {
-			// ensure we write the filter to a valid namespace
-			writeNamespace := ns
-			if writeNamespace == v1.NamespaceAll {
-				writeNamespace = p.IstioConfigNamespace
-			}
-			envoyFilter = &v1alpha3.EnvoyFilter{
-				ObjectMeta: metav1.ObjectMeta{
-					// in istio's case, filter ID must be a kube-compliant name
-					Name:      filter.ID,
-					Namespace: ns,
-				},
-			}
-
-			// object does not exist so we must use crate
-			write = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(ns).Create
-		}
-
-		// TODO: finish these when istio ready
-		cacheURI := "TODO"
-		cacheCluster := "TODO"
-
-		envoyFilter.Spec = makeSpec(filter, p.Selector.ListenerType, p.Selector.WorkloadLabels, cacheURI, cacheCluster)
-
-		// write the created/updated EnvoyFilter
-		if _, err := write(envoyFilter); err != nil {
-			return err
-		}
+	err := p.forEachWorkload(func(meta metav1.ObjectMeta, spec *v1.PodTemplateSpec) error {
+		return p.applyFilterToWorkload(filter, meta, spec)
+	})
+	if err != nil {
+		return errors.Wrap(err, "applying filter to workload")
 	}
+
 	return nil
 }
 
-// removes the filter from all selected workloads in selected namespaces
-func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
-	namespaces := p.Selector.Namespaces
-	if len(namespaces) == 0 {
-		namespaces = []string{v1.NamespaceAll}
+// applies the filter to the target workload: adds annotations and creates the EnvoyFilter CR
+func (p *Provider) applyFilterToWorkload(filter *deploy.Filter, meta metav1.ObjectMeta, spec *v1.PodTemplateSpec) error {
+	p.setAnnotations(spec)
+	labels := spec.Labels
+	ports := collectContainerPorts(spec)
+	workloadName := meta.Name
+
+	logger := logrus.WithFields(logrus.Fields{
+		"filter":   filter,
+		"workload": p.Workload,
+		"ports":    ports,
+	})
+
+	if len(ports) == 0 {
+		logger.Info("no ports detected on workload, skipping")
+		return nil
 	}
-	for _, ns := range namespaces {
-		// delete the filter
-		if err := p.IstioClient.NetworkingV1alpha3().EnvoyFilters(ns).Delete(filter.ID, nil); err != nil {
+
+	logger.Info("updated workload sidecar annotations")
+
+	istioEnvoyFilter, err := p.makeIstioEnvoyFilter(
+		filter,
+		workloadName,
+		labels,
+		ports,
+	)
+	if err != nil {
+		return err
+	}
+
+	filterLogger := logger.WithFields(logrus.Fields{
+		"envoy_filter_resource": istioEnvoyFilter.Name + "." + istioEnvoyFilter.Namespace,
+	})
+
+	_, err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Create(istioEnvoyFilter)
+	if err != nil {
+		if kubeerrutils.IsAlreadyExists(err) {
+
+			// attempt to update if exists
+			existing, err := p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Get(istioEnvoyFilter.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			istioEnvoyFilter.ResourceVersion = existing.ResourceVersion
+
+			_, err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Update(istioEnvoyFilter)
+			if err != nil {
+				return err
+			}
+
+			filterLogger.Info("updated Istio EnvoyFilter resource")
+		} else {
 			return err
 		}
+	} else {
+		filterLogger.Info("created Istio EnvoyFilter resource")
 	}
+
 	return nil
 }
 
-// create the spec for the EnvoyFilter crd
-func makeSpec(filter *deploy.Filter, listenerType networkingv1alpha3.EnvoyFilter_PatchContext, labels map[string]string, cacheUri, cacheCluster string) networkingv1alpha3.EnvoyFilter {
+// updates the deployed wasme-cache configmap
+// if configmap does not exist (cache not deployed), this will error
+func (p *Provider) addImageToCacheConfigMap(image string) error {
+	cm, err := p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
 
-	wasmFilterConfig := envoyfilter.MakeWasmFilter(filter, envoyfilter.MakeRemoteDataSource(cacheUri, cacheCluster))
+	logger := logrus.WithFields(logrus.Fields{
+		"cache": p.Cache,
+	})
+
+	if cm.Data == nil {
+		cm.Data = map[string]string{}
+	}
+
+	images := strings.Split(cm.Data[cachedeployment.ImagesKey], "\n")
+
+	for _, existingImage := range images {
+		if image == existingImage {
+			logger.Info("image is already cached")
+			// already exists
+			return nil
+		}
+	}
+
+	images = append(images, image)
+
+	cm.Data[cachedeployment.ImagesKey] = strings.Trim(strings.Join(images, "\n"), "\n")
+
+	_, err = p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Update(cm)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("added image to cache")
+
+	return nil
+
+}
+
+// runs a function on the workload pod template spec
+// selects all workloads in a namespace if workload.Name == ""
+func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *v1.PodTemplateSpec) error) error {
+	switch p.Workload.Type {
+	case WorkloadTypeDeployment:
+		if p.Workload.Name == "" {
+			workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(metav1.ListOptions{})
+			if err != nil {
+				return err
+			}
+			for _, workload := range workloads.Items {
+				if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
+					return err
+				}
+
+				if _, err = p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Update(&workload); err != nil {
+					return err
+				}
+			}
+		} else {
+			workload, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Get(p.Workload.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
+				return err
+			}
+
+			if _, err = p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Update(workload); err != nil {
+				return err
+			}
+		}
+	case WorkloadTypeDaemonSet:
+		if p.Workload.Name == "" {
+			workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{})
+			if err != nil {
+				return err
+			}
+			for _, workload := range workloads.Items {
+				if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
+					return err
+				}
+
+				if _, err = p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Update(&workload); err != nil {
+					return err
+				}
+			}
+		} else {
+			workload, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Get(p.Workload.Name, metav1.GetOptions{})
+			if err != nil {
+				return err
+			}
+
+			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
+				return err
+			}
+
+			if _, err = p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Update(workload); err != nil {
+				return err
+			}
+		}
+	default:
+		return errors.Errorf("unknown workload type %v, must be %v or %v", p.Workload.Type, WorkloadTypeDeployment, WorkloadTypeDaemonSet)
+	}
+
+	return nil
+
+}
+
+// set sidecar annotations on the workload
+func (p *Provider) setAnnotations(template *v1.PodTemplateSpec) {
+	if template.Annotations == nil {
+		template.Annotations = map[string]string{}
+	}
+	ports := collectContainerPorts(template)
+	for k, v := range requiredSidecarAnnotations(ports) {
+		// create backups of the existing annotations if they exist
+		if currentVal, ok := template.Annotations[k]; ok {
+			template.Annotations[backupAnnotationPrefix+k] = currentVal
+		}
+		template.Annotations[k] = v
+	}
+}
+
+// construct Istio EnvoyFilter Custom Resource
+func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, workloadName string, labels map[string]string, ports []uint32) (*v1alpha3.EnvoyFilter, error) {
+	descriptor, err := p.Puller.PullCodeDescriptor(p.Ctx, filter.Image)
+	if err != nil {
+		return nil, err
+	}
+
+	// path to the file in the mounted host volume
+	// created by the cache
+	filename := filepath.Join(
+		"/var/local/lib/wasme-cache",
+		cache.Digest2filename(descriptor.Digest),
+	)
+
+	wasmFilterConfig := envoyfilter.MakeHackyIstioWasmFilter(filter,
+		// use Filename datasource as Istio doesn't yet support
+		// AsyncDatasource
+		envoyfilter.MakeFilenameDatasource(filename),
+	)
 
 	// here we need to use the gogo proto marshal
 	patchValue, err := protoutils.MarshalStruct(wasmFilterConfig)
@@ -99,31 +308,129 @@ func makeSpec(filter *deploy.Filter, listenerType networkingv1alpha3.EnvoyFilter
 		panic(err)
 	}
 
-	return networkingv1alpha3.EnvoyFilter{
-		WorkloadSelector: &networkingv1alpha3.WorkloadSelector{
-			Labels: labels,
-		},
-		ConfigPatches: []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{{
-			ApplyTo: networkingv1alpha3.EnvoyFilter_HTTP_FILTER,
-			Match: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-				Context: listenerType,
-				ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
-					Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
-						FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
-							Filter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
-								Name: "envoy.http_connection_manager",
-								SubFilter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_SubFilterMatch{
-									Name: "envoy.router",
-								},
+	// helper func to create a matcher for the target port
+	// we need a separate match for each port
+	makeMatch := func(port uint32) *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch {
+		return &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+			Context: networkingv1alpha3.EnvoyFilter_SIDECAR_INBOUND,
+			ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
+				Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
+					PortNumber: port,
+					FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
+						Filter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
+							Name: "envoy.http_connection_manager",
+							SubFilter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_SubFilterMatch{
+								Name: "envoy.router",
 							},
 						},
 					},
 				},
 			},
+		}
+	}
+
+	// each config patch only allows one match, so we
+	// have to duplicate the config patch for each port we want
+	makeConfigPatch := func(match *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch) *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch {
+		return &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
+			ApplyTo: networkingv1alpha3.EnvoyFilter_HTTP_FILTER,
+			Match:   match,
 			Patch: &networkingv1alpha3.EnvoyFilter_Patch{
 				Operation: networkingv1alpha3.EnvoyFilter_Patch_INSERT_BEFORE,
 				Value:     patchValue,
 			},
-		}},
+		}
 	}
+
+	// create a config patch for each port
+	var configPatches []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch
+	for _, port := range ports {
+		configPatches = append(configPatches,
+			makeConfigPatch(makeMatch(port)),
+		)
+	}
+
+	spec := networkingv1alpha3.EnvoyFilter{
+		WorkloadSelector: &networkingv1alpha3.WorkloadSelector{
+			Labels: labels,
+		},
+		ConfigPatches: configPatches,
+	}
+
+	return &v1alpha3.EnvoyFilter{
+		ObjectMeta: metav1.ObjectMeta{
+			// in istio's case, filter ID must be a kube-compliant name
+			Name:      istioEnvoyFilterName(workloadName, filter.ID),
+			Namespace: p.Workload.Namespace,
+		},
+		Spec: spec,
+	}, nil
+}
+
+func istioEnvoyFilterName(workloadName, filterId string) string {
+	return workloadName + "-" + filterId
+}
+
+// removes the filter from all selected workloads in selected namespaces
+func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
+	logger := logrus.WithFields(logrus.Fields{
+		"filter":   filter,
+		"workload": p.Workload,
+	})
+
+	var workloads []string
+	// remove annotations from workload
+	err := p.forEachWorkload(func(meta metav1.ObjectMeta, spec *v1.PodTemplateSpec) error {
+		// collect the name of the workload so we can delete its filter
+		workloads = append(workloads, meta.Name)
+
+		// annotate the inbound ports on the spec
+		ports := collectContainerPorts(spec)
+
+		for k := range requiredSidecarAnnotations(ports) {
+			delete(spec.Annotations, k)
+		}
+
+		// restore backup annotations
+		for k, v := range spec.Annotations {
+			if strings.HasPrefix(backupAnnotationPrefix, k) {
+				key := strings.TrimPrefix(k, backupAnnotationPrefix)
+				spec.Annotations[key] = v
+				delete(spec.Annotations, key)
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return errors.Wrap(err, "removing annotations from workload")
+	}
+
+	logger.Info("removed sidecar annotations from workloads")
+
+	for _, workloadName := range workloads {
+
+		filterName := istioEnvoyFilterName(workloadName, filter.ID)
+
+		err = p.IstioClient.NetworkingV1alpha3().EnvoyFilters(p.Workload.Namespace).Delete(filterName, nil)
+		if err != nil {
+			return err
+		}
+
+		logger.WithFields(logrus.Fields{
+			"filter": filterName,
+		}).Info("deleted Istio EnvoyFilter resource")
+	}
+
+	return nil
+}
+
+func collectContainerPorts(spec *v1.PodTemplateSpec) []uint32 {
+	var ports []uint32
+	for _, container := range spec.Spec.Containers {
+		for _, port := range container.Ports {
+			ports = append(ports, uint32(port.ContainerPort))
+		}
+	}
+	return ports
 }

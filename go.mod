@@ -10,6 +10,8 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/google/go-github/v28 v28.1.1
+	github.com/onsi/ginkgo v1.10.1
+	github.com/onsi/gomega v1.7.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.8.1
@@ -26,6 +28,7 @@ require (
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
+	k8s.io/client-go v11.0.0+incompatible
 )
 
 // Pinned to kubernetes-1.16.2

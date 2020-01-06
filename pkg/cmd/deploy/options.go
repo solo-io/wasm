@@ -2,18 +2,23 @@ package deploy
 
 import (
 	"context"
+	"io"
+	"os"
+
 	"github.com/pkg/errors"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	"github.com/solo-io/go-utils/kubeutils"
+	cachedeployment "github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/deploy"
 	"github.com/solo-io/wasme/pkg/deploy/gloo"
+	"github.com/solo-io/wasme/pkg/deploy/istio"
 	"github.com/solo-io/wasme/pkg/deploy/local"
 	"github.com/solo-io/wasme/pkg/pull"
 	"github.com/solo-io/wasme/pkg/resolver"
 	"github.com/spf13/pflag"
-	"io"
-	"os"
+	"istio.io/client-go/pkg/clientset/versioned"
 )
 
 type options struct {
@@ -53,6 +58,9 @@ type providerOptions struct {
 
 	glooOpts  glooOpts
 	localOpts localOpts
+	istioOpts istioOpts
+
+	cacheOpts cacheOpts
 }
 
 type glooOpts struct {
@@ -62,6 +70,34 @@ type glooOpts struct {
 func (opts *glooOpts) addToFlags(flags *pflag.FlagSet) {
 	flags.StringSliceVarP(&opts.selector.Namespaces, "namespaces", "n", nil, "deploy the filter to selected Gateway resource in the given namespaces. if none provided, Gateways in all namespaces will be selected.")
 	flags.StringToStringVarP(&opts.selector.GatewayLabels, "labels", "l", nil, "select deploy the filter to selected Gateway resource in the given namespaces. if none provided, Gateways in all namespaces will be selected.")
+}
+
+type istioOpts struct {
+	workload istio.Workload
+
+	puller pull.CodePuller // set by load
+}
+
+func (opts *istioOpts) addToFlags(flags *pflag.FlagSet) {
+	flags.StringVarP(&opts.workload.Name, "name", "", "", "name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace")
+	flags.StringVarP(&opts.workload.Namespace, "namespace", "n", "default", "namespace of the workload(s) to inject the filter.")
+	flags.StringVarP(&opts.workload.Type, "workload-type", "t", istio.WorkloadTypeDeployment, "type of workload into which the filter should be injected. possible values are "+istio.WorkloadTypeDeployment+" or "+istio.WorkloadTypeDaemonSet)
+}
+
+type cacheOpts struct {
+	name       string
+	namespace  string
+	imageRepo  string
+	imageTag   string
+	customArgs []string
+}
+
+func (opts *cacheOpts) addToFlags(flags *pflag.FlagSet) {
+	flags.StringVarP(&opts.name, "cache-name", "", cachedeployment.CacheName, "name of resources for the wasm image cache server")
+	flags.StringVarP(&opts.namespace, "cache-namespace", "", cachedeployment.CacheNamespace, "namespace of resources for the wasm image cache server")
+	flags.StringVarP(&opts.imageRepo, "cache-repo", "", cachedeployment.CacheImageRepository, "name of the image repository to use for the cache server daemonset")
+	flags.StringVarP(&opts.imageTag, "cache-tag", "", cachedeployment.CacheImageTag, "image tag to use for the cache server daemonset")
+	flags.StringSliceVarP(&opts.customArgs, "cache-custom-command", "", nil, "custom command to provide to the cache server image")
 }
 
 type localOpts struct {
@@ -109,6 +145,32 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			GatewayClient: gwClient,
 			Selector:      opts.glooOpts.selector,
 		}, nil
+	case Provider_Istio:
+		if opts.dryRun {
+			return nil, errors.Errorf("dry-run not currenty supported for istio")
+		}
+
+		cfg, err := kubeutils.GetConfig("", "")
+		if err != nil {
+			return nil, err
+		}
+
+		istioClient, err := versioned.NewForConfig(cfg)
+		if err != nil {
+			return nil, err
+		}
+
+		return &istio.Provider{
+			Ctx:         ctx,
+			KubeClient:  helpers.MustKubeClient(),
+			IstioClient: istioClient,
+			Puller:      opts.istioOpts.puller,
+			Workload:    opts.istioOpts.workload,
+			Cache: istio.Cache{
+				Name:      opts.cacheOpts.name,
+				Namespace: opts.cacheOpts.namespace,
+			},
+		}, nil
 	case Provider_Envoy:
 		var in io.ReadCloser
 		if opts.localOpts.infile == "-" {
@@ -129,8 +191,6 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			FilterPath:    opts.localOpts.filterPath,
 			UseJsonConfig: opts.localOpts.useJsonConfig,
 		}, nil
-	case Provider_Istio:
-		return nil, errors.Errorf("istio currently not supported")
 	}
 
 	return nil, nil
@@ -139,6 +199,9 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 func makeDeployer(opts *options) (*deploy.Deployer, error) {
 	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
 	puller := pull.NewPuller(resolver)
+
+	// set istio puller
+	opts.istioOpts.puller = puller
 
 	ctx := context.Background()
 

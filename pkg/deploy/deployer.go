@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 	"github.com/solo-io/wasme/pkg/pull"
 )

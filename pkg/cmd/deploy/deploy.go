@@ -2,8 +2,11 @@ package deploy
 
 import (
 	"fmt"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
+	cachedeployment "github.com/solo-io/wasme/pkg/cache"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -38,6 +41,7 @@ You must specify --root-id unless a default root id is provided in the image con
 
 	cmd.AddCommand(
 		deployGlooCmd(opts),
+		deployIstioCmd(opts),
 		deployLocalCmd(opts),
 	)
 
@@ -82,6 +86,42 @@ Use --labels to use a match Gateway CRs by label.
 		1,
 		opts.glooOpts.addToFlags,
 	)
+}
+
+func deployIstioCmd(opts *options) *cobra.Command {
+	use := "istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels <key1=val1,key2=val2>]"
+	short := "Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy)."
+	long := `Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).
+
+wasme uses the EnvoyFilter Istio Custom Resource to pull and run wasm filters.
+wasme deploys a server-side cache component which runs in cluster and pulls filter images.
+
+Note: currently only Istio 1.4 is supported.
+`
+	cmd := makeDeployCommand(opts,
+		Provider_Istio,
+		use,
+		short,
+		long,
+		1,
+		opts.istioOpts.addToFlags,
+		opts.cacheOpts.addToFlags,
+	)
+
+	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		cacheDeployer := cachedeployment.NewDeployer(
+			helpers.MustKubeClient(),
+			opts.cacheOpts.namespace,
+			opts.cacheOpts.name,
+			opts.cacheOpts.imageRepo,
+			opts.cacheOpts.imageTag,
+			opts.cacheOpts.customArgs,
+		)
+
+		return cacheDeployer.EnsureCache()
+	}
+
+	return cmd
 }
 
 func deployLocalCmd(opts *options) *cobra.Command {

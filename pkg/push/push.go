@@ -3,13 +3,14 @@ package push
 import (
 	"context"
 	"fmt"
-	"github.com/solo-io/gloo/pkg/utils/protoutils"
-	"github.com/solo-io/wasme/pkg/config"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/solo-io/gloo/pkg/utils/protoutils"
+	"github.com/solo-io/wasme/pkg/config"
 
 	"github.com/containerd/containerd/reference"
 	"github.com/containerd/containerd/remotes"
@@ -19,7 +20,6 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/solo-io/wasme/pkg/model"
 )
-
 
 type LocalFilter interface {
 	CodeFilename() string

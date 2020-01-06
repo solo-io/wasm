@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/solo-io/wasme/pkg/config"
 	"io"
 	"io/ioutil"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/containerd/containerd/remotes"
 	"github.com/deislabs/oras/pkg/content"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/solo-io/wasme/pkg/config"
 	"github.com/solo-io/wasme/pkg/model"
 )
 
@@ -27,14 +27,19 @@ func (f *FilterImpl) Configs() []FilterConfig {
 	return nil
 }
 
+// CodePuller Pulls the .wasm file descriptor from the image ref
+type CodePuller interface {
+	PullCodeDescriptor(ctx context.Context, ref string) (ocispec.Descriptor, error)
+}
+
 // ImagePuller pulls oci image descriptors by their ref.
 // Given the image as a wasme image,
 // can also download files from those images
 type ImagePuller interface {
+	CodePuller
 	Pull(ctx context.Context, ref string) ([]ocispec.Descriptor, error)
 	PullFilter(ctx context.Context, image string) (Filter, error)
 	PullConfigFile(ctx context.Context, ref string) (*config.Config, error)
-	PullCodeDescriptor(ctx context.Context, ref string) (ocispec.Descriptor, error)
 }
 
 type PullerImpl struct {
