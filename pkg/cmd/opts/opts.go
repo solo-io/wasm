@@ -6,4 +6,7 @@ type GeneralOptions struct {
 	Password  string
 	Insecure  bool
 	PlainHTTP bool
+
+	Verbose bool
+	Debug   bool
 }

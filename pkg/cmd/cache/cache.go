@@ -25,7 +25,7 @@ type cacheOptions struct {
 	*opts.GeneralOptions
 }
 
-func CacheCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
+func CacheCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts cacheOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
@@ -38,7 +38,7 @@ func CacheCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 				return fmt.Errorf("invalid number of arguments")
 			}
 			opts.targetRefs = args
-			return runCache(opts)
+			return runCache(*ctx, opts)
 		},
 		Hidden: true,
 	}
@@ -51,7 +51,7 @@ func CacheCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 	return cmd
 }
 
-func runCache(opts cacheOptions) error {
+func runCache(ctx context.Context, opts cacheOptions) error {
 
 	imageCache := defaults.NewDefaultCache()
 	for _, image := range opts.targetRefs {
@@ -62,7 +62,7 @@ func runCache(opts cacheOptions) error {
 		fmt.Println("added digest", digest)
 	}
 
-	errg, ctx := errgroup.WithContext(context.Background())
+	errg, ctx := errgroup.WithContext(ctx)
 
 	if 0 != opts.port {
 		errg.Go(func() error {

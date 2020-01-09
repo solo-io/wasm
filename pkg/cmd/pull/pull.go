@@ -26,7 +26,7 @@ type pullOptions struct {
 	*opts.GeneralOptions
 }
 
-func PullCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
+func PullCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts pullOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
@@ -37,20 +37,15 @@ func PullCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.targetRef = args[0]
-			return runPull(opts)
+			return runPull(*ctx, opts)
 		},
 	}
 
 	cmd.Flags().StringVarP(&opts.output, "output", "o", "filter.wasm", "output file")
-	cmd.Flags().BoolVarP(&opts.verbose, "verbose", "v", false, "verbose output")
-
-	cmd.Flags().BoolVarP(&opts.debug, "debug", "d", false, "debug mode")
 	return cmd
 }
 
-func runPull(opts pullOptions) error {
-
-	ctx := context.Background()
+func runPull(ctx context.Context, opts pullOptions) error {
 	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
 	var puller pull.ImagePuller = pull.NewPuller(resolver)
 

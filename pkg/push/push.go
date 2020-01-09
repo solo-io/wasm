@@ -124,6 +124,9 @@ func (p *PusherImpl) Push(ctx context.Context, localFilter LocalFilter) error {
 }
 
 func (p *PusherImpl) checkAuth(ctx context.Context, ref string) {
+	if p.Authorizer == nil {
+		return
+	}
 	refspec, err := reference.Parse(ref)
 	if err != nil {
 		return

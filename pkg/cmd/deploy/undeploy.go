@@ -1,11 +1,13 @@
 package deploy
 
 import (
+	"context"
+
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
-func UndeployCmd() *cobra.Command {
+func UndeployCmd(ctx *context.Context) *cobra.Command {
 	opts := &options{
 		remove: true,
 	}
@@ -26,15 +28,15 @@ func UndeployCmd() *cobra.Command {
 	opts.addIdToFlags(cmd.PersistentFlags())
 
 	cmd.AddCommand(
-		undeployGlooCmd(opts),
-		undeployIstioCmd(opts),
-		undeployLocalCmd(opts),
+		undeployGlooCmd(ctx, opts),
+		undeployIstioCmd(ctx, opts),
+		undeployLocalCmd(ctx, opts),
 	)
 
 	return cmd
 }
 
-func undeployGlooCmd(opts *options) *cobra.Command {
+func undeployGlooCmd(ctx *context.Context, opts *options) *cobra.Command {
 	use := "gloo --id=<unique name>"
 	short := "Remove an Envoy WASM Filter from the Gloo Gateway Proxies (Envoy)."
 	long := `wasme uses the Gloo Gateway CR to pull and run wasm filters.
@@ -43,7 +45,7 @@ Use --namespaces to constrain the namespaces of Gateway CRs to update.
 
 Use --labels to use a match Gateway CRs by label.
 `
-	return makeDeployCommand(opts,
+	return makeDeployCommand(ctx, opts,
 		Provider_Gloo,
 		use,
 		short,
@@ -53,7 +55,7 @@ Use --labels to use a match Gateway CRs by label.
 	)
 }
 
-func undeployIstioCmd(opts *options) *cobra.Command {
+func undeployIstioCmd(ctx *context.Context, opts *options) *cobra.Command {
 	use := "istio --id=<unique name> --namespace=<deployment namespace> [--name=<deployment name>]"
 	short := "Remove an Envoy WASM Filter from the Istio Sidecar Proxies (Envoy)."
 	long := `wasme uses the Istio EnvoyFilter CR to pull and run wasm filters.
@@ -62,7 +64,7 @@ Use --namespace to target workload(s) in a the namespaces of Gateway CRs to upda
 Use --name to target a specific workload (deployment or daemonset) in the target namespace. If unspecified, all deployments 
 in the namespace will be targeted.
 `
-	return makeDeployCommand(opts,
+	return makeDeployCommand(ctx, opts,
 		Provider_Istio,
 		use,
 		short,
@@ -72,12 +74,12 @@ in the namespace will be targeted.
 	)
 }
 
-func undeployLocalCmd(opts *options) *cobra.Command {
+func undeployLocalCmd(ctx *context.Context, opts *options) *cobra.Command {
 	use := "envoy --id=<unique name>"
 	short := "Remove an Envoy WASM Filter from the Envoy listeners."
 	long := `wasme removes the deployed filter matching the given id. 
 `
-	return makeDeployCommand(opts,
+	return makeDeployCommand(ctx, opts,
 		Provider_Envoy,
 		use,
 		short,

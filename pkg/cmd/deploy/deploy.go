@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/pkg/errors"
@@ -13,7 +14,7 @@ import (
 
 var log = logrus.StandardLogger()
 
-func DeployCmd() *cobra.Command {
+func DeployCmd(ctx *context.Context) *cobra.Command {
 	opts := &options{}
 	cmd := &cobra.Command{
 		Use:   "deploy gloo|istio|envoy <image> --id=<unique id> [--config=<inline string>] [--root-id=<root id>]",
@@ -40,15 +41,15 @@ You must specify --root-id unless a default root id is provided in the image con
 	opts.addToFlags(cmd.PersistentFlags())
 
 	cmd.AddCommand(
-		deployGlooCmd(opts),
-		deployIstioCmd(opts),
-		deployLocalCmd(opts),
+		deployGlooCmd(ctx, opts),
+		deployIstioCmd(ctx, opts),
+		deployLocalCmd(ctx, opts),
 	)
 
 	return cmd
 }
 
-func makeDeployCommand(opts *options, provider, use, short, long string, minArgs int, addFlags ...func(flags *pflag.FlagSet)) *cobra.Command {
+func makeDeployCommand(ctx *context.Context, opts *options, provider, use, short, long string, minArgs int, addFlags ...func(flags *pflag.FlagSet)) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   use,
 		Short: short,
@@ -56,7 +57,7 @@ func makeDeployCommand(opts *options, provider, use, short, long string, minArgs
 		Args:  cobra.MinimumNArgs(minArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.providerType = provider
-			return runDeploy(opts)
+			return runDeploy(*ctx, opts)
 		},
 	}
 
@@ -67,7 +68,7 @@ func makeDeployCommand(opts *options, provider, use, short, long string, minArgs
 	return cmd
 }
 
-func deployGlooCmd(opts *options) *cobra.Command {
+func deployGlooCmd(ctx *context.Context, opts *options) *cobra.Command {
 	use := "gloo <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels <key1=val1,key2=val2>]"
 	short := "Deploy an Envoy WASM Filter to the Gloo Gateway Proxies (Envoy)."
 	long := `Deploys an Envoy WASM Filter to Gloo Gateway Proxies.
@@ -78,7 +79,7 @@ Use --namespaces to constrain the namespaces of Gateway CRs to update.
 
 Use --labels to use a match Gateway CRs by label.
 `
-	return makeDeployCommand(opts,
+	return makeDeployCommand(ctx, opts,
 		Provider_Gloo,
 		use,
 		short,
@@ -88,7 +89,7 @@ Use --labels to use a match Gateway CRs by label.
 	)
 }
 
-func deployIstioCmd(opts *options) *cobra.Command {
+func deployIstioCmd(ctx *context.Context, opts *options) *cobra.Command {
 	use := "istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels <key1=val1,key2=val2>]"
 	short := "Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy)."
 	long := `Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).
@@ -98,7 +99,7 @@ wasme deploys a server-side cache component which runs in cluster and pulls filt
 
 Note: currently only Istio 1.4 is supported.
 `
-	cmd := makeDeployCommand(opts,
+	cmd := makeDeployCommand(ctx, opts,
 		Provider_Istio,
 		use,
 		short,
@@ -124,7 +125,7 @@ Note: currently only Istio 1.4 is supported.
 	return cmd
 }
 
-func deployLocalCmd(opts *options) *cobra.Command {
+func deployLocalCmd(ctx *context.Context, opts *options) *cobra.Command {
 	use := "envoy <image> --id=<unique id> [--config=<inline string>] [--root-id=<root id>] --in=<input config file> --out=<output config file> --filter <path to filter wasm> [--use-json]"
 	short := "Configure a local instance of Envoy to run a WASM Filter."
 	long := `
@@ -132,7 +133,7 @@ Unlike ` + "`" + `wasme deploy gloo` + "`" + ` and ` + "`" + `wasme deploy istio
 
 Launch Envoy using the output configuration to run the wasm filter.
 `
-	return makeDeployCommand(opts,
+	return makeDeployCommand(ctx, opts,
 		Provider_Envoy,
 		use,
 		short,
@@ -142,8 +143,8 @@ Launch Envoy using the output configuration to run the wasm filter.
 	)
 }
 
-func runDeploy(opts *options) error {
-	deployer, err := makeDeployer(opts)
+func runDeploy(ctx context.Context, opts *options) error {
+	deployer, err := makeDeployer(ctx, opts)
 	if err != nil {
 		return err
 	}
