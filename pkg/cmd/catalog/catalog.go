@@ -12,7 +12,7 @@ type catalogOptions struct {
 	*opts.GeneralOptions
 }
 
-func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
+func CatalogCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts catalogOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
@@ -27,15 +27,15 @@ func CatalogCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runCatalog(opts, args[0])
+			return runCatalog(*ctx, opts, args[0])
 		},
 	})
 
 	return cmd
 }
 
-func runCatalog(opts catalogOptions, ref string) error {
+func runCatalog(ctx context.Context, opts catalogOptions, ref string) error {
 
-	return catalog.UpdateCatalogItem(context.Background(), ref)
+	return catalog.UpdateCatalogItem(ctx, ref)
 
 }

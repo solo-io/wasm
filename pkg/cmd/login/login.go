@@ -12,7 +12,7 @@ type catalogOptions struct {
 	*opts.GeneralOptions
 }
 
-func LoginCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
+func LoginCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts catalogOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
@@ -22,13 +22,13 @@ func LoginCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
 		creating a PR to publish you content to the hub.
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runLogin(opts)
+			return runLogin(*ctx, opts)
 		},
 	}
 
 	return cmd
 }
 
-func runLogin(opts catalogOptions) error {
-	return auth.Login(context.Background())
+func runLogin(ctx context.Context, opts catalogOptions) error {
+	return auth.Login(ctx)
 }

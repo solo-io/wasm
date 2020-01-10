@@ -15,14 +15,11 @@ type pushOptions struct {
 	code        string
 	descriptors string
 	rootId      string
-	verbose     bool
-
-	debug bool
 
 	*opts.GeneralOptions
 }
 
-func PushCmd(generalOptions *opts.GeneralOptions) *cobra.Command {
+func PushCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.Command {
 	var opts pushOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
@@ -42,21 +39,20 @@ wasme push webassemblyhub.io/my/filter:v1 filter.wasm
 			if len(args) == 3 {
 				opts.descriptors = args[2]
 			}
-			return runPush(opts)
+			return runPush(*ctx, opts)
 		},
 	}
 
 	cmd.Flags().StringVarP(&opts.rootId, "root-id", "r", "", "Specify the root_id of the filter to be loaded by Envoy. If not specified, users of this filter will have to specify the --root-id flag to the `wasme deploy` command.")
-	cmd.Flags().BoolVarP(&opts.verbose, "verbose", "v", false, "verbose output")
-	cmd.Flags().BoolVarP(&opts.debug, "debug", "d", false, "debug mode")
+
 	return cmd
 }
 
-func runPush(opts pushOptions) error {
+func runPush(ctx context.Context, opts pushOptions) error {
 	resolver, authorizer := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
 	pusher := push.PusherImpl{
 		Resolver:   resolver,
 		Authorizer: authorizer,
 	}
-	return pusher.Push(context.Background(), push.NewLocalFilter(opts.code, opts.descriptors, opts.targetRef, opts.rootId))
+	return pusher.Push(ctx, push.NewLocalFilter(opts.code, opts.descriptors, opts.targetRef, opts.rootId))
 }

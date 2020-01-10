@@ -196,14 +196,12 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 	return nil, nil
 }
 
-func makeDeployer(opts *options) (*deploy.Deployer, error) {
+func makeDeployer(ctx context.Context, opts *options) (*deploy.Deployer, error) {
 	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
 	puller := pull.NewPuller(resolver)
 
 	// set istio puller
 	opts.istioOpts.puller = puller
-
-	ctx := context.Background()
 
 	provider, err := opts.makeProvider(ctx)
 	if err != nil {
