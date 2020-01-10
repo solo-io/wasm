@@ -2,7 +2,6 @@ package istio
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -63,17 +62,10 @@ type Provider struct {
 }
 
 // the sidecar annotations required on the pod
-func requiredSidecarAnnotations(ports []uint32) map[string]string {
-	var portStrings []string
-	for _, p := range ports {
-		portStrings = append(portStrings, fmt.Sprintf("%v", p))
-	}
-
+func requiredSidecarAnnotations() map[string]string {
 	return map[string]string{
-		"sidecar.istio.io/userVolume":                  `[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
-		"sidecar.istio.io/userVolumeMount":             `[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
-		"sidecar.istio.io/interceptionMode":            "TPROXY",
-		"traffic.sidecar.istio.io/includeInboundPorts": strings.Join(portStrings, ","),
+		"sidecar.istio.io/userVolume":      `[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
+		"sidecar.istio.io/userVolumeMount": `[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
 	}
 }
 
@@ -117,7 +109,6 @@ func (p *Provider) applyFilterToWorkload(filter *deploy.Filter, meta metav1.Obje
 		filter,
 		workloadName,
 		labels,
-		ports,
 	)
 	if err != nil {
 		return err
@@ -271,8 +262,7 @@ func (p *Provider) setAnnotations(template *v1.PodTemplateSpec) {
 	if template.Annotations == nil {
 		template.Annotations = map[string]string{}
 	}
-	ports := collectContainerPorts(template)
-	for k, v := range requiredSidecarAnnotations(ports) {
+	for k, v := range requiredSidecarAnnotations() {
 		// create backups of the existing annotations if they exist
 		if currentVal, ok := template.Annotations[k]; ok {
 			template.Annotations[backupAnnotationPrefix+k] = currentVal
@@ -282,7 +272,7 @@ func (p *Provider) setAnnotations(template *v1.PodTemplateSpec) {
 }
 
 // construct Istio EnvoyFilter Custom Resource
-func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, workloadName string, labels map[string]string, ports []uint32) (*v1alpha3.EnvoyFilter, error) {
+func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, workloadName string, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
 	descriptor, err := p.Puller.PullCodeDescriptor(p.Ctx, filter.Image)
 	if err != nil {
 		return nil, err
@@ -310,12 +300,11 @@ func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, workloadName stri
 
 	// helper func to create a matcher for the target port
 	// we need a separate match for each port
-	makeMatch := func(port uint32) *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch {
+	makeMatch := func() *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch {
 		return &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
 			Context: networkingv1alpha3.EnvoyFilter_SIDECAR_INBOUND,
 			ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
 				Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
-					PortNumber: port,
 					FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
 						Filter: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterMatch{
 							Name: "envoy.http_connection_manager",
@@ -344,11 +333,7 @@ func (p *Provider) makeIstioEnvoyFilter(filter *deploy.Filter, workloadName stri
 
 	// create a config patch for each port
 	var configPatches []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch
-	for _, port := range ports {
-		configPatches = append(configPatches,
-			makeConfigPatch(makeMatch(port)),
-		)
-	}
+	configPatches = append(configPatches, makeConfigPatch(makeMatch()))
 
 	spec := networkingv1alpha3.EnvoyFilter{
 		WorkloadSelector: &networkingv1alpha3.WorkloadSelector{
@@ -391,10 +376,7 @@ func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
 			"workload": meta.Name,
 		})
 
-		// annotate the inbound ports on the spec
-		ports := collectContainerPorts(spec)
-
-		for k := range requiredSidecarAnnotations(ports) {
+		for k := range requiredSidecarAnnotations() {
 			delete(spec.Annotations, k)
 		}
 		logger.Info("removing sidecar annotations from workload")
