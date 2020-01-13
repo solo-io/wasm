@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	v1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
+
 	envoy_api_v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoy_api_v2_listener "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	envoy_config_bootstrap_v2 "github.com/envoyproxy/go-control-plane/envoy/config/bootstrap/v2"
@@ -14,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/api/v2/config"
 	"github.com/solo-io/solo-kit/pkg/api/v1/control-plane/util"
-	"github.com/solo-io/wasme/pkg/deploy"
 	envoyfilter "github.com/solo-io/wasme/pkg/deploy/filter"
 	wasmeutil "github.com/solo-io/wasme/pkg/util"
 )
@@ -86,7 +87,7 @@ func (p *Provider) writeConfig(bootstrap *envoy_config_bootstrap_v2.Bootstrap) e
 }
 
 // applies the filter to all selected workloads in selected namespaces
-func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
+func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 	cfg, err := p.getConfig()
 	if err != nil {
 		return err
@@ -100,7 +101,7 @@ func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
 }
 
 // removes the filter from all selected workloads in selected namespaces
-func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
+func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
 	cfg, err := p.getConfig()
 	if err != nil {
 		return err
@@ -135,7 +136,7 @@ func forEachHcm(listeners []*envoy_api_v2.Listener, fn func(networkFilter *envoy
 	return nil
 }
 
-func addFilterToListeners(filter *deploy.Filter, listeners []*envoy_api_v2.Listener, filterPath string) error {
+func addFilterToListeners(filter *v1.FilterSpec, listeners []*envoy_api_v2.Listener, filterPath string) error {
 
 	wasmFilter := envoyfilter.MakeWasmFilter(filter, envoyfilter.MakeLocalDatasource(filterPath))
 
@@ -148,8 +149,8 @@ func addFilterToListeners(filter *deploy.Filter, listeners []*envoy_api_v2.Liste
 					return err
 				}
 
-				if wasmFilterConfig.GetConfig().GetName() == filter.ID {
-					return errors.Errorf("filter with id %v already present", filter.ID)
+				if wasmFilterConfig.GetConfig().GetName() == filter.Id {
+					return errors.Errorf("filter with id %v already present", filter.Id)
 				}
 			}
 
@@ -174,7 +175,7 @@ func addFilterToListeners(filter *deploy.Filter, listeners []*envoy_api_v2.Liste
 	})
 }
 
-func removeFilterFromListeners(filter *deploy.Filter, listeners []*envoy_api_v2.Listener) error {
+func removeFilterFromListeners(filter *v1.FilterSpec, listeners []*envoy_api_v2.Listener) error {
 	return forEachHcm(listeners, func(networkFilter *envoy_api_v2_listener.Filter, cfg *envoy_config_filter_network_hcm_v2.HttpConnectionManager) error {
 		for i, httpFilter := range cfg.GetHttpFilters() {
 			if httpFilter.GetName() == wasmeutil.WasmFilterName {
@@ -185,7 +186,7 @@ func removeFilterFromListeners(filter *deploy.Filter, listeners []*envoy_api_v2.
 					return err
 				}
 
-				if wasmFilterConfig.GetConfig().GetName() == filter.ID {
+				if wasmFilterConfig.GetConfig().GetName() == filter.Id {
 					cfg.HttpFilters = append(cfg.HttpFilters[:i], cfg.HttpFilters[i+1:]...)
 
 					// update the HCM minus the filter

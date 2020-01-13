@@ -3,38 +3,16 @@ package deploy
 import (
 	"context"
 
+	v1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
+
 	"github.com/pkg/errors"
 	"github.com/solo-io/wasme/pkg/pull"
 )
 
-// the filter to deploy
-type Filter struct {
-	// unique identifier that will be used
-	// to remove the filter as well as for logging
-	ID string
-
-	// name of image which houses the compiled wasm filter
-	Image string
-
-	// string of the config sent to the wasm filter
-	// Currently has to be json or will crash
-	Config string
-
-	// the root id must match the root id
-	// defined inside the filter.
-	// if the user does not provide this field,
-	// wasme will attempt to pull the image
-	// and set it from the filter_conf
-	// the first time it must pull the image and inspect it
-	// second time it will cache it locally
-	// if the user provides
-	RootID string
-}
-
 // mesh-provider specific implementation that adds/removes filters
 type Provider interface {
-	ApplyFilter(filter *Filter) error
-	RemoveFilter(filter *Filter) error
+	ApplyFilter(filter *v1.FilterSpec) error
+	RemoveFilter(filter *v1.FilterSpec) error
 }
 
 type Deployer struct {
@@ -43,14 +21,14 @@ type Deployer struct {
 	Provider Provider
 }
 
-func (d *Deployer) ApplyFilter(filter *Filter) error {
+func (d *Deployer) ApplyFilter(filter *v1.FilterSpec) error {
 	if err := d.setRootID(filter); err != nil {
 		return err
 	}
 	return d.Provider.ApplyFilter(filter)
 }
 
-func (d *Deployer) RemoveFilter(filter *Filter) error {
+func (d *Deployer) RemoveFilter(filter *v1.FilterSpec) error {
 	return d.Provider.RemoveFilter(filter)
 }
 
@@ -58,8 +36,8 @@ func (d *Deployer) RemoveFilter(filter *Filter) error {
 // the first time it must pull the image and inspect it
 // second time it will cache it locally
 // if the user provides
-func (d *Deployer) setRootID(f *Filter) error {
-	if f.RootID != "" {
+func (d *Deployer) setRootID(f *v1.FilterSpec) error {
+	if f.Image != "" {
 		return nil
 	}
 	rootId, err := d.getRootId(f.Image)

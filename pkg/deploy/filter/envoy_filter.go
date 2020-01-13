@@ -6,7 +6,7 @@ import (
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/api/v2/config"
 	"github.com/solo-io/solo-kit/pkg/api/external/envoy/api/v2/core"
-	"github.com/solo-io/wasme/pkg/deploy"
+	wasmev1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/util"
 )
 
@@ -48,10 +48,10 @@ func MakeFilenameDatasource(path string) *core.DataSource {
 	}
 }
 
-func MakeWasmFilter(filter *deploy.Filter, dataSrc *core.AsyncDataSource) *envoyhttp.HttpFilter {
+func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSource) *envoyhttp.HttpFilter {
 	filterCfg := &config.WasmService{
 		Config: &config.PluginConfig{
-			Name:          filter.ID,
+			Name:          filter.Id,
 			RootId:        filter.RootID,
 			Configuration: filter.Config,
 			VmConfig: &config.VmConfig{
@@ -78,10 +78,10 @@ func MakeWasmFilter(filter *deploy.Filter, dataSrc *core.AsyncDataSource) *envoy
 
 // istio wasm does nto support AsyncDataSource, we must manually stitch the struct
 // TODO: remove this when Istio updates their Envoy APIs
-func MakeHackyIstioWasmFilter(filter *deploy.Filter, dataSrc *core.DataSource) *envoyhttp.HttpFilter {
+func MakeHackyIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.DataSource) *envoyhttp.HttpFilter {
 	filterCfg := &config.WasmService{
 		Config: &config.PluginConfig{
-			Name:          filter.ID,
+			Name:          filter.Id,
 			RootId:        filter.RootID,
 			Configuration: filter.Config,
 			VmConfig: &config.VmConfig{
