@@ -17,7 +17,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
-	github.com/solo-io/autopilot v0.0.0-00010101000000-000000000000
+	github.com/solo-io/autopilot v0.0.2
 	github.com/solo-io/gloo v1.2.10
 	github.com/solo-io/go-utils v0.11.7
 	github.com/solo-io/solo-kit v0.12.2
@@ -76,5 +76,3 @@ replace (
 replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309
 
 replace github.com/codegangsta/cli => github.com/urfave/cli v1.22.2
-
-replace github.com/solo-io/autopilot => ../autopilot
