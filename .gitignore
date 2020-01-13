@@ -1,9 +1,6 @@
 .vscode/
 .idea
 
-# go bin
-wasme
-
 # rust output
 target
 
