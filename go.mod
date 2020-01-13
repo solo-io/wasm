@@ -17,7 +17,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
-	github.com/solo-io/autopilot v0.0.2
+	github.com/solo-io/autopilot v0.1.0
 	github.com/solo-io/gloo v1.2.10
 	github.com/solo-io/go-utils v0.11.7
 	github.com/solo-io/solo-kit v0.12.2
