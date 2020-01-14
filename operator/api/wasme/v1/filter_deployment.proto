@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package wasme.io;
 
-option go_package = "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1";
+option go_package = "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1";
 
 // A FilterDeployment tells the Wasme Operator
 // to deploy a filter with the provided configuration

@@ -34,7 +34,7 @@ func main() {
 				RenderTypes:      true,
 				RenderClients:    true,
 				RenderController: true,
-				ApiRoot:          "operator/pkg/api",
+				ApiRoot:          "pkg/operator/api",
 			},
 		},
 		ManifestRoot: "operator/install/kube",
