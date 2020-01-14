@@ -5,8 +5,8 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/autopilot/pkg/ezkube"
-	v1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/deploy/istio"
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/pull"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
