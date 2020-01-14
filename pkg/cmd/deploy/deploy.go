@@ -32,7 +32,7 @@ You must specify --root-id unless a default root id is provided in the image con
 				return fmt.Errorf("invalid number of arguments")
 			}
 			opts.filter.Image = args[0]
-			if opts.filter.ID == "" {
+			if opts.filter.Id == "" {
 				return errors.Errorf("--id cannot be empty")
 			}
 			return nil
