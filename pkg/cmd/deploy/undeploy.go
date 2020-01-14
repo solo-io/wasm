@@ -18,7 +18,7 @@ func UndeployCmd(ctx *context.Context) *cobra.Command {
 
 `,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if opts.filter.ID == "" {
+			if opts.filter.Id == "" {
 				return errors.Errorf("--id cannot be empty")
 			}
 			return nil
