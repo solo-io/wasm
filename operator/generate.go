@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/solo-io/wasme/pkg/version"
 	"log"
 
 	"github.com/solo-io/autopilot/codegen"
@@ -10,6 +11,7 @@ import (
 
 func main() {
 	cmd := &codegen.Command{
+		AppName: "wasme",
 		Groups: []model.Group{
 			{
 				ProtoDir: "operator/api",
@@ -38,6 +40,35 @@ func main() {
 			},
 		},
 		ManifestRoot: "operator/install/kube",
+
+		Chart: &model.Chart{
+			Operators: []model.Operator{
+				{
+					Name: "wasme",
+					Deployment: model.Deployment{
+						Image: model.Image{
+							Tag:        version.Version,
+							Repository: "wasme",
+							Registry:   "quay.io/solo-io",
+							PullPolicy: "IfNotPresent",
+						},
+					},
+					Args: []string{"operator"},
+				},
+			},
+			Values: nil,
+			Data: model.Data{
+				ApiVersion:  "v1",
+				Description: "",
+				Name:        "Wasme Operator",
+				Version:     "v0.0.1",
+				Home:        "https://docs.solo.io/web-assembly-hub/latest",
+				Icon:        "https://raw.githubusercontent.com/solo-io/wasme/master/docs/content/img/logo.png",
+				Sources: []string{
+					"https://github.com/solo-io/wasme",
+				},
+			},
+		},
 	}
 
 	if err := cmd.Execute(); err != nil {
