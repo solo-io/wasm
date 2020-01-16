@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"github.com/solo-io/wasme/pkg/cmd/operator"
 	"os"
 
 	"github.com/sirupsen/logrus"
@@ -50,6 +51,7 @@ func Cmd() *cobra.Command {
 		list.ListCmd(),
 		deploy.DeployCmd(ctx),
 		deploy.UndeployCmd(ctx),
+		operator.OperatorCmd(ctx),
 	)
 	cmd.PersistentFlags().StringArrayVarP(&opts.Configs, "config", "c", nil, "auth config path")
 	cmd.PersistentFlags().StringVarP(&opts.Username, "username", "u", "", "registry username")

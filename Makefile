@@ -38,30 +38,41 @@ enable-gomod:
 generate-deps: enable-gomod
 	go get -u github.com/cratonica/2goarray
 
-# Generated Static assets for CLI & Docs
+# Generated Static assets for CLI & Docs, plus Operator/API Code
 .PHONY: generated-code
-generated-code: enable-gomod
+generated-code: enable-gomod autopilot-gen
 	go generate ./...
+
+# Generate Operator Code & Chart
+.PHONY: operator-gen
+operator-gen:
+	go run -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) operator/generate.go
+
+# Generate Manifests from Chart
+.PHONY: manifest-gen
+manifest-gen: operator/install/kube/wasme-demo.yaml
+operator/install/kube/wasme-demo.yaml: operator-gen
+	helm template --namespace wasme operator/install/kube/wasme > operator/install/kube/wasme-demo.yaml
 
 .PHONY: wasme
 wasme: $(OUTDIR)/wasme
 $(OUTDIR)/wasme: $(SOURCES) enable-gomod
-	go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ main.go
+	go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ cmd/main.go
 
 .PHONY: wasme-linux-amd64
 wasme-linux-amd64: $(OUTDIR)/wasme-linux-amd64
 $(OUTDIR)/wasme-linux-amd64: $(SOURCES) enable-gomod
-	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ main.go
+	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ cmd/main.go
 
 .PHONY: wasme-darwin-amd64
 wasme-darwin-amd64: $(OUTDIR)/wasme-darwin-amd64
 $(OUTDIR)/wasme-darwin-amd64: $(SOURCES) enable-gomod
-	CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ main.go
+	CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ cmd/main.go
 
 .PHONY: wasme-windows-amd64
 wasme-windows-amd64: $(OUTDIR)/wasme-windows-amd64.exe
 $(OUTDIR)/wasme-windows-amd64.exe: $(SOURCES) enable-gomod
-	CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ main.go
+	CGO_ENABLED=0 GOARCH=amd64 GOOS=windows go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ cmd/main.go
 
 
 .PHONY: build-cli
@@ -69,7 +80,7 @@ build-cli: wasme-linux-amd64 wasme-darwin-amd64 wasme-windows-amd64
 
 .PHONY: install-cli
 install-cli: enable-gomod
-	go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o ${GOPATH}/bin/wasme main.go
+	go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o ${GOPATH}/bin/wasme cmd/main.go
 
 
 .PHONY: build-images
@@ -133,4 +144,4 @@ clean:
 
 .PHONY: build-example
 build-example:
-	go run main.go build example/cpp
+	go run cmd/main.go build example/cpp

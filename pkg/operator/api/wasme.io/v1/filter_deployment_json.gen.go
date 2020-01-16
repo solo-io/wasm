@@ -38,6 +38,17 @@ func (this *FilterSpec) UnmarshalJSON(b []byte) error {
 	return FilterDeploymentUnmarshaler.Unmarshal(bytes.NewReader(b), this)
 }
 
+// MarshalJSON is a custom marshaler for ImagePullOptions
+func (this *ImagePullOptions) MarshalJSON() ([]byte, error) {
+	str, err := FilterDeploymentMarshaler.MarshalToString(this)
+	return []byte(str), err
+}
+
+// UnmarshalJSON is a custom unmarshaler for ImagePullOptions
+func (this *ImagePullOptions) UnmarshalJSON(b []byte) error {
+	return FilterDeploymentUnmarshaler.Unmarshal(bytes.NewReader(b), this)
+}
+
 // MarshalJSON is a custom marshaler for DeploymentSpec
 func (this *DeploymentSpec) MarshalJSON() ([]byte, error) {
 	str, err := FilterDeploymentMarshaler.MarshalToString(this)

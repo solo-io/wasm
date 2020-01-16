@@ -2,6 +2,8 @@
 package controller
 
 import (
+	"context"
+
 	. "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 
 	"github.com/pkg/errors"
@@ -71,9 +73,9 @@ func NewFilterDeploymentController(name string, mgr manager.Manager) (*FilterDep
 	}, nil
 }
 
-func (c *FilterDeploymentController) AddEventHandler(h FilterDeploymentEventHandler, predicates ...predicate.Predicate) error {
+func (c *FilterDeploymentController) AddEventHandler(ctx context.Context, h FilterDeploymentEventHandler, predicates ...predicate.Predicate) error {
 	handler := genericFilterDeploymentHandler{handler: h}
-	if err := c.watcher.Watch(&FilterDeployment{}, handler, predicates...); err != nil {
+	if err := c.watcher.Watch(ctx, &FilterDeployment{}, handler, predicates...); err != nil {
 		return err
 	}
 	return nil

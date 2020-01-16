@@ -25,7 +25,7 @@ message FilterSpec {
     string id = 1;
 
     // name of image which houses the compiled wasm filter
-     string image = 2;
+    string image = 2;
 
     // string of the config sent to the wasm filter
     // Currently has to be json or will crash
@@ -40,6 +40,28 @@ message FilterSpec {
     // second time it will cache it locally
     // if the user provides
     string rootID = 4;
+
+    // custom options if pulling from private / custom repositories
+    ImagePullOptions imagePullOptions = 5;
+}
+
+
+message ImagePullOptions {
+    // if a username/password is required,
+    // specify here the name of a secret:
+    // with keys:
+    // * username: <username>
+    // * password: <password>
+    //
+    // the secret must live in the same namespace
+    // as the FilterDeployment
+    string pullSecret = 1;
+
+    // skip verifying the image server's TLS certificate
+    bool insecureSkipVerify = 2;
+
+    // use HTTP instead of HTTPS
+    bool plainHttp = 3;
 }
 
 // how to deploy the filter

@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"context"
 	"io/ioutil"
 	"path/filepath"
 
@@ -39,6 +40,10 @@ func deleteFile(file string) error {
 		return err
 	}
 	return utils.KubectlDelete(b)
+}
+
+func generateCrdExample() error {
+
 }
 
 var _ = Describe("AutopilotGenerate", func() {
@@ -83,7 +88,7 @@ var _ = Describe("AutopilotGenerate", func() {
 		ctl, err := controller.NewFilterDeploymentController("wasme", mgr)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = ctl.AddEventHandler(&controller.FilterDeploymentEventHandlerFuncs{
+		err = ctl.AddEventHandler(context.TODO(), &controller.FilterDeploymentEventHandlerFuncs{
 			OnCreate: nil,
 			OnUpdate: nil,
 			OnDelete: nil,

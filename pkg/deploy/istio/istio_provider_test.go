@@ -12,7 +12,7 @@ import (
 	"github.com/solo-io/autopilot/test"
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/randutils"
-	wasmev1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
+	wasmev1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 

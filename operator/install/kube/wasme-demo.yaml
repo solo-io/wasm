@@ -1,0 +1,116 @@
+---
+# Source: Wasme Operator/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wasme
+---
+# Source: Wasme Operator/templates/deployment.yaml
+# Service account for wasme
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: wasme
+  name: wasme
+  namespace: wasme
+---
+# Source: Wasme Operator/templates/rbac.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+    name: wasme
+    labels:
+      app: wasme
+rules:
+- apiGroups:
+  - wasme.io
+  resources:
+  - filterdeployments
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - wasme.io
+  resources:
+  - filterdeployments/status
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - envoyfilters
+  verbs:
+  - '*'
+---
+# Source: Wasme Operator/templates/rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: wasme
+  labels:
+    app: wasme
+subjects:
+- kind: ServiceAccount
+  name: wasme
+  namespace: wasme
+roleRef:
+  kind: ClusterRole
+  name: wasme
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: Wasme Operator/templates/deployment.yaml
+# Deployment manifest for wasme
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: wasme
+  name: wasme
+  namespace: wasme
+spec:
+  selector:
+    matchLabels:
+      app: wasme
+  template:
+    metadata:
+      labels:
+        app: wasme
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9091"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: wasme
+      containers:
+      - image: quay.io/solo-io/wasme:dev
+        args:
+        - operator
+        imagePullPolicy: Always
+        name: wasme
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+---
+# Source: Wasme Operator/templates/rbac.yaml
+# Rbac manifests for wasme

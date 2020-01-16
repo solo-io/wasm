@@ -1,0 +1,64 @@
+# Deployment manifest for wasme
+
+{{- $wasme := $.Values.wasme}}
+{{- $image := $wasme.image }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: wasme
+  name: wasme
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: wasme
+  template:
+    metadata:
+      labels:
+        app: wasme
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9091"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: wasme
+      containers:
+      - image: {{ $image.registry }}/{{ $image.repository }}:{{ $image.tag }}
+        args:
+        - operator
+        imagePullPolicy: {{ $image.pullPolicy }}
+        name: wasme
+{{- if $wasme.resources }}
+        resources:
+{{ toYaml $wasme.resources | indent 10}}
+{{- else}}
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+{{- end}}
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+      {{- if $image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ $image.pullSecret }}
+      {{- end}}
+
+
+---
+
+# Service account for wasme
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: wasme
+  name: wasme
+  namespace: {{ $.Release.Namespace }}

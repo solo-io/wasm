@@ -1,0 +1,58 @@
+# Rbac manifests for wasme
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+    name: wasme
+    labels:
+      app: wasme
+rules:
+- apiGroups:
+  - wasme.io
+  resources:
+  - filterdeployments
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - wasme.io
+  resources:
+  - filterdeployments/status
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - envoyfilters
+  verbs:
+  - '*'
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: wasme
+  labels:
+    app: wasme
+subjects:
+- kind: ServiceAccount
+  name: wasme
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: wasme
+  apiGroup: rbac.authorization.k8s.io

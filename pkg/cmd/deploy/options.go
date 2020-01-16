@@ -13,7 +13,7 @@ import (
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
 	"github.com/solo-io/go-utils/kubeutils"
-	v1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	cachedeployment "github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/deploy"

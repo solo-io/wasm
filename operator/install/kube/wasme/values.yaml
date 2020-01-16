@@ -1,0 +1,7 @@
+
+wasme:
+  image:
+    pullPolicy: Always
+    registry: quay.io/solo-io
+    repository: wasme
+    tag: dev

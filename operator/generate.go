@@ -2,6 +2,8 @@ package main
 
 import (
 	"github.com/solo-io/wasme/pkg/version"
+	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"log"
 
 	"github.com/solo-io/autopilot/codegen"
@@ -34,12 +36,11 @@ func main() {
 				RenderProtos:     true,
 				RenderManifests:  true,
 				RenderTypes:      true,
-				RenderClients:    true,
+				RenderClients:    false,
 				RenderController: true,
 				ApiRoot:          "pkg/operator/api",
 			},
 		},
-		ManifestRoot: "operator/install/kube",
 
 		Chart: &model.Chart{
 			Operators: []model.Operator{
@@ -47,10 +48,41 @@ func main() {
 					Name: "wasme",
 					Deployment: model.Deployment{
 						Image: model.Image{
-							Tag:        version.Version,
-							Repository: "wasme",
 							Registry:   "quay.io/solo-io",
-							PullPolicy: "IfNotPresent",
+							Repository: "wasme",
+							Tag:        version.Version,
+							PullPolicy: v1.PullAlways,
+							Build: &model.BuildOptions{
+								MainFile: "cmd/main.go",
+								Push:     true,
+							},
+						},
+					},
+					Rbac: []rbacv1.PolicyRule{
+						// api resource
+						{
+							Verbs:           []string{"get", "list", "watch"},
+							APIGroups:       []string{"wasme.io"},
+							Resources:       []string{"filterdeployments"},
+						},
+						{
+							Verbs:           []string{"get", "update"},
+							APIGroups:       []string{"wasme.io"},
+							Resources:       []string{"filterdeployments/status"},
+						},
+
+						// dependency
+						{
+							Verbs:           []string{"get", "list", "watch"},
+							APIGroups:       []string{"apps"},
+							Resources:       []string{"deployments", "daemonsets"},
+						},
+
+						// managed resource
+						{
+							Verbs:           []string{"*"},
+							APIGroups:       []string{"networking.istio.io"},
+							Resources:       []string{"envoyfilters"},
 						},
 					},
 					Args: []string{"operator"},
@@ -69,6 +101,9 @@ func main() {
 				},
 			},
 		},
+
+		ManifestRoot: "operator/install/kube",
+		BuildRoot:    "operator/build",
 	}
 
 	if err := cmd.Execute(); err != nil {

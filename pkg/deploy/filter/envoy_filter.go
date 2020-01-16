@@ -6,7 +6,7 @@ import (
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/api/v2/config"
 	"github.com/solo-io/solo-kit/pkg/api/external/envoy/api/v2/core"
-	wasmev1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
+	wasmev1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/util"
 )
 
