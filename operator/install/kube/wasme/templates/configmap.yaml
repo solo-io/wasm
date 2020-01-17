@@ -1,0 +1,12 @@
+---
+# ConfigMap wasme-cache
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: wasme-cache
+    configmap: wasme-cache
+  name: wasme-cache
+  namespace: {{ .Release.Namespace }}
+data:
+  images: ""
