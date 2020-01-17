@@ -37,7 +37,7 @@ func (d *Deployer) RemoveFilter(filter *v1.FilterSpec) error {
 // second time it will cache it locally
 // if the user provides
 func (d *Deployer) setRootID(f *v1.FilterSpec) error {
-	if f.Image != "" {
+	if f.RootID != "" {
 		return nil
 	}
 	rootId, err := d.getRootId(f.Image)

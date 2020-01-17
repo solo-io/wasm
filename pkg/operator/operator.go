@@ -2,6 +2,8 @@ package operator
 
 import (
 	"context"
+	"github.com/solo-io/wasme/pkg/deploy"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/autopilot/pkg/ezkube"
@@ -67,7 +69,8 @@ func (f *filterDeploymentHandler) deploy(obj *v1.FilterDeployment) error {
 				State:  v1.WorkloadStatus_Failed,
 			}
 		}
-		status.Workloads[obj.Name] = workloadStatus
+		log.Log.V(1).Info("applied filter to workload", "result", workloadStatus)
+		status.Workloads[workloadMeta.Name] = workloadStatus
 	}
 
 	err := f.handleFilter(obj, false, setWorkloadStatus)
@@ -120,6 +123,7 @@ func (f *filterDeploymentHandler) handleFilter(obj *v1.FilterDeployment, remove 
 		return err
 	}
 
+	var provider deploy.Provider
 	switch dep := deployment.GetDeploymentType().(type) {
 	case *v1.DeploymentSpec_Istio:
 		workload := istio.Workload{
@@ -128,7 +132,7 @@ func (f *filterDeploymentHandler) handleFilter(obj *v1.FilterDeployment, remove 
 			Namespace: obj.Namespace,
 		}
 
-		provider, err := istio.NewProvider(
+		istioProvider, err := istio.NewProvider(
 			f.ctx,
 			f.kubeClient,
 			f.client,
@@ -142,14 +146,23 @@ func (f *filterDeploymentHandler) handleFilter(obj *v1.FilterDeployment, remove 
 			return err
 		}
 
-		if remove {
-			return provider.RemoveFilter(filter)
-		} else {
-			return provider.ApplyFilter(filter)
-		}
+		provider = istioProvider
 	default:
 		return errors.Errorf("internal error: %T not implemented", deployment)
 	}
+
+	// deployer sets the root_id on the filter if the user hasn't provided one
+	deployer := &deploy.Deployer{
+		Ctx:      f.ctx,
+		Puller:   puller,
+		Provider: provider,
+	}
+
+	if remove {
+		return deployer.RemoveFilter(filter)
+	}
+
+	return deployer.ApplyFilter(filter)
 }
 
 func (f *filterDeploymentHandler) makePuller(secretNamespace string, opts *v1.ImagePullOptions) (pull.ImagePuller, error) {

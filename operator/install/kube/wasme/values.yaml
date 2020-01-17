@@ -1,5 +1,11 @@
 
-wasme:
+wasmeOperator:
+  image:
+    pullPolicy: Always
+    registry: quay.io/solo-io
+    repository: wasme
+    tag: dev
+wasmeCache:
   image:
     pullPolicy: Always
     registry: quay.io/solo-io

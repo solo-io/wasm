@@ -1,13 +1,14 @@
-# Rbac manifests for wasme
+
+# Rbac manifests for wasme-operator
 
 ---
 
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-    name: wasme
-    labels:
-      app: wasme
+  name: wasme-operator
+  labels:
+    app: wasme-operator
 rules:
 - apiGroups:
   - wasme.io
@@ -25,6 +26,14 @@ rules:
   - get
   - update
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - apps
   resources:
   - deployments
@@ -33,10 +42,17 @@ rules:
   - get
   - list
   - watch
+  - update
 - apiGroups:
   - networking.istio.io
   resources:
   - envoyfilters
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
   verbs:
   - '*'
 
@@ -45,14 +61,14 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: wasme
+  name: wasme-operator
   labels:
-    app: wasme
+    app: wasme-operator
 subjects:
 - kind: ServiceAccount
-  name: wasme
+  name: wasme-operator
   namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: wasme
+  name: wasme-operator
   apiGroup: rbac.authorization.k8s.io

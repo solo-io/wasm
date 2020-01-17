@@ -1,5 +1,5 @@
 FROM alpine
 
-COPY wasme /usr/local/bin/wasme
+COPY wasme-cache /usr/local/bin/wasme-cache
 
-ENTRYPOINT ["/usr/local/bin/wasme"]
+ENTRYPOINT ["/usr/local/bin/wasme-cache"]
