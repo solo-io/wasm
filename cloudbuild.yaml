@@ -29,7 +29,6 @@ steps:
       - 'AWS_SHARED_CREDENTIALS_FILE=/workspace/aws_credentials'
       - 'CLOUDSDK_COMPUTE_ZONE=us-central1-b'
       - 'CLOUDSDK_CONTAINER_CLUSTER=autopilot-ci-cluster'
-    entrypoint: "sh"
     args: ['-r', '-failFast', '-trace', '-progress']
     secretEnv: ['GITHUB_TOKEN']
     id: 'run-tests'
