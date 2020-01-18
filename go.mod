@@ -34,6 +34,7 @@ require (
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/code-generator v0.17.1 // indirect
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 

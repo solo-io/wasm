@@ -10,8 +10,6 @@ steps:
     env:
       - 'GO111MODULE=on'
       - 'TAGGED_VERSION=$TAG_NAME'
-      - 'PROJECT_ROOT=github.com/solo-io/autopilot'
-      - 'GOPATH=/workspace/gopath'
     secretEnv: ['GITHUB_TOKEN']
     id: 'install dependencies'
 
@@ -22,24 +20,16 @@ steps:
     env:
       - 'GO111MODULE=on'
       - 'TAGGED_VERSION=$TAG_NAME'
-      - 'GOPATH=/workspace/gopath'
       - 'BUILD_ID=$BUILD_ID'
-      - 'PROJECT_ROOT=github.com/solo-io/autopilot'
-      - 'GOPATH=/workspace/gopath'
-      - 'AWS_SHARED_CREDENTIALS_FILE=/workspace/aws_credentials'
-      - 'CLOUDSDK_COMPUTE_ZONE=us-central1-b'
-      - 'CLOUDSDK_CONTAINER_CLUSTER=autopilot-ci-cluster'
     args: ['-r', '-failFast', '-trace', '-progress']
     secretEnv: ['GITHUB_TOKEN']
     id: 'run-tests'
 
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['build-images']
     env:
       - 'GO111MODULE=on'
       - 'TAGGED_VERSION=$TAG_NAME'
-      - 'PROJECT_ROOT=github.com/solo-io/wasme'
-      - 'GOPATH=/workspace/gopath'
     id: 'build-images'
 
   - name: 'gcr.io/cloud-builders/docker'
@@ -50,23 +40,21 @@ steps:
     secretEnv: ['QUAY_IO_PASSWORD']
     id: 'docker-login'
 
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['publish-images', '-B']
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'PROJECT_ROOT=github.com/solo-io/wasme'
-      - 'GOPATH=/workspace/gopath'
     secretEnv: ['GITHUB_TOKEN']
     id: 'release-build-container'
 
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['upload-github-release-assets', 'publish-docs', '-B']
     env:
       - 'GO111MODULE=on'
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'PROJECT_ROOT=github.com/solo-io/wasme'
-      - 'GOPATH=/workspace/gopath'
     secretEnv: ['GITHUB_TOKEN']
     id: 'release-assets-docs'
 
@@ -80,3 +68,6 @@ timeout: 1200s
 tags: ['wasme']
 options:
   machineType: 'N1_HIGHCPU_32'
+  volumes:
+    - name: 'gopath'
+      path: '/go'
