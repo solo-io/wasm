@@ -34,12 +34,12 @@ BUILD_ID := $(BUILD_ID)
 mod-download:
 	go mod download
 
-.PHONY: generate-deps
-generate-deps: mod-download
+.PHONY: install-deps
+install-deps: mod-download
 
 # Build dependencies
-.PHONY: generate-deps
-generate-deps: mod-download
+.PHONY: install-deps
+install-deps: mod-download
 	go get -u github.com/cratonica/2goarray
 	go get -u github.com/gogo/protobuf
 	go get -u github.com/solo-io/protoc-gen-ext
