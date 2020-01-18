@@ -5,13 +5,40 @@ import (
 	"github.com/solo-io/wasme/pkg/version"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
+	"os"
 
 	"github.com/solo-io/autopilot/codegen"
 	"github.com/solo-io/autopilot/codegen/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
+
+var (
+	defaultRegistry = "quay.io/solo-io"
+)
+
+func getImage(build bool) model.Image {
+	var buildOpts *model.BuildOptions
+	if build {
+		buildOpts = &model.BuildOptions{
+			MainFile: "cmd/main.go",
+			Push:     true,
+		}
+	}
+	registry := os.Getenv("IMAGE_REGISTRY")
+	if registry == "" {
+		registry = defaultRegistry
+	}
+	return model.Image{
+		Registry:   registry,
+		Repository: "wasme",
+		Tag:        version.Version,
+		PullPolicy: v1.PullAlways,
+		Build:      buildOpts,
+	}
+}
 
 func main() {
 	hostPathType := v1.HostPathDirectoryOrCreate
@@ -51,16 +78,7 @@ func main() {
 				{
 					Name: "wasme-operator",
 					Deployment: model.Deployment{
-						Image: model.Image{
-							Registry:   "quay.io/solo-io",
-							Repository: "wasme",
-							Tag:        version.Version,
-							PullPolicy: v1.PullAlways,
-							Build: &model.BuildOptions{
-								MainFile: "cmd/main.go",
-								Push:     true,
-							},
-						},
+						Image: getImage(true),
 					},
 					Rbac: []rbacv1.PolicyRule{
 						// api resource
@@ -109,11 +127,12 @@ func main() {
 				{
 					Name: "wasme-cache",
 					Deployment: model.Deployment{
-						Image: model.Image{
-							Registry:   "quay.io/solo-io",
-							Repository: "wasme",
-							Tag:        version.Version,
-							PullPolicy: v1.PullAlways,
+						Image: getImage(false),
+						Resources: &v1.ResourceRequirements{
+							Requests: v1.ResourceList{
+								v1.ResourceCPU:    resource.MustParse("125m"),
+								v1.ResourceMemory: resource.MustParse("256Mi"),
+							},
 						},
 						UseDaemonSet: true,
 					},

@@ -7,6 +7,8 @@ import (
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"io/ioutil"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -16,6 +18,13 @@ import (
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 	"github.com/solo-io/autopilot/codegen/util"
 )
+
+func runMake(target string) error {
+	cmd := exec.Command("make", "-C", filepath.Dir(util.GoModPath()), target)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	return cmd.Run()
+}
 
 func applyFile(file, ns string) error {
 	path := filepath.Join(util.MustGetThisDir(), file)
@@ -90,7 +99,10 @@ func generateCrdExample() error {
 var ns = "bookinfo"
 
 var _ = BeforeSuite(func() {
-	err := generateCrdExample()
+	err := runMake("manifest-gen")
+	Expect(err).NotTo(HaveOccurred())
+
+	err = generateCrdExample()
 	Expect(err).NotTo(HaveOccurred())
 
 	utils.Kubectl(nil, "create", "ns", ns)
@@ -107,7 +119,7 @@ var _ = BeforeSuite(func() {
 	err = applyFile("bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = waitDeploymentReady("productpage", "bookinfo", time.Minute * 2)
+	err = waitDeploymentReady("productpage", "bookinfo", time.Minute*2)
 	Expect(err).NotTo(HaveOccurred())
 })
 var _ = AfterSuite(func() {
@@ -132,13 +144,13 @@ var _ = Describe("AutopilotGenerate", func() {
 		}
 
 		// expect header in response
-		Eventually(testRequest, time.Minute * 2).Should(ContainSubstring("hello: world"))
+		Eventually(testRequest, time.Minute*5).Should(ContainSubstring("hello: world"))
 
 		err = deleteFile("test_filter.yaml", ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
-		Eventually(testRequest, time.Minute * 2).ShouldNot(ContainSubstring("hello: world"))
+		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring("hello: world"))
 	})
 })
 

@@ -162,7 +162,7 @@ spec:
         name: wasme-cache
         resources:
           requests:
-            cpu: 500m
+            cpu: 125m
             memory: 256Mi
         securityContext:
           readOnlyRootFilesystem: true

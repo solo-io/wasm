@@ -11,3 +11,7 @@ wasmeCache:
     registry: quay.io/solo-io
     repository: wasme
     tag: dev
+  resources:
+    requests:
+      cpu: 125m
+      memory: 256Mi
