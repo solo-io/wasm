@@ -37,6 +37,8 @@ enable-gomod:
 .PHONY: generate-deps
 generate-deps: enable-gomod
 	go get -u github.com/cratonica/2goarray
+	go get -u github.com/gogo/protobuf
+	go get -u github.com/solo-io/protoc-gen-ext
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
 .PHONY: generated-code
@@ -84,7 +86,7 @@ install-cli: enable-gomod
 
 
 .PHONY: build-images
-build-images: builder-image cache-image
+build-images: builder-image
 
 # build Builder image
 .PHONY: builder-image
@@ -95,16 +97,6 @@ builder-image:
 .PHONY: builder-image-push
 builder-image-push:
 	docker push $(BUILDER_IMAGE):$(VERSION)
-
-# build Cache image
-.PHONY: cache-image
-cache-image:
-	docker build -t $(CACHE_IMAGE):$(VERSION) .
-
-.PHONY: cache-image-push
-cache-image-push:
-	docker push $(CACHE_IMAGE):$(VERSION)
-
 
 #----------------------------------------------------------------------------------
 # Release
