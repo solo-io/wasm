@@ -29,19 +29,18 @@ BUILD_ID := $(BUILD_ID)
 # Build
 #----------------------------------------------------------------------------------
 
-# must be a seperate target so that make waits for it to complete before moving on
+# Build dependencies
+
 .PHONY: mod-download
 mod-download:
 	go mod download
 
 .PHONY: install-deps
 install-deps: mod-download
-
-# Build dependencies
-.PHONY: install-deps
-install-deps: mod-download
 	go get -u github.com/cratonica/2goarray
 	go get -u github.com/gogo/protobuf
+	go get -v istio.io/tools/cmd/protoc-gen-jsonshim
+	go get -v github.com/gogo/protobuf/protoc-gen-gogo
 	go get -u github.com/solo-io/protoc-gen-ext
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
