@@ -6,7 +6,7 @@ OUTDIR?=_output
 PROJECT?=wasme
 
 BUILDER_IMAGE?=quay.io/solo-io/ee-builder
-CACHE_IMAGE?=quay.io/solo-io/wasme
+OPERATOR_IMAGE?=quay.io/solo-io/wasme
 
 SOURCES := $(shell find . -name "*.go" | grep -v test.go | grep -v '\.\#*')
 RELEASE := "true"
@@ -89,7 +89,18 @@ install-cli:
 
 
 .PHONY: build-images
-build-images: builder-image
+build-images: wasme-image builder-image
+
+# build Operator image
+.PHONY: operator-image
+operator-image: wasme-linux-amd64
+	cp $(OUTDIR)/wasme-linux-amd64 operator/build/wasme/ && \
+	docker build -t $(OPERATOR_IMAGE):$(VERSION) operator/build/wasme/
+	rm operator/build/wasme/wasme-linux-amd64
+
+.PHONY: operator-image-push
+operator-image-push:
+	docker push $(OPERATOR_IMAGE):$(VERSION)
 
 # build Builder image
 .PHONY: builder-image
@@ -123,8 +134,8 @@ endif
 .PHONY: publish-images
 publish-images:
 ifeq ($(RELEASE),"true")
-	docker push $(BUILDER_IMAGE):$(VERSION)
-	docker push $(CACHE_IMAGE):$(VERSION)
+	make operator-image-push
+	make builder-image-push
 endif
 
 #----------------------------------------------------------------------------------

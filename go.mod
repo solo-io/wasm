@@ -17,24 +17,21 @@ require (
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
-	github.com/solo-io/autopilot v0.1.1-0.20200117205836-93b3eb68cbc0
+	github.com/solo-io/autopilot v0.1.1-0.20200119203055-47b101effd5d
 	github.com/solo-io/gloo v1.2.10
 	github.com/solo-io/go-utils v0.11.7
 	github.com/solo-io/solo-kit v0.12.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
-	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
-	golang.org/x/sys v0.0.0-20200117145432-59e60aa80a0c // indirect
 	gopkg.in/AlecAivazis/survey.v1 v1.8.7
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v11.0.0+incompatible
-	k8s.io/code-generator v0.17.1 // indirect
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 

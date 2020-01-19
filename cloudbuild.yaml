@@ -15,18 +15,21 @@ steps:
       - 'TAGGED_VERSION=$TAG_NAME'
     id: 'install dependencies'
     
-  - name: 'gcr.io/$PROJECT_ID/e2e-go-mod-ginkgo:0.2.1'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-ginkgo:wasme'
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'BUILD_ID=$BUILD_ID'
+      - 'IMAGE_REGISTRY=gcr.io/$PROJECT_ID'
     args: ['-r', '-failFast', '-trace', '-progress']
     secretEnv: ['GITHUB_TOKEN']
     id: 'run-tests'
 
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
-    args: ['build-images']
+  - name: 'gcr.io/$PROJECT_ID/e2e-go-mod-make:0.2.1'
+    args: ['build-images', 'builder-image-push']
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
+      - 'BUILD_ID=$BUILD_ID'
+    secretEnv: ['GITHUB_TOKEN']
     id: 'build-images'
 
   - name: 'gcr.io/cloud-builders/docker'
@@ -42,9 +45,8 @@ steps:
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
       - 'TAGGED_VERSION=$TAG_NAME'
-      - 'PROJECT_ROOT=github.com/solo-io/wasme'
     secretEnv: ['GITHUB_TOKEN']
-    id: 'release-build-container'
+    id: 'publish-release-containers'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['upload-github-release-assets', 'publish-docs', '-B']
