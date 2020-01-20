@@ -7,6 +7,7 @@ require (
 	github.com/containerd/containerd v1.3.0
 	github.com/deislabs/oras v0.7.0
 	github.com/envoyproxy/go-control-plane v0.9.1
+	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
@@ -20,6 +21,7 @@ require (
 	github.com/solo-io/autopilot v0.1.1-0.20200119203055-47b101effd5d
 	github.com/solo-io/gloo v1.2.10
 	github.com/solo-io/go-utils v0.11.7
+	github.com/solo-io/protoc-gen-ext v0.0.7
 	github.com/solo-io/solo-kit v0.12.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
@@ -32,6 +34,7 @@ require (
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
 	k8s.io/client-go v11.0.0+incompatible
+	k8s.io/code-generator v0.17.1
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 
