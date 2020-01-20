@@ -25,7 +25,7 @@ steps:
     id: 'run-tests'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
-    args: ['build-images', 'builder-image-push']
+    args: ['build-images']
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'BUILD_ID=$BUILD_ID'
