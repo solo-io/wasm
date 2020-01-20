@@ -160,7 +160,7 @@ spec:
     istio:
       kind: Deployment
   filter:
-    config: '{"name":"hello","value":"goodbye"}'
+    config: '{"name":"hello","value":"world"}'
     image: webassemblyhub.io/ilackarms/istio-example:1.4.2
 EOF
 ```
@@ -238,6 +238,56 @@ The output should look have a `200 OK` response and contain the response header 
 < content-length: 180
 < x-envoy-upstream-service-time: 1
 < hello: world
+< x-envoy-decorator-operation: details.bookinfo.svc.cluster.local:9080/*
+<
+* Connection #0 to host details.bookinfo left intact
+{"id":123,"author":"William Shakespeare","year":1595,"type":"paperback","pages":200,"publisher":"PublisherA","language":"English","ISBN-10":"1234567890","ISBN-13":"123-1234567890"}
+{{< /highlight >}}
+
+We can easily modify the `hello: world` custom header by updating the FilterDeployment `spec.filter.config`:
+
+{{< highlight yaml "hl_lines=12" >}}
+cat <<EOF | kubectl apply -f -
+apiVersion: wasme.io/v1
+kind: FilterDeployment
+metadata:
+  name: bookinfo-custom-filter
+  namespace: bookinfo
+spec:
+  deployment:
+    istio:
+      kind: Deployment
+  filter:
+    config: '{"name":"hello","value":"goodbye"}'
+    image: webassemblyhub.io/ilackarms/istio-example:1.4.2
+EOF
+{{< /highlight >}}
+
+Try the request again:
+
+
+```bash
+kubectl exec -ti -n bookinfo deploy/productpage-v1 -c istio-proxy -- curl -v http://details.bookinfo:9080/details/123
+```
+
+The output should now contain the response header `hello: goodbye`:
+
+{{< highlight yaml "hl_lines=15" >}}
+*   Trying 10.55.247.3...
+* TCP_NODELAY set
+* Connected to details.bookinfo (10.55.247.3) port 9080 (#0)
+> GET /details/123 HTTP/1.1
+> Host: details.bookinfo:9080
+> User-Agent: curl/7.58.0
+> Accept: */*
+>
+< HTTP/1.1 200 OK
+< content-type: application/json
+< server: istio-envoy
+< date: Mon, 20 Jan 2020 19:39:33 GMT
+< content-length: 180
+< x-envoy-upstream-service-time: 1
+< hello: goodbye
 < x-envoy-decorator-operation: details.bookinfo.svc.cluster.local:9080/*
 <
 * Connection #0 to host details.bookinfo left intact
