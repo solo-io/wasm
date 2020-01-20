@@ -9,8 +9,8 @@ import (
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/v1/options/wasm"
 	"github.com/solo-io/go-utils/contextutils"
 	"github.com/solo-io/solo-kit/pkg/api/v1/clients"
-	"github.com/solo-io/wasme/pkg/deploy"
-	v1 "k8s.io/api/core/v1"
+	v1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // selects the gateways to which to deploy the wasm filter(s)
@@ -29,22 +29,22 @@ type Provider struct {
 }
 
 // applies the filter to all selected workloads in selected namespaces
-func (p *Provider) ApplyFilter(filter *deploy.Filter) error {
+func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 	return p.updateGateways(func(gateway *gatewayv1.Gateway) error {
 		return apendWasmConfig(filter, gateway)
 	})
 }
 
 // removes the filter from all selected workloads in selected namespaces
-func (p *Provider) RemoveFilter(filter *deploy.Filter) error {
+func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
 	return p.updateGateways(func(gateway *gatewayv1.Gateway) error {
-		return removeWasmConfig(filter.ID, gateway)
+		return removeWasmConfig(filter.Id, gateway)
 	})
 }
 func (p *Provider) updateGateways(updateFunc func(gateway *gatewayv1.Gateway) error) error {
 	namespaces := p.Selector.Namespaces
 	if len(namespaces) == 0 {
-		namespaces = []string{v1.NamespaceAll}
+		namespaces = []string{corev1.NamespaceAll}
 	}
 	for _, ns := range namespaces {
 		gateways, err := p.GatewayClient.List(ns, clients.ListOpts{
@@ -72,7 +72,7 @@ func (p *Provider) updateGateways(updateFunc func(gateway *gatewayv1.Gateway) er
 
 // TODO: currently gloo only supports 1 wasm filter
 // when it is updated, this should become an APPEND
-func apendWasmConfig(filter *deploy.Filter, gateway *gatewayv1.Gateway) error {
+func apendWasmConfig(filter *v1.FilterSpec, gateway *gatewayv1.Gateway) error {
 	httpGw := gateway.GetHttpGateway()
 	if httpGw == nil {
 		return errors.Errorf("must contain httpGateway field")
@@ -88,7 +88,7 @@ func apendWasmConfig(filter *deploy.Filter, gateway *gatewayv1.Gateway) error {
 	opts.Wasm = &wasm.PluginSource{
 		Image:  filter.Image,
 		Config: filter.Config,
-		Name:   filter.ID,
+		Name:   filter.Id,
 		RootId: filter.RootID,
 		VmType: wasm.PluginSource_V8, // default to V8
 	}

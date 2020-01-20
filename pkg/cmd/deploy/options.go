@@ -5,10 +5,15 @@ import (
 	"io"
 	"os"
 
+	"github.com/solo-io/autopilot/pkg/ezkube"
+	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+
 	"github.com/pkg/errors"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
 	"github.com/solo-io/go-utils/kubeutils"
+	v1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
 	cachedeployment "github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/deploy"
@@ -18,12 +23,11 @@ import (
 	"github.com/solo-io/wasme/pkg/pull"
 	"github.com/solo-io/wasme/pkg/resolver"
 	"github.com/spf13/pflag"
-	"istio.io/client-go/pkg/clientset/versioned"
 )
 
 type options struct {
 	// filter to deploy
-	filter deploy.Filter
+	filter v1.FilterSpec
 
 	// deployment implementation
 	providerOptions
@@ -50,7 +54,7 @@ func (opts *options) addDryRunToFlags(flags *pflag.FlagSet) {
 }
 
 func (opts *options) addIdToFlags(flags *pflag.FlagSet) {
-	flags.StringVar(&opts.filter.ID, "id", "", "unique id for naming the deployed filter. this is used for logging as well as removing the filter. when running wasme deploy istio, this name must be a valid Kubernetes resource name.")
+	flags.StringVar(&opts.filter.Id, "id", "", "unique id for naming the deployed filter. this is used for logging as well as removing the filter. when running wasme deploy istio, this name must be a valid Kubernetes resource name.")
 }
 
 type providerOptions struct {
@@ -81,7 +85,7 @@ type istioOpts struct {
 func (opts *istioOpts) addToFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&opts.workload.Name, "name", "", "", "name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace")
 	flags.StringVarP(&opts.workload.Namespace, "namespace", "n", "default", "namespace of the workload(s) to inject the filter.")
-	flags.StringVarP(&opts.workload.Type, "workload-type", "t", istio.WorkloadTypeDeployment, "type of workload into which the filter should be injected. possible values are "+istio.WorkloadTypeDeployment+" or "+istio.WorkloadTypeDaemonSet)
+	flags.StringVarP(&opts.workload.Kind, "workload-type", "t", istio.WorkloadTypeDeployment, "type of workload into which the filter should be injected. possible values are "+istio.WorkloadTypeDeployment+" or "+istio.WorkloadTypeDaemonSet)
 }
 
 type cacheOpts struct {
@@ -155,22 +159,29 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			return nil, err
 		}
 
-		istioClient, err := versioned.NewForConfig(cfg)
+		kubeClient, err := kubernetes.NewForConfig(cfg)
 		if err != nil {
 			return nil, err
 		}
 
-		return &istio.Provider{
-			Ctx:         ctx,
-			KubeClient:  helpers.MustKubeClient(),
-			IstioClient: istioClient,
-			Puller:      opts.istioOpts.puller,
-			Workload:    opts.istioOpts.workload,
-			Cache: istio.Cache{
+		mgr, err := manager.New(cfg, manager.Options{})
+		if err != nil {
+			return nil, err
+		}
+
+		return istio.NewProvider(
+			ctx,
+			kubeClient,
+			ezkube.NewEnsurer(ezkube.NewRestClient(mgr)),
+			opts.istioOpts.puller,
+			opts.istioOpts.workload,
+			istio.Cache{
 				Name:      opts.cacheOpts.name,
 				Namespace: opts.cacheOpts.namespace,
 			},
-		}, nil
+			nil, // no parent object when using CLI
+			nil, // no callback when using CLI
+		)
 	case Provider_Envoy:
 		var in io.ReadCloser
 		if opts.localOpts.infile == "-" {
