@@ -220,7 +220,7 @@ Let's test the filter with a `curl`:
 kubectl exec -ti -n bookinfo deploy/productpage-v1 -c istio-proxy -- curl -v http://details.bookinfo:9080/details/123
 ```
 
-The output should look have a `200 OK` response and contain the response header `hello: world`:
+The output should have a `200 OK` response and contain the response header `hello: world`:
 
 {{< highlight yaml "hl_lines=15" >}}
 *   Trying 10.55.247.3...
