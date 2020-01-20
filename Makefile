@@ -55,9 +55,9 @@ operator-gen:
 
 # Generate Manifests from Chart
 .PHONY: manifest-gen
-manifest-gen: operator/install/kube/wasme-demo.yaml
-operator/install/kube/wasme-demo.yaml: operator-gen
-	helm template --namespace wasme operator/install/kube/wasme > operator/install/kube/wasme-demo.yaml
+manifest-gen: operator/install/kube/wasme-default.yaml
+operator/install/kube/wasme-default.yaml: operator-gen
+	helm template --namespace wasme operator/install/kube/wasme > operator/install/kube/wasme-default.yaml
 
 .PHONY: wasme
 wasme: $(OUTDIR)/wasme
@@ -91,15 +91,15 @@ install-cli:
 .PHONY: build-images
 build-images: wasme-image builder-image
 
-# build Operator image
-.PHONY: operator-image
-operator-image: wasme-linux-amd64
+# build image with Wasme binary
+.PHONY: wasme-image
+wasme-image: wasme-linux-amd64
 	cp $(OUTDIR)/wasme-linux-amd64 operator/build/wasme/ && \
 	docker build -t $(OPERATOR_IMAGE):$(VERSION) operator/build/wasme/
 	rm operator/build/wasme/wasme-linux-amd64
 
-.PHONY: operator-image-push
-operator-image-push:
+.PHONY: wasme-image-push
+wasme-image-push:
 	docker push $(OPERATOR_IMAGE):$(VERSION)
 
 # build Builder image
@@ -134,7 +134,7 @@ endif
 .PHONY: publish-images
 publish-images:
 ifeq ($(RELEASE),"true")
-	make operator-image-push
+	make wasme-image-push
 	make builder-image-push
 endif
 

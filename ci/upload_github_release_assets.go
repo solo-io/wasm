@@ -5,6 +5,7 @@ import (
 )
 
 const buildDir = "_output"
+const installDir = "operator/install/kube"
 const repoOwner = "solo-io"
 const repoName = "wasme"
 
@@ -23,6 +24,16 @@ func main() {
 		{
 			Name:       "wasme-windows-amd64.exe",
 			ParentPath: buildDir,
+			UploadSHA:  true,
+		},
+		{
+			Name:       "wasme-default.yaml",
+			ParentPath: installDir,
+			UploadSHA:  true,
+		},
+		{
+			Name:       "wasme.io_v1_crds.yaml",
+			ParentPath: installDir+"/wasme/crds",
 			UploadSHA:  true,
 		},
 	}

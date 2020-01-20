@@ -46,7 +46,7 @@ steps:
       - 'DOCKER_CONFIG=/workspace/docker-config'
       - 'TAGGED_VERSION=$TAG_NAME'
     secretEnv: ['GITHUB_TOKEN']
-    id: 'publish-release-containers'
+    id: 'publish-images'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['upload-github-release-assets', 'publish-docs', '-B']
@@ -54,7 +54,7 @@ steps:
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'PROJECT_ROOT=github.com/solo-io/wasme'
     secretEnv: ['GITHUB_TOKEN']
-    id: 'release-assets-docs'
+    id: 'upload-github-release-assets'
 
 secrets:
   - kmsKeyName: projects/solo-public/locations/global/keyRings/build/cryptoKeys/build-key

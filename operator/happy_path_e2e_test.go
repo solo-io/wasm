@@ -113,7 +113,7 @@ var _ = BeforeSuite(func() {
 	err = applyFile("install/kube/wasme/crds/wasme.io_v1_crds.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = applyFile("install/kube/wasme-demo.yaml", "")
+	err = applyFile("install/kube/wasme-default.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
 	err = applyFile("bookinfo.yaml", ns)
@@ -124,7 +124,7 @@ var _ = BeforeSuite(func() {
 })
 var _ = AfterSuite(func() {
 	deleteFile("bookinfo.yaml", ns)
-	deleteFile("install/kube/wasme-demo.yaml", "")
+	deleteFile("install/kube/wasme-default.yaml", "")
 	utils.Kubectl(nil, "delete", "ns", ns)
 })
 
