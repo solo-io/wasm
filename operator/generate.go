@@ -1,14 +1,15 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/version"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"log"
-	"os"
 
 	"github.com/solo-io/autopilot/codegen"
 	"github.com/solo-io/autopilot/codegen/model"
@@ -209,7 +210,7 @@ func main() {
 			},
 		},
 
-		ManifestRoot: "operator/install/kube",
+		ManifestRoot: "operator/install",
 
 		Builds: []model.Build{
 			{

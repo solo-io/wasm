@@ -22,7 +22,7 @@ LDFLAGS := "-X github.com/solo-io/$(PROJECT)/pkg/version.Version=$(VERSION)"
 GCFLAGS := all="-N -l"
 
 # Passed by cloudbuild
-GCLOUD_PROJECT_ID := $(GCLOUD_PROJECT_ID)
+GCLOUD_PROJECT_ID := $(PROJECT_ID)
 BUILD_ID := $(BUILD_ID)
 
 #----------------------------------------------------------------------------------
@@ -55,9 +55,9 @@ operator-gen:
 
 # Generate Manifests from Chart
 .PHONY: manifest-gen
-manifest-gen: operator/install/kube/wasme-default.yaml
-operator/install/kube/wasme-default.yaml: operator-gen
-	helm template --namespace wasme operator/install/kube/wasme > operator/install/kube/wasme-default.yaml
+manifest-gen: operator/install/wasme-default.yaml
+operator/install/wasme-default.yaml: operator-gen
+	helm template --namespace wasme operator/install/wasme > operator/install/wasme-default.yaml
 
 .PHONY: wasme
 wasme: $(OUTDIR)/wasme

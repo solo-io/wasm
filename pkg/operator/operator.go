@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+
 	"github.com/solo-io/wasme/pkg/deploy"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 

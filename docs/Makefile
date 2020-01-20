@@ -1,7 +1,7 @@
 # Note to developers/testers
 # >> to force docs publication and deployment during testing, do the following:
 # cd to repo root, connect to a cluster where you want to push your images, run the following (update SUFFIX as you like)
-# SUFFIX=a GCLOUD_PROJECT_ID=solo-public TAGGED_VERSION=vtest-docs-build$SUFFIX make publish-docs -B && kubectl apply -f docs/install/manifest-latest.yaml -n docs
+# SUFFIX=a PROJECT_ID=solo-public TAGGED_VERSION=vtest-docs-build$SUFFIX make publish-docs -B && kubectl apply -f docs/install/manifest-latest.yaml -n docs
 # >> to run host the docs locally, do the following
 # cd to the docs dir
 # make serve-site -B

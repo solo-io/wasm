@@ -2,8 +2,9 @@ package cmd
 
 import (
 	"context"
-	"github.com/solo-io/wasme/pkg/cmd/operator"
 	"os"
+
+	"github.com/solo-io/wasme/pkg/cmd/operator"
 
 	"github.com/sirupsen/logrus"
 

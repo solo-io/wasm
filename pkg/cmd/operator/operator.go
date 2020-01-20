@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/go-utils/contextutils"
 	cachedeployment "github.com/solo-io/wasme/pkg/cache"
@@ -32,7 +33,7 @@ func (f flagSetLogLevel) Type() string {
 }
 
 type operatorOpts struct {
-	cache istio.Cache
+	cache    istio.Cache
 	logLevel flagSetLogLevel
 }
 

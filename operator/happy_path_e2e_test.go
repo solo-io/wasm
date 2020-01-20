@@ -1,17 +1,18 @@
 package main_test
 
 import (
-	"github.com/pkg/errors"
-	"github.com/solo-io/autopilot/codegen/model"
-	"github.com/solo-io/autopilot/codegen/render"
-	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"io/ioutil"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
+	"github.com/solo-io/autopilot/codegen/model"
+	"github.com/solo-io/autopilot/codegen/render"
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -110,10 +111,10 @@ var _ = BeforeSuite(func() {
 	err = utils.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = applyFile("install/kube/wasme/crds/wasme.io_v1_crds.yaml", "")
+	err = applyFile("install/wasme/crds/wasme.io_v1_crds.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = applyFile("install/kube/wasme-default.yaml", "")
+	err = applyFile("install/wasme-default.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
 	err = applyFile("bookinfo.yaml", ns)
@@ -124,7 +125,7 @@ var _ = BeforeSuite(func() {
 })
 var _ = AfterSuite(func() {
 	deleteFile("bookinfo.yaml", ns)
-	deleteFile("install/kube/wasme-default.yaml", "")
+	deleteFile("install/wasme-default.yaml", "")
 	utils.Kubectl(nil, "delete", "ns", ns)
 })
 
