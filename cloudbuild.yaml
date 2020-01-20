@@ -24,7 +24,7 @@ steps:
     secretEnv: ['GITHUB_TOKEN']
     id: 'run-tests'
 
-  - name: 'gcr.io/$PROJECT_ID/e2e-go-mod-make:0.2.1'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['build-images', 'builder-image-push']
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
