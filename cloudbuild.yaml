@@ -15,7 +15,7 @@ steps:
       - 'TAGGED_VERSION=$TAG_NAME'
     id: 'install dependencies'
     
-  - name: 'gcr.io/$PROJECT_ID/go-mod-ginkgo:wasme'
+  - name: 'gcr.io/$PROJECT_ID/e2e-go-mod-ginkgo:wasme'
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'BUILD_ID=$BUILD_ID'
