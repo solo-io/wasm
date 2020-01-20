@@ -112,7 +112,7 @@ kubectl create ns bookinfo
 kubectl label namespace bookinfo istio-injection=enabled --overwrite
 
 # install the bookinfo application
-kubectl apply -n bookinfo -f https://github.com/solo-io/wasme/blob/master/operator/bookinfo.yaml#L14
+kubectl apply -n bookinfo -f https://github.com/solo-io/wasme/blob/master/operator/bookinfo.yaml
 ```
 
 {{% notice note %}}
@@ -304,4 +304,3 @@ kubectl delete filterdeployment -n bookinfo bookinfo-custom-filter
 
 For more information and support using `wasme` and the Web Assembly Hub, visit the Solo.io slack channel at
 https://slack.solo.io.
-
