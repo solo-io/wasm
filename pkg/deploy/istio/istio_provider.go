@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
-	v1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -209,7 +209,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 					return err
 				}
 
-				if _, err = p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Update(&workload); err != nil {
+				if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
 					return err
 				}
 			}
@@ -223,7 +223,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 				return err
 			}
 
-			if _, err = p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Update(workload); err != nil {
+			if err = p.Client.Ensure(p.Ctx, nil, workload); err != nil {
 				return err
 			}
 		}
@@ -238,7 +238,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 					return err
 				}
 
-				if _, err = p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Update(&workload); err != nil {
+				if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
 					return err
 				}
 			}
@@ -252,7 +252,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 				return err
 			}
 
-			if _, err = p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Update(workload); err != nil {
+			if err = p.Client.Ensure(p.Ctx, nil, workload); err != nil {
 				return err
 			}
 		}

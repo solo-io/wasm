@@ -1,0 +1,15 @@
+apiVersion: wasme.io/v1
+kind: FilterDeployment
+metadata:
+  labels:
+    app: wasme-test-app
+    app.kubernetes.io/name: wasme-test-app
+  name: myfilter
+  namespace: bookinfo
+spec:
+  deployment:
+    istio:
+      kind: Deployment
+  filter:
+    config: '{"name":"hello","value":"world"}'
+    image: webassemblyhub.io/ilackarms/istio-example:1.4.2

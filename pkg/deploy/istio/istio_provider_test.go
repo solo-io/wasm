@@ -3,16 +3,12 @@ package istio
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
 
-	"github.com/solo-io/autopilot/cli/pkg/utils"
-	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/autopilot/test"
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/randutils"
-	wasmev1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
+	wasmev1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
@@ -26,16 +22,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
-
-func applyCrds() error {
-	// apply operator crd
-	path := filepath.Join(util.GetModuleRoot(), "operator/install/kube/wasme.io_v1_crds.yaml")
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	return utils.KubectlApply(b)
-}
 
 func makeDeployment(workloadName, ns string) *appsv1.Deployment {
 	return &appsv1.Deployment{
@@ -88,14 +74,11 @@ var _ = Describe("IstioProvider", func() {
 		cancel = func() {}
 	)
 	BeforeEach(func() {
-		err := applyCrds()
-		Expect(err).NotTo(HaveOccurred())
-
 		cfg := test.MustConfig()
 		kube = kubernetes.NewForConfigOrDie(cfg)
 
 		ns = "istio-provider-test-" + randutils.RandString(4)
-		err = kubeutils.CreateNamespacesInParallel(kube, ns)
+		err := kubeutils.CreateNamespacesInParallel(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		mgr, c := test.ManagerWithOpts(cfg, manager.Options{

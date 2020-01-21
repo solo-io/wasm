@@ -3,11 +3,13 @@ package deploy
 import (
 	"context"
 
-	v1 "github.com/solo-io/wasme/operator/pkg/api/wasme.io/v1"
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/wasme/pkg/pull"
 )
+
+//go:generate mockgen -destination ./mocks/deployer.go github.com/solo-io/wasme/pkg/deploy Provider
 
 // mesh-provider specific implementation that adds/removes filters
 type Provider interface {
@@ -37,7 +39,7 @@ func (d *Deployer) RemoveFilter(filter *v1.FilterSpec) error {
 // second time it will cache it locally
 // if the user provides
 func (d *Deployer) setRootID(f *v1.FilterSpec) error {
-	if f.Image != "" {
+	if f.RootID != "" {
 		return nil
 	}
 	rootId, err := d.getRootId(f.Image)

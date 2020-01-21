@@ -15,6 +15,8 @@ import (
 	"github.com/solo-io/wasme/pkg/model"
 )
 
+//go:generate mockgen -destination ./mocks/pull.go github.com/solo-io/wasme/pkg/pull ImagePuller
+
 type FilterImpl struct {
 	code io.ReadCloser
 }

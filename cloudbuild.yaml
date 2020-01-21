@@ -1,28 +1,35 @@
 steps:
 
+  - name: gcr.io/cloud-builders/gcloud
+    args: ['container', 'clusters', 'get-credentials', 'wasme-ci-cluster', '--zone', 'us-central1-a']
+    id: 'get-kubeconfig'
+
   - name: gcr.io/cloud-builders/gsutil
     entrypoint: 'bash'
     args: ['-c', 'mkdir -p /go/pkg && cd /go/pkg && gsutil cat gs://$PROJECT_ID-cache/wasme/wasme-mod.tar.gz | tar -xzf -']
-    volumes: &vol
-      - name: 'gopath'
-        path: '/go/pkg'
     id: 'untar-mod-cache'
 
-  - name: 'golang:1.13.4'
-    volumes: *vol
-    args: ['go', 'get', './...']
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
+    args: ['install-deps']
     env:
-      - 'GO111MODULE=on'
-    id: 'go-get'
+      - 'TAGGED_VERSION=$TAG_NAME'
+    id: 'install dependencies'
+    
+  - name: 'gcr.io/$PROJECT_ID/e2e-go-mod-ginkgo:wasme'
+    env:
+      - 'TAGGED_VERSION=$TAG_NAME'
+      - 'BUILD_ID=$BUILD_ID'
+      - 'IMAGE_REGISTRY=gcr.io/$PROJECT_ID'
+    args: ['-r', '-failFast', '-trace', '-progress']
+    secretEnv: ['GITHUB_TOKEN']
+    id: 'run-tests'
 
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['build-images']
     env:
-      - 'GO111MODULE=on'
       - 'TAGGED_VERSION=$TAG_NAME'
-      - 'PROJECT_ROOT=github.com/solo-io/wasme'
-      - 'GOPATH=/workspace/gopath'
-      - 'GCLOUD_PROJECT_ID=$PROJECT_ID'
+      - 'BUILD_ID=$BUILD_ID'
+    secretEnv: ['GITHUB_TOKEN']
     id: 'build-images'
 
   - name: 'gcr.io/cloud-builders/docker'
@@ -33,27 +40,21 @@ steps:
     secretEnv: ['QUAY_IO_PASSWORD']
     id: 'docker-login'
 
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['publish-images', '-B']
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
       - 'TAGGED_VERSION=$TAG_NAME'
-      - 'PROJECT_ROOT=github.com/solo-io/wasme'
-      - 'GOPATH=/workspace/gopath'
-      - 'GCLOUD_PROJECT_ID=$PROJECT_ID'
     secretEnv: ['GITHUB_TOKEN']
-    id: 'release-build-container'
+    id: 'publish-images'
 
-  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.0'
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
     args: ['upload-github-release-assets', 'publish-docs', '-B']
     env:
-      - 'GO111MODULE=on'
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'PROJECT_ROOT=github.com/solo-io/wasme'
-      - 'GOPATH=/workspace/gopath'
-      - 'GCLOUD_PROJECT_ID=$PROJECT_ID'
     secretEnv: ['GITHUB_TOKEN']
-    id: 'release-assets-docs'
+    id: 'upload-github-release-assets'
 
 secrets:
   - kmsKeyName: projects/solo-public/locations/global/keyRings/build/cryptoKeys/build-key
@@ -65,3 +66,6 @@ timeout: 1200s
 tags: ['wasme']
 options:
   machineType: 'N1_HIGHCPU_32'
+  volumes:
+    - name: 'gopath'
+      path: '/go'
