@@ -9,6 +9,8 @@ import (
 	"github.com/solo-io/wasme/pkg/pull"
 )
 
+//go:generate mockery -name=Provider
+
 // mesh-provider specific implementation that adds/removes filters
 type Provider interface {
 	ApplyFilter(filter *v1.FilterSpec) error

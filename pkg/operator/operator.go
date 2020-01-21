@@ -30,6 +30,10 @@ type filterDeploymentHandler struct {
 	client     ezkube.Ensurer
 
 	cache istio.Cache
+
+	// custom overrides for testing
+	makePullerFn   func(secretNamespace string, opts *v1.ImagePullOptions) (pull.ImagePuller, error)
+	makeProviderFn func(obj *v1.FilterDeployment, puller pull.ImagePuller, onWorkload func(workloadMeta metav1.ObjectMeta, err error)) (deploy.Provider, error)
 }
 
 func NewFilterDeploymentHandler(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, cache istio.Cache) controller.FilterDeploymentEventHandler {
@@ -86,7 +90,20 @@ func (f *filterDeploymentHandler) deploy(obj *v1.FilterDeployment) error {
 }
 
 func (f *filterDeploymentHandler) undeploy(obj *v1.FilterDeployment) error {
-	return f.handleFilter(obj, true, nil)
+	status := v1.FilterDeploymentStatus{
+		ObservedGeneration: obj.Generation,
+		Workloads:          map[string]*v1.WorkloadStatus{},
+	}
+
+	err := f.handleFilter(obj, true, nil)
+
+	if err != nil {
+		status.Reason = err.Error()
+	}
+
+	obj.Status = status
+
+	return f.client.UpdateStatus(f.ctx, obj)
 }
 
 func getFilter(obj *v1.FilterDeployment) (*v1.FilterSpec, error) {
@@ -114,14 +131,35 @@ func (f *filterDeploymentHandler) handleFilter(obj *v1.FilterDeployment, remove 
 		return err
 	}
 
-	deployment, err := getDeployment(obj)
+	makePuller := f.makePuller
+	if f.makePullerFn != nil {
+		makePuller = f.makePullerFn
+	}
+	puller, err := makePuller(obj.Namespace, filter.GetImagePullOptions())
 	if err != nil {
 		return err
 	}
 
-	puller, err := f.makePuller(obj.Namespace, filter.GetImagePullOptions())
+	makeProvider := f.makeProvider
+	if f.makeProviderFn != nil {
+		makeProvider = f.makeProviderFn
+	}
+	deployer, err := makeProvider(obj, puller, onWorkload)
 	if err != nil {
 		return err
+	}
+
+	if remove {
+		return deployer.RemoveFilter(filter)
+	}
+
+	return deployer.ApplyFilter(filter)
+}
+
+func (f *filterDeploymentHandler) makeProvider(obj *v1.FilterDeployment, puller pull.ImagePuller, onWorkload func(workloadMeta metav1.ObjectMeta, err error)) (deploy.Provider, error) {
+	deployment, err := getDeployment(obj)
+	if err != nil {
+		return nil, err
 	}
 
 	var provider deploy.Provider
@@ -133,7 +171,7 @@ func (f *filterDeploymentHandler) handleFilter(obj *v1.FilterDeployment, remove 
 			Namespace: obj.Namespace,
 		}
 
-		istioProvider, err := istio.NewProvider(
+		provider, err = istio.NewProvider(
 			f.ctx,
 			f.kubeClient,
 			f.client,
@@ -144,26 +182,17 @@ func (f *filterDeploymentHandler) handleFilter(obj *v1.FilterDeployment, remove 
 			onWorkload,
 		)
 		if err != nil {
-			return err
+			return nil, err
 		}
-
-		provider = istioProvider
 	default:
-		return errors.Errorf("internal error: %T not implemented", deployment)
+		return nil, errors.Errorf("internal error: %T not implemented", deployment)
 	}
-
 	// deployer sets the root_id on the filter if the user hasn't provided one
-	deployer := &deploy.Deployer{
+	return &deploy.Deployer{
 		Ctx:      f.ctx,
 		Puller:   puller,
 		Provider: provider,
-	}
-
-	if remove {
-		return deployer.RemoveFilter(filter)
-	}
-
-	return deployer.ApplyFilter(filter)
+	}, nil
 }
 
 func (f *filterDeploymentHandler) makePuller(secretNamespace string, opts *v1.ImagePullOptions) (pull.ImagePuller, error) {

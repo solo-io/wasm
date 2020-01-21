@@ -28,19 +28,14 @@ func runMake(target string) error {
 }
 
 func applyFile(file, ns string) error {
-	path := filepath.Join(util.MustGetThisDir(), file)
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
-	}
-	extraArgs := []string{}
-	if ns != "" {
-		extraArgs = []string{"-n", ns}
-	}
-	return utils.KubectlApply(b, extraArgs...)
+	return withManifest(file, ns, utils.KubectlApply)
 }
 
 func deleteFile(file, ns string) error {
+	return withManifest(file, ns, utils.KubectlDelete)
+}
+
+func withManifest(file, ns string, fn func (manifest []byte, extraArgs ...string) error) error {
 	path := filepath.Join(util.MustGetThisDir(), file)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -50,7 +45,7 @@ func deleteFile(file, ns string) error {
 	if ns != "" {
 		extraArgs = []string{"-n", ns}
 	}
-	return utils.KubectlDelete(b, extraArgs...)
+	return fn(b, extraArgs...)
 }
 
 func generateCrdExample() error {

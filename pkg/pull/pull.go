@@ -15,6 +15,8 @@ import (
 	"github.com/solo-io/wasme/pkg/model"
 )
 
+//go:generate mockery -name=ImagePuller
+
 type FilterImpl struct {
 	code io.ReadCloser
 }
