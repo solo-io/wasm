@@ -10,6 +10,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/gogo/protobuf v1.3.1
+	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/google/go-github/v28 v28.1.1
 	github.com/onsi/ginkgo v1.11.0
@@ -18,7 +19,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
-	github.com/solo-io/autopilot v0.1.1-0.20200121190015-0b9c6fb38715
+	github.com/solo-io/autopilot v0.1.1-0.20200121203626-e502fb63902d
 	github.com/solo-io/gloo v1.2.10
 	github.com/solo-io/go-utils v0.11.7
 	github.com/solo-io/protoc-gen-ext v0.0.7

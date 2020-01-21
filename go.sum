@@ -928,6 +928,9 @@ github.com/solo-io/autopilot v0.1.1-0.20200117205836-93b3eb68cbc0 h1:+jyQaBiHENA
 github.com/solo-io/autopilot v0.1.1-0.20200117205836-93b3eb68cbc0/go.mod h1:gEo7JTNbJb1+4Fq60bgrysr+r7l1sig1OnDbaDQU8Ik=
 github.com/solo-io/autopilot v0.1.1-0.20200119203055-47b101effd5d h1:OZSnXCXLO00ti4BN0jSBsLXlUFUBOTHCfjw2tLFpVRo=
 github.com/solo-io/autopilot v0.1.1-0.20200119203055-47b101effd5d/go.mod h1:uBrw4eaG0iPiRPuYblxHfXVWDqFTQNsqaIlR4VjcU7Y=
+github.com/solo-io/autopilot v0.1.1-0.20200121190015-0b9c6fb38715/go.mod h1:JGlboTENATP4PQBRnIZtq6wTeHJhhCjmP6XYcEF9s2s=
+github.com/solo-io/autopilot v0.1.1-0.20200121203626-e502fb63902d h1:J2TN3VSWBGkt/7kpEkMH0OZeHxGLqiv5zsYHLiXtZyc=
+github.com/solo-io/autopilot v0.1.1-0.20200121203626-e502fb63902d/go.mod h1:ufYqjstCFzvALsvvcEHzRMbcouFCGnyHHd7ejY26APE=
 github.com/solo-io/envoy-operator v0.1.1/go.mod h1:ZP5hB+khljAFCROj/yDjVPXCPHntdewy6mqYybcCneQ=
 github.com/solo-io/gloo v1.2.10 h1:NuALnVCPmBWVgRPHgou0nFMz1xQa0W/e9TXUmdbyzvQ=
 github.com/solo-io/gloo v1.2.10/go.mod h1:qJmoMYyIbWavBjG8+uOsnG/lwG82RLNkWsQABNaLcbQ=

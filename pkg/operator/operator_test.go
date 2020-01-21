@@ -2,16 +2,16 @@ package operator
 
 import (
 	"context"
+	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/autopilot/pkg/ezkube/mocks"
 	"github.com/solo-io/wasme/pkg/deploy"
 	"github.com/solo-io/wasme/pkg/deploy/istio"
-	providermocks "github.com/solo-io/wasme/pkg/deploy/mocks"
+	"github.com/solo-io/wasme/pkg/deploy/mocks"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/pull"
-	"github.com/stretchr/testify/mock"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
@@ -25,12 +25,15 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 		filterDeployment *v1.FilterDeployment
 		client           *mockClient
 		provider         *mockProvider
+		mockCtrl         *gomock.Controller
 	)
 	BeforeEach(func() {
 		kubeClient = fake.NewSimpleClientset()
 
-		client = &mockClient{Ensurer: &mocks.Ensurer{}}
-		provider = &mockProvider{Provider: &providermocks.Provider{}}
+		mockCtrl = gomock.NewController(GinkgoT())
+
+		client = &mockClient{MockEnsurer: mock_ezkube.NewMockEnsurer(mockCtrl)}
+		provider = &mockProvider{MockProvider: mock_deploy.NewMockProvider(mockCtrl)}
 
 		handler = &filterDeploymentHandler{
 			ctx:        context.TODO(),
@@ -71,9 +74,12 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 			},
 		}
 	})
-	applyTest := func(applyFunc func (obj *v1.FilterDeployment) error) {
-		provider.On("ApplyFilter", filterDeployment.Spec.Filter).Return(nil)
-		client.On("UpdateStatus", mock.Anything, mock.Anything).Return(nil)
+	AfterEach(func() {
+		mockCtrl.Finish()
+	})
+	applyTest := func(applyFunc func(obj *v1.FilterDeployment) error) {
+		provider.EXPECT().ApplyFilter(filterDeployment.Spec.Filter).Return(nil)
+		client.EXPECT().UpdateStatus(gomock.Any(), gomock.Any()).Return(nil)
 
 		// ensure the status gets set for the workload
 		provider.workloadMeta = metav1.ObjectMeta{Name: "test-workload"}
@@ -104,8 +110,8 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 		})
 	})
 	It("handles delete event", func() {
-		provider.On("RemoveFilter", filterDeployment.Spec.Filter).Return(nil)
-		client.On("UpdateStatus", mock.Anything, mock.Anything).Return(nil)
+		provider.EXPECT().RemoveFilter(filterDeployment.Spec.Filter).Return(nil)
+		client.EXPECT().UpdateStatus(gomock.Any(), gomock.Any()).Return(nil)
 
 		err := handler.Delete(filterDeployment)
 		Expect(err).NotTo(HaveOccurred())
@@ -118,7 +124,7 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 		updatedFilter := updated.(*v1.FilterDeployment)
 		Expect(updatedFilter.Status).To(Equal(v1.FilterDeploymentStatus{
 			ObservedGeneration: 1,
-			Workloads: map[string]*v1.WorkloadStatus{},
+			Workloads:          map[string]*v1.WorkloadStatus{},
 		}))
 	})
 })
@@ -127,20 +133,20 @@ type mockProvider struct {
 	workloadMeta metav1.ObjectMeta
 	err          error
 	onWorkloadFn func(workloadMeta metav1.ObjectMeta, err error)
-	*providermocks.Provider
+	*mock_deploy.MockProvider
 }
 
 func (c *mockProvider) ApplyFilter(f *v1.FilterSpec) error {
 	c.onWorkloadFn(c.workloadMeta, c.err)
-	return c.Provider.ApplyFilter(f)
+	return c.MockProvider.ApplyFilter(f)
 }
 
 type mockClient struct {
 	updatedObjStatus ezkube.Object
-	*mocks.Ensurer
+	*mock_ezkube.MockEnsurer
 }
 
 func (c *mockClient) UpdateStatus(ctx context.Context, obj ezkube.Object) error {
 	c.updatedObjStatus = obj
-	return c.Ensurer.UpdateStatus(ctx, obj)
+	return c.MockEnsurer.UpdateStatus(ctx, obj)
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/solo-io/wasme/pkg/pull"
 )
 
-//go:generate mockery -name=Provider
+//go:generate mockgen -destination ./mocks/deployer.go github.com/solo-io/wasme/pkg/deploy Provider
 
 // mesh-provider specific implementation that adds/removes filters
 type Provider interface {
