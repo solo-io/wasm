@@ -3,6 +3,10 @@ package istio
 import (
 	"context"
 	"fmt"
+	"io"
+
+	"github.com/solo-io/wasme/pkg/config"
+	"github.com/solo-io/wasme/pkg/pull"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/autopilot/test"
@@ -69,8 +73,9 @@ var _ = Describe("IstioProvider", func() {
 		}
 		workloadName = "work"
 
-		puller = &mockPuller{digest: "sha256:e454cab754cf9234e8b41d7c5e30f53a4c125d7d9443cb3ef2b2eb1c4bd1ec14"}
-
+		puller = &mockPuller{
+			image: mockImage{digest: "sha256:e454cab754cf9234e8b41d7c5e30f53a4c125d7d9443cb3ef2b2eb1c4bd1ec14"},
+		}
 		cancel = func() {}
 	)
 	BeforeEach(func() {
@@ -225,13 +230,33 @@ var _ = Describe("IstioProvider", func() {
 })
 
 type mockPuller struct {
+	image mockImage
+}
+
+func (p *mockPuller) Pull(ctx context.Context, ref string) (pull.Image, error) {
+	return &p.image, nil
+}
+
+type mockImage struct {
 	digest string
 }
 
-func (m *mockPuller) PullCodeDescriptor(ctx context.Context, ref string) (v1.Descriptor, error) {
+func (m *mockImage) Ref() string {
+	panic("implement me")
+}
+
+func (m *mockImage) Descriptor() (v1.Descriptor, error) {
 	return v1.Descriptor{
 		Digest: digest.Digest(m.digest),
 	}, nil
+}
+
+func (m *mockImage) FetchFilter(ctx context.Context) (io.ReadCloser, error) {
+	panic("implement me")
+}
+
+func (m *mockImage) FetchConfig(ctx context.Context) (*config.Config, error) {
+	panic("implement me")
 }
 
 func pointerToInt64(value int64) *int64 {

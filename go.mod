@@ -3,7 +3,6 @@ module github.com/solo-io/wasme
 go 1.13
 
 require (
-	github.com/Azure/go-autorest v13.3.1+incompatible // indirect
 	github.com/containerd/containerd v1.3.0
 	github.com/deislabs/oras v0.7.0
 	github.com/envoyproxy/go-control-plane v0.9.1
@@ -13,6 +12,7 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/google/go-github/v28 v28.1.1
+	github.com/manifoldco/promptui v0.7.0
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
@@ -26,7 +26,6 @@ require (
 	github.com/solo-io/solo-kit v0.12.2
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.4.0
 	go.uber.org/zap v1.13.0
 	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
@@ -42,9 +41,10 @@ require (
 
 // Pinned to kubernetes-1.16.2
 replace (
+	// copypaste from Gloo
+	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.0.0+incompatible
 	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
 
-	// copypaste from Gloo
 	k8s.io/api => k8s.io/api v0.0.0-20191004120104-195af9ec3521
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20191204090712-e0e829f17bab
 	k8s.io/apimachinery => k8s.io/apimachinery v0.0.0-20191028221656-72ed19daf4bb

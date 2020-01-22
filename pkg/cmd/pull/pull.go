@@ -49,14 +49,19 @@ func runPull(ctx context.Context, opts pullOptions) error {
 	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
 	var puller pull.ImagePuller = pull.NewPuller(resolver)
 
-	filter, err := puller.PullFilter(ctx, opts.targetRef)
+	image, err := puller.Pull(ctx, opts.targetRef)
+	if err != nil {
+		return err
+	}
+
+	filterCode, err := image.FetchFilter(ctx)
 	if err != nil {
 		return err
 	}
 
 	logrus.Printf("Pulled filter image %v", opts.targetRef)
 
-	raw, err := ioutil.ReadAll(filter.Code())
+	raw, err := ioutil.ReadAll(filterCode)
 	if err != nil {
 		return err
 	}

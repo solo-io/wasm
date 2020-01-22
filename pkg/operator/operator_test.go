@@ -2,20 +2,21 @@ package operator
 
 import (
 	"context"
+	"time"
+
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/autopilot/pkg/ezkube"
-	"github.com/solo-io/autopilot/pkg/ezkube/mocks"
+	mock_ezkube "github.com/solo-io/autopilot/pkg/ezkube/mocks"
 	"github.com/solo-io/wasme/pkg/deploy"
 	"github.com/solo-io/wasme/pkg/deploy/istio"
-	"github.com/solo-io/wasme/pkg/deploy/mocks"
+	mock_deploy "github.com/solo-io/wasme/pkg/deploy/mocks"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/pull"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
-	"time"
 )
 
 var _ = Describe("FilterDeploymentEventHandler", func() {

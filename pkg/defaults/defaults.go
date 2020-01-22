@@ -11,8 +11,5 @@ func NewDefaultCache() cache.Cache {
 	resolver, _ := resolver.NewResolver("", "", true, false)
 	puller := pull.NewPuller(resolver)
 
-	return &cache.CacheImpl{
-		Puller:   puller,
-		Resolver: resolver,
-	}
+	return cache.NewCache(puller)
 }

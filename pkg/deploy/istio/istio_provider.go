@@ -52,7 +52,7 @@ type Provider struct {
 
 	// pulls the image descriptor so we can get the
 	// name of the file created by the cache
-	Puller pull.CodePuller
+	Puller pull.ImagePuller
 
 	// the target workload to deploy the filter
 	Workload Workload
@@ -70,7 +70,7 @@ type Provider struct {
 	OnWorkload func(workloadMeta metav1.ObjectMeta, err error)
 }
 
-func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.CodePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error)) (*Provider, error) {
+func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error)) (*Provider, error) {
 
 	// ensure istio types are added to scheme
 	if err := v1alpha3.AddToScheme(client.Manager().GetScheme()); err != nil {
@@ -280,7 +280,12 @@ func (p *Provider) setAnnotations(template *corev1.PodTemplateSpec) {
 
 // construct Istio EnvoyFilter Custom Resource
 func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, workloadName string, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
-	descriptor, err := p.Puller.PullCodeDescriptor(p.Ctx, filter.Image)
+	image, err := p.Puller.Pull(p.Ctx, filter.Image)
+	if err != nil {
+		return nil, err
+	}
+
+	descriptor, err := image.Descriptor()
 	if err != nil {
 		return nil, err
 	}
