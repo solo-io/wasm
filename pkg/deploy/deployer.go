@@ -51,8 +51,13 @@ func (d *Deployer) setRootID(f *v1.FilterSpec) error {
 }
 
 // get the root id by pulling the image
-func (d *Deployer) getRootId(image string) (string, error) {
-	cfg, err := d.Puller.PullConfigFile(d.Ctx, image)
+func (d *Deployer) getRootId(ref string) (string, error) {
+	image, err := d.Puller.Pull(d.Ctx, ref)
+	if err != nil {
+		return "", err
+	}
+
+	cfg, err := image.FetchConfig(d.Ctx)
 	if err != nil {
 		return "", err
 	}

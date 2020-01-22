@@ -68,11 +68,11 @@ func (f *fileWatcher) watchFileAndGetRefs(ctx context.Context, refFile string) <
 
 func (f *fileWatcher) watchFile(ctx context.Context) error {
 	for ref := range f.watchFileAndGetRefs(ctx, f.refFile) {
-		desc, err := f.imageCache.Add(ctx, ref)
+		digest, err := f.imageCache.Add(ctx, ref)
 		if err != nil {
 			return err
 		}
-		err = f.addToDirectory(ctx, desc)
+		err = f.addToDirectory(ctx, digest)
 		if err != nil {
 			return errors.Wrapf(err, "adding digest to directory %v", f.directory)
 		}

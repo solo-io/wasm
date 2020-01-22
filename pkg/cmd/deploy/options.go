@@ -79,7 +79,7 @@ func (opts *glooOpts) addToFlags(flags *pflag.FlagSet) {
 type istioOpts struct {
 	workload istio.Workload
 
-	puller pull.CodePuller // set by load
+	puller pull.ImagePuller // set by load
 }
 
 func (opts *istioOpts) addToFlags(flags *pflag.FlagSet) {

@@ -35,7 +35,7 @@ func deleteFile(file, ns string) error {
 	return withManifest(file, ns, utils.KubectlDelete)
 }
 
-func withManifest(file, ns string, fn func (manifest []byte, extraArgs ...string) error) error {
+func withManifest(file, ns string, fn func(manifest []byte, extraArgs ...string) error) error {
 	path := filepath.Join(util.MustGetThisDir(), file)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {

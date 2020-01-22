@@ -2,125 +2,144 @@ package cache
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"path"
 	"strconv"
 	"sync"
 	"time"
 
-	"github.com/opencontainers/go-digest"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/pkg/errors"
 
-	"github.com/containerd/containerd/remotes"
+	"github.com/opencontainers/go-digest"
 	"github.com/solo-io/wasme/pkg/pull"
 )
 
+// Cache stores digests and image contents in memory
 type Cache interface {
+	// adds the image retrieve the digest for the image.
+	// the digest will be cached if it is the initial Get
 	Add(ctx context.Context, image string) (digest.Digest, error)
+
+	// retrieve the wasm file from the image
 	Get(ctx context.Context, digest digest.Digest) (io.ReadCloser, error)
 	http.Handler
 }
 
 type CacheImpl struct {
-	Puller   pull.ImagePuller
-	Resolver remotes.Resolver
+	Puller pull.ImagePuller
 
 	cacheState cacheState
 }
 
-type fetchableDescriptor struct {
-	ocispec.Descriptor
-	fetcher func(ctx context.Context) (io.ReadCloser, error) //remotes.Fetcher
+func NewCache(puller pull.ImagePuller) Cache {
+	return &CacheImpl{
+		Puller: puller,
+	}
 }
 
 type cacheState struct {
-	descriptors     map[string]*fetchableDescriptor
-	descriptorsLock sync.RWMutex
+	images     map[string]pull.Image
+	imagesLock sync.RWMutex
 }
 
-func (c *cacheState) add(image string, d fetchableDescriptor) {
-	if c.find(d.Digest) != nil {
-		// check existance for idempotency
-		// technically metadata can be different, but its fine for now.
+func (c *cacheState) add(image pull.Image) {
+	desc, err := image.Descriptor()
+	if err != nil {
+		// image is missing descriptor, should never happen
+		// TODO: better logging impl
+		log.Printf("error: image %v missing code descriptor", image.Ref())
 		return
 	}
-	c.descriptorsLock.Lock()
-	if c.descriptors == nil {
-		c.descriptors = make(map[string]*fetchableDescriptor)
+	if c.find(desc.Digest) != nil {
+		// check existence for idempotence
+		// technically metadata can be different, but it's fine for now.
+		return
 	}
-	c.descriptors[image] = &d
-	c.descriptorsLock.Unlock()
+	c.imagesLock.Lock()
+	if c.images == nil {
+		c.images = make(map[string]pull.Image)
+	}
+	c.images[image.Ref()] = image
+	c.imagesLock.Unlock()
 }
 
-func (c *cacheState) find(digest digest.Digest) *fetchableDescriptor {
-	c.descriptorsLock.RLock()
-	defer c.descriptorsLock.RUnlock()
-	if c.descriptors == nil {
+func (c *cacheState) find(digest digest.Digest) pull.Image {
+	c.imagesLock.RLock()
+	defer c.imagesLock.RUnlock()
+	if c.images == nil {
 		return nil
 	}
-	for _, d := range c.descriptors {
-		if d.Digest == digest {
-			d := d
-			return d
+	for _, image := range c.images {
+		desc, err := image.Descriptor()
+		if err != nil {
+			log.Printf("error: image %v missing code descriptor", image.Ref())
+			return nil
+		}
+
+		if desc.Digest == digest {
+			return image
 		}
 	}
 	return nil
 }
-func (c *cacheState) findImage(image string) *fetchableDescriptor {
-	c.descriptorsLock.RLock()
-	defer c.descriptorsLock.RUnlock()
-	return c.descriptors[image]
+func (c *cacheState) findImage(image string) pull.Image {
+	c.imagesLock.RLock()
+	defer c.imagesLock.RUnlock()
+	return c.images[image]
 }
 
-func (c *CacheImpl) Add(ctx context.Context, image string) (digest.Digest, error) {
-
-	if d := c.cacheState.findImage(image); d != nil {
-		return d.Digest, nil
+func (c *CacheImpl) Add(ctx context.Context, ref string) (digest.Digest, error) {
+	if img := c.cacheState.findImage(ref); img != nil {
+		desc, err := img.Descriptor()
+		if err != nil {
+			return "", err
+		}
+		return desc.Digest, nil
 	}
 
-	desc, err := c.Puller.PullCodeDescriptor(ctx, image)
+	image, err := c.Puller.Pull(ctx, ref)
 	if err != nil {
-		return digest.Digest(""), err
+		return "", err
 	}
 
-	fd := fetchableDescriptor{
-		Descriptor: desc,
-		fetcher: func(subctx context.Context) (io.ReadCloser, error) {
-			fetcher, err := c.Resolver.Fetcher(subctx, image)
-			if err != nil {
-				return nil, err
-			}
-			return fetcher.Fetch(subctx, desc)
-		},
+	desc, err := image.Descriptor()
+	if err != nil {
+		return "", err
 	}
 
-	c.cacheState.add(image, fd)
+	c.cacheState.add(image)
 
-	return desc.Digest, err
+	return desc.Digest, nil
 }
 
 func (c *CacheImpl) Get(ctx context.Context, digest digest.Digest) (io.ReadCloser, error) {
-	desc := c.cacheState.find(digest)
-	if desc == nil {
-		return nil, errors.New("not found")
+	image := c.cacheState.find(digest)
+	if image == nil {
+		return nil, errors.Errorf("image with digest %v not found", digest)
 	}
-	return desc.fetcher(ctx)
+	return image.FetchFilter(ctx)
 }
 
 func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	// parse the url
 	ctx := r.Context()
 	_, file := path.Split(r.URL.Path)
-	desc := c.cacheState.find(digest.Digest("sha256:" + file))
-	if desc == nil {
+	image := c.cacheState.find(digest.Digest("sha256:" + file))
+	if image == nil {
 		http.NotFound(rw, r)
 		return
 	}
 
-	rc, err := desc.fetcher(ctx)
+	desc, err := image.Descriptor()
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	rc, err := image.FetchFilter(ctx)
 	if err != nil {
 		http.NotFound(rw, r)
 		return
