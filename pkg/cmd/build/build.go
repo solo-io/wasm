@@ -1,12 +1,18 @@
 package build
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+
+	"github.com/solo-io/wasme/pkg/config"
+	"github.com/solo-io/wasme/pkg/model"
+	"github.com/solo-io/wasme/pkg/store"
 
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/wasme/pkg/version"
@@ -18,7 +24,9 @@ var log = logrus.StandardLogger()
 
 type buildOptions struct {
 	sourceDir    string
-	outFile      string
+	configFile   string
+	tag          string
+	storageDir   string
 	builderImage string
 	buildDir     string
 	bazelOutput  string
@@ -28,8 +36,8 @@ type buildOptions struct {
 func BuildCmd() *cobra.Command {
 	var opts buildOptions
 	cmd := &cobra.Command{
-		Use:   "build SOURCE_DIRECTORY [-b <bazel target>] [-o OUTPUT_FILE]",
-		Short: "Compile the filter to wasm using Bazel-in-Docker",
+		Use:   "build SOURCE_DIRECTORY [-b <bazel target>] [-t <name:tag>]",
+		Short: "Build a wasm image from the filter source directory using Bazel-in-Docker",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
@@ -40,7 +48,9 @@ func BuildCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.outFile, "output", "o", "filter.wasm", "path to the output .wasm file. Nonexistent directories will be created.")
+	cmd.Flags().StringVarP(&opts.tag, "tag", "t", "", "The image ref with which to tag this image. Specified in the format <name:tag>. Required")
+	cmd.Flags().StringVarP(&opts.configFile, "config", "c", "", "The path to the filter configuration file for the image. If not specified, defaults to <SOURCE_DIRECTOR>/filter-config.json. This file must be present in order to build the image.")
+	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store")
 	cmd.Flags().StringVarP(&opts.builderImage, "image", "i", "quay.io/solo-io/ee-builder:"+version.Version, "Name of the docker image containing the Bazel run instructions. Modify to run a custom builder image")
 	cmd.Flags().StringVarP(&opts.buildDir, "build-dir", "b", ".", "Directory containing the target BUILD file.")
 	cmd.Flags().StringVarP(&opts.bazelOutput, "bazel-ouptut", "f", "filter.wasm", "Path relative to `bazel-bin` to the wasm file produced by running the Bazel target.")
@@ -49,11 +59,22 @@ func BuildCmd() *cobra.Command {
 }
 
 func runBuild(opts buildOptions) error {
-	sourceDir, err := filepath.Abs(opts.sourceDir)
+	configFile := opts.configFile
+	if configFile == "" {
+		configFile = filepath.Join(opts.sourceDir, "filter-config.json")
+	}
+
+	configBytes, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return err
 	}
-	outFile, err := filepath.Abs(opts.outFile)
+
+	cfg, err := config.FromBytes(configBytes)
+	if err != nil {
+		return err
+	}
+
+	sourceDir, err := filepath.Abs(opts.sourceDir)
 	if err != nil {
 		return err
 	}
@@ -88,25 +109,39 @@ func runBuild(opts buildOptions) error {
 	tmpFile := filepath.Join(tmpDir, "filter.wasm")
 
 	log.WithFields(logrus.Fields{
-		"tmp_file":    tmpFile,
-		"output_file": outFile,
-	}).Info("moving output file...")
+		"tmp_file": tmpFile,
+		"tag":      opts.tag,
+	}).Info("adding image to cache...")
 
-	if err := os.MkdirAll(filepath.Dir(outFile), 0755); err != nil {
+	filterFile, err := os.Open(tmpFile)
+	if err != nil {
 		return err
 	}
 
-	if err := os.Rename(tmpFile, outFile); err != nil {
+	descriptor, err := model.GetDescriptor(filterFile)
+	if err != nil {
 		return err
 	}
 
-	if err := os.Chmod(outFile, 0644); err != nil {
+	// expand the ref to contain :latest suffix if no tag provided
+	imageRef := func() string {
+		parts := strings.Split(opts.tag, ":")
+		if len(parts) == 2 {
+			return opts.tag
+		}
+		return opts.tag + ":latest"
+	}()
+
+	image := store.NewStorableImage(imageRef, descriptor, filterFile, cfg)
+
+	if err := store.NewStore(opts.storageDir).Add(context.Background(), image); err != nil {
 		return err
 	}
 
 	log.WithFields(logrus.Fields{
-		"output_file": outFile,
-	}).Info("compilation complete!")
+		"digest": descriptor.Digest.String(),
+		"image":  imageRef,
+	}).Info("tagged image")
 
 	return nil
 }
