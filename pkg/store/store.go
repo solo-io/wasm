@@ -66,7 +66,7 @@ func (s *store) Add(ctx context.Context, image Image) error {
 
 func (s *store) Get(ref string) (*storedImage, error) {
 	dir := dirname(ref)
-	return imageReadWriter{dir: dir}.readImage(true)
+	return imageReadWriter{dir: dir}.readImage()
 }
 
 func (s *store) Delete(ref string) error {

@@ -12,6 +12,7 @@ require (
 	github.com/golang/mock v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/google/go-github/v28 v28.1.1
+	github.com/hashicorp/go-multierror v1.0.0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1

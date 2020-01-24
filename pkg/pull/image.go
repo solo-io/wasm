@@ -10,7 +10,6 @@ import (
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"github.com/solo-io/wasme/pkg/config"
-	"github.com/solo-io/wasme/pkg/model"
 )
 
 // an image that was pulled from a remote registry

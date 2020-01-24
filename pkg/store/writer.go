@@ -24,13 +24,13 @@ type imageReadWriter struct {
 	dir string
 }
 
-func (w *imageReadWriter) writeRef(image Image) error {
+func (w imageReadWriter) writeRef(image Image) error {
 	ref := image.Ref()
 	imageRefFile := filepath.Join(w.dir, imageRefFilename)
 	return ioutil.WriteFile(imageRefFile, []byte(ref), 0644)
 }
 
-func (w *imageReadWriter) writeConfig(ctx context.Context, image Image) error {
+func (w imageReadWriter) writeConfig(ctx context.Context, image Image) error {
 	cfg, err := image.FetchConfig(ctx)
 	if err != nil {
 		return err
@@ -43,7 +43,7 @@ func (w *imageReadWriter) writeConfig(ctx context.Context, image Image) error {
 	return ioutil.WriteFile(configFile, cfgBytes, 0644)
 }
 
-func (w *imageReadWriter) writeDescriptor(image Image) error {
+func (w imageReadWriter) writeDescriptor(image Image) error {
 	desc, err := image.Descriptor()
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (w *imageReadWriter) writeDescriptor(image Image) error {
 	return ioutil.WriteFile(descriptorFile, descBytes, 0644)
 }
 
-func (w *imageReadWriter) writeFilter(ctx context.Context, image Image) error {
+func (w imageReadWriter) writeFilter(ctx context.Context, image Image) error {
 	filterFile := filepath.Join(w.dir, filterFilename)
 	filter, err := image.FetchFilter(ctx)
 	if err != nil {
@@ -75,7 +75,7 @@ func (w *imageReadWriter) writeFilter(ctx context.Context, image Image) error {
 	return file.Close()
 }
 
-func (w *imageReadWriter) writeImage(ctx context.Context, image Image) error {
+func (w imageReadWriter) writeImage(ctx context.Context, image Image) error {
 	if err := w.writeRef(image); err != nil {
 		return err
 	}
@@ -92,7 +92,7 @@ func (w *imageReadWriter) writeImage(ctx context.Context, image Image) error {
 	return nil
 }
 
-func (w *imageReadWriter) readRef() (string, error) {
+func (w imageReadWriter) readRef() (string, error) {
 	imageRefFile := filepath.Join(w.dir, imageRefFilename)
 	raw, err := ioutil.ReadFile(imageRefFile)
 	if err != nil {
@@ -101,7 +101,7 @@ func (w *imageReadWriter) readRef() (string, error) {
 	return string(raw), nil
 }
 
-func (w *imageReadWriter) readDescriptor() (ocispec.Descriptor, error) {
+func (w imageReadWriter) readDescriptor() (ocispec.Descriptor, error) {
 	var desc ocispec.Descriptor
 
 	descriptorFile := filepath.Join(w.dir, descriptorFilename)
@@ -113,7 +113,7 @@ func (w *imageReadWriter) readDescriptor() (ocispec.Descriptor, error) {
 	return desc, json.Unmarshal(descBytes, &desc)
 }
 
-func (w *imageReadWriter) readConfig() (*config.Config, error) {
+func (w imageReadWriter) readConfig() (*config.Config, error) {
 	configFile := filepath.Join(w.dir, configFilename)
 	raw, err := ioutil.ReadFile(configFile)
 	if err != nil {
@@ -127,7 +127,7 @@ func (w *imageReadWriter) readConfig() (*config.Config, error) {
 	return cfg, nil
 }
 
-func (w *imageReadWriter) readFilter() (io.ReadCloser, error) {
+func (w imageReadWriter) readFilter() (io.ReadCloser, error) {
 	filterFile := filepath.Join(w.dir, filterFilename)
 
 	file, err := os.Open(filterFile)
@@ -137,27 +137,8 @@ func (w *imageReadWriter) readFilter() (io.ReadCloser, error) {
 	return file, nil
 }
 
-type filterReader struct {
-	file   string
-	reader io.ReadCloser
-}
-
-func (f *filterReader) Read(p []byte) (n int, err error) {
-	if f.reader == nil {
-		file, err := os.Open(f.file)
-		if err != nil {
-			return 0, err
-		}
-		f.reader = file
-	}
-}
-
-func (f *filterReader) Close() error {
-	panic("implement me")
-}
-
 // will skip loading the filter
-func (w *imageReadWriter) readImage() (*storedImage, error) {
+func (w imageReadWriter) readImage() (*storedImage, error) {
 	ref, err := w.readRef()
 	if err != nil {
 		return nil, err
