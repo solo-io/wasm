@@ -35,6 +35,8 @@ func NewPuller(resolver remotes.Resolver) *puller {
 }
 
 func (p *puller) Pull(ctx context.Context, ref string) (Image, error) {
+	ref = model.FullRef(ref)
+
 	store := content.NewMemoryStore()
 
 	name, desc, err := p.resolver.Resolve(ctx, ref)

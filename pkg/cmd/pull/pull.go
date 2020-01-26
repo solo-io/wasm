@@ -59,7 +59,8 @@ func runPull(ctx context.Context, opts pullOptions) error {
 		return err
 	}
 
-	logrus.Infof("Pulled digest", desc.Digest)
+	logrus.Infof("Image: %v", image.Ref())
+	logrus.Infof("Digest: %v", desc.Digest)
 
 	return nil
 }

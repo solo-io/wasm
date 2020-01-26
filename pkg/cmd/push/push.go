@@ -2,7 +2,6 @@ package push
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -31,11 +30,8 @@ func PushCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.C
 
 wasme push webassemblyhub.io/my/filter:v1
 `,
-		Args: cobra.MinimumNArgs(2),
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 2 && len(args) != 3 {
-				return fmt.Errorf("invalid number of arguments")
-			}
 			opts.ref = args[0]
 			return runPush(*ctx, opts)
 		},
@@ -54,18 +50,11 @@ func runPush(ctx context.Context, opts pushOptions) error {
 		return errors.Wrap(err, "image not found. run `wasme list` to see locally cahced images")
 	}
 
-	desc, err := image.Descriptor()
-	if err != nil {
-		return err
-	}
-
 	resolver, authorizer := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
 	pusher := push.NewPusher(resolver, authorizer)
 	if err := pusher.Push(ctx, image); err != nil {
 		return err
 	}
-
-	logrus.Infof("Pushed digest", desc.Digest)
 
 	return nil
 }

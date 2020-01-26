@@ -21,6 +21,8 @@ type storedImage struct {
 }
 
 func NewStorableImage(ref string, descriptor ocispec.Descriptor, filter func() (model.Filter, error), config *config.Config) *storedImage {
+	ref = model.FullRef(ref)
+
 	return &storedImage{ref: ref, descriptor: descriptor, filter: filter, config: config}
 }
 

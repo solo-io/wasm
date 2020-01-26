@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
@@ -136,16 +135,7 @@ func runBuild(opts buildOptions) error {
 		return err
 	}
 
-	// expand the ref to contain :latest suffix if no tag provided
-	imageRef := func() string {
-		parts := strings.Split(opts.tag, ":")
-		if len(parts) == 2 {
-			return opts.tag
-		}
-		return opts.tag + ":latest"
-	}()
-
-	image := store.NewStorableImage(imageRef, descriptor, fetchFilter, cfg)
+	image := store.NewStorableImage(opts.tag, descriptor, fetchFilter, cfg)
 
 	if err := store.NewStore(opts.storageDir).Add(context.Background(), image); err != nil {
 		return err
@@ -153,7 +143,7 @@ func runBuild(opts buildOptions) error {
 
 	log.WithFields(logrus.Fields{
 		"digest": descriptor.Digest.String(),
-		"image":  imageRef,
+		"image":  image.Ref(),
 	}).Info("tagged image")
 
 	return nil

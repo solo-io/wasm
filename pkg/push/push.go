@@ -2,11 +2,13 @@ package push
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/containerd/containerd/reference"
 	"github.com/containerd/containerd/remotes"
@@ -47,9 +49,6 @@ func (p *pusher) Push(ctx context.Context, image Image) error {
 
 	cfgDescriptor := store.Add(model.ConfigFilename, model.ConfigMediaType, cfgBytes)
 
-	// TODO: do we need this? for oras.WithConfig?
-	cfgDescriptor.Annotations = nil
-
 	filter, err := image.FetchFilter(ctx)
 	if err != nil {
 		return err
@@ -70,10 +69,10 @@ func (p *pusher) Push(ctx context.Context, image Image) error {
 
 	desc, err := oras.Push(ctx, p.resolver, image.Ref(), store, files, oras.WithConfig(cfgDescriptor))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "oras push failed")
 	}
-	fmt.Println("Pushed", image.Ref())
-	fmt.Println("Digest:", desc.Digest)
+	logrus.Infof("Pushed %v", image.Ref())
+	logrus.Infof("Digest: %v", desc.Digest)
 
 	return err
 }

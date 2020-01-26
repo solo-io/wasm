@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
+	"github.com/solo-io/wasme/pkg/model"
 )
 
 // a filter image that can be stored as a directory on-disk
@@ -66,11 +67,13 @@ func (s *store) Add(ctx context.Context, image Image) error {
 }
 
 func (s *store) Get(ref string) (*storedImage, error) {
+	ref = model.FullRef(ref)
 	dir := dirname(ref)
-	return imageReadWriter{dir: dir}.readImage()
+	return imageReadWriter{dir: filepath.Join(s.storageDir, dir)}.readImage()
 }
 
 func (s *store) Delete(ref string) error {
+	ref = model.FullRef(ref)
 	dir := dirname(ref)
 	return os.RemoveAll(dir)
 }

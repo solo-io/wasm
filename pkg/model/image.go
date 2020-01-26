@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"strings"
 
 	"github.com/deislabs/oras/pkg/content"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
@@ -50,4 +51,13 @@ func GetDescriptor(filter Filter) (ocispec.Descriptor, error) {
 	}
 
 	return store.Add(CodeFilename, CodeMediaType, bytes), nil
+}
+
+// expand the ref to contain :latest suffix if no tag provided
+func FullRef(ref string) string {
+	parts := strings.Split(ref, ":")
+	if len(parts) == 2 {
+		return ref
+	}
+	return ref + ":latest"
 }
