@@ -101,18 +101,20 @@ func (f *fileWatcher) copyToFile(ctx context.Context, filename string, digest di
 		return nil
 	}
 
-	rc, err := f.imageCache.Get(ctx, digest)
+	filter, err := f.imageCache.Get(ctx, digest)
 	if err != nil {
 		return err
 	}
-	defer rc.Close()
+	if closer, ok := filter.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
 
 	// fail if file exists
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(file, rc)
+	_, err = io.Copy(file, filter)
 	file.Close()
 	if err != nil {
 		// to avoid partial copies, delete the file if it exists

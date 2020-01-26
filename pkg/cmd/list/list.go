@@ -37,7 +37,7 @@ func ListCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.published, "published", "p", false, "Set to true to list images that have been published to webassemblyhub.io. Defaults to listing image stored in local image cache.")
+	cmd.Flags().BoolVarP(&opts.published, "published", "", false, "Set to true to list images that have been published to webassemblyhub.io. Defaults to listing image stored in local image cache.")
 	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store. Ignored if using --published")
 
 	return cmd
@@ -85,7 +85,11 @@ type image struct {
 func (i image) Write(w io.Writer) {
 	for idx, tag := range i.tags {
 		if idx == 0 {
-			fmt.Fprintf(w, "%v \t%v \t%v \t%v \t%v\n", i.name, i.sum, i.updated.Format(time.RFC822), byteCountSI(i.sizeBytes), tag)
+			sum := i.sum
+			if len(sum) > 8 {
+				sum = strings.TrimPrefix(sum, "sha256:")[:8]
+			}
+			fmt.Fprintf(w, "%v \t%v \t%v \t%v \t%v\n", i.name, sum, i.updated.Format(time.RFC822), byteCountSI(i.sizeBytes), tag)
 		} else {
 			fmt.Fprintf(w, "  \t  \t  \t  \t%v\n", tag)
 		}
@@ -148,7 +152,7 @@ func getLocalImages(storageDir string) ([]image, error) {
 			sum:       descriptor.Digest.String(),
 			updated:   filterFileInfo.ModTime(),
 			tags:      []string{tag},
-			sizeBytes: filterFileInfo.Size(),
+			sizeBytes: descriptor.Size,
 		})
 
 	}
@@ -183,9 +187,6 @@ func getPublishedImages() ([]image, error) {
 				continue
 			}
 			for sha, manifest := range imgInfo.Manifest {
-				if len(sha) > 8 {
-					sha = strings.TrimPrefix(sha, "sha256:")[:8]
-				}
 				size, err := strconv.Atoi(manifest.ImageSizeBytes)
 				if err != nil {
 					return nil, err

@@ -3,9 +3,9 @@ package istio
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"github.com/solo-io/wasme/pkg/config"
+	"github.com/solo-io/wasme/pkg/model"
 	"github.com/solo-io/wasme/pkg/pull"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
@@ -251,7 +251,7 @@ func (m *mockImage) Descriptor() (v1.Descriptor, error) {
 	}, nil
 }
 
-func (m *mockImage) FetchFilter(ctx context.Context) (io.ReadCloser, error) {
+func (m *mockImage) FetchFilter(ctx context.Context) (model.Filter, error) {
 	panic("implement me")
 }
 

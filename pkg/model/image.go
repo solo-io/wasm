@@ -19,7 +19,7 @@ type Image interface {
 	Descriptor() (ocispec.Descriptor, error)
 
 	// get the filter .wasm file from the image
-	FetchFilter(ctx context.Context) (io.ReadCloser, error)
+	FetchFilter(ctx context.Context) (Filter, error)
 
 	// get the filter config from the image
 	FetchConfig(ctx context.Context) (*config.Config, error)
@@ -34,11 +34,14 @@ const (
 // default filenames stored in a Wasm Module Image
 const (
 	ConfigFilename = "config.json"
-	CodeFilename   = "code.wasm"
+	CodeFilename   = "filter.wasm"
 )
 
+// a reader with access to the filter code
+type Filter io.Reader
+
 // helper function to get the descriptor for a wasm binary
-func GetDescriptor(filter io.ReadCloser) (ocispec.Descriptor, error) {
+func GetDescriptor(filter Filter) (ocispec.Descriptor, error) {
 	store := content.NewMemoryStore()
 
 	bytes, err := ioutil.ReadAll(filter)

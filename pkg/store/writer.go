@@ -8,15 +8,19 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/solo-io/wasme/pkg/model"
+
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/solo-io/wasme/pkg/config"
 )
 
 const (
+	// store the image ref for use in List() calls
+	// TODO: consider making this generic metadata
 	imageRefFilename   = "image_ref"
 	descriptorFilename = "descriptor.json"
-	configFilename     = "config.json"
-	filterFilename     = "filter.wasm"
+	configFilename     = model.ConfigFilename
+	filterFilename     = model.CodeFilename
 )
 
 // writes an image into and reads an image out of a directory
@@ -57,25 +61,30 @@ func (w imageReadWriter) writeDescriptor(image Image) error {
 }
 
 func (w imageReadWriter) writeFilter(ctx context.Context, image Image) error {
-	filterFile := filepath.Join(w.dir, filterFilename)
 	filter, err := image.FetchFilter(ctx)
 	if err != nil {
 		return err
 	}
-	file, err := os.Create(filterFile)
+
+	filterFile := filepath.Join(w.dir, filterFilename)
+	destFile, err := os.Create(filterFile)
 	if err != nil {
 		return err
 	}
-	_, err = io.Copy(file, filter)
+	_, err = io.Copy(destFile, filter)
 	if err != nil {
-		// to avoid partial copies, delete the file if it exists
+		// to avoid partial copies, delete the dest file if it exists
 		_ = os.Remove(filterFile)
 		return err
 	}
-	return file.Close()
+	return destFile.Close()
 }
 
 func (w imageReadWriter) writeImage(ctx context.Context, image Image) error {
+	if err := os.MkdirAll(w.dir, 0777); err != nil {
+		return err
+	}
+
 	if err := w.writeRef(image); err != nil {
 		return err
 	}
@@ -127,7 +136,7 @@ func (w imageReadWriter) readConfig() (*config.Config, error) {
 	return cfg, nil
 }
 
-func (w imageReadWriter) readFilter() (io.ReadCloser, error) {
+func (w imageReadWriter) readFilter() (model.Filter, error) {
 	filterFile := filepath.Join(w.dir, filterFilename)
 
 	file, err := os.Open(filterFile)
@@ -151,10 +160,6 @@ func (w imageReadWriter) readImage() (*storedImage, error) {
 	if err != nil {
 		return nil, err
 	}
-	filter, err := w.readFilter()
-	if err != nil {
-		return nil, err
-	}
 
-	return NewStorableImage(ref, desc, filter, cfg), nil
+	return NewStorableImage(ref, desc, w.readFilter, cfg), nil
 }

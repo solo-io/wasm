@@ -2,7 +2,6 @@ package pull
 
 import (
 	"context"
-	"io"
 
 	"github.com/solo-io/wasme/pkg/model"
 
@@ -27,7 +26,7 @@ func (i *pulledImage) Descriptor() (ocispec.Descriptor, error) {
 	return i.getDescriptor(model.CodeMediaType)
 }
 
-func (i *pulledImage) FetchFilter(ctx context.Context) (io.ReadCloser, error) {
+func (i *pulledImage) FetchFilter(ctx context.Context) (model.Filter, error) {
 	desc, err := i.Descriptor()
 	if err != nil {
 		return nil, err

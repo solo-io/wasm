@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/hashicorp/go-multierror"
 )
@@ -61,7 +62,7 @@ func (s *store) List() ([]Image, error) {
 }
 
 func (s *store) Add(ctx context.Context, image Image) error {
-	return imageReadWriter{dir: dirname(image.Ref())}.writeImage(ctx, image)
+	return imageReadWriter{dir: filepath.Join(s.storageDir, dirname(image.Ref()))}.writeImage(ctx, image)
 }
 
 func (s *store) Get(ref string) (*storedImage, error) {
