@@ -50,7 +50,7 @@ func (s *store) List() ([]Image, error) {
 			continue
 		}
 
-		image, err := imageReadWriter{dir: file.Name()}.readImage()
+		image, err := s.readWriter(file.Name()).readImage()
 		if err != nil {
 			readErrors = multierror.Append(readErrors, err)
 			continue
@@ -63,19 +63,24 @@ func (s *store) List() ([]Image, error) {
 }
 
 func (s *store) Add(ctx context.Context, image Image) error {
-	return imageReadWriter{dir: filepath.Join(s.storageDir, dirname(image.Ref()))}.writeImage(ctx, image)
+	dir := dirname(image.Ref())
+	return s.readWriter(dir).writeImage(ctx, image)
 }
 
 func (s *store) Get(ref string) (*storedImage, error) {
 	ref = model.FullRef(ref)
 	dir := dirname(ref)
-	return imageReadWriter{dir: filepath.Join(s.storageDir, dir)}.readImage()
+	return s.readWriter(dir).readImage()
 }
 
 func (s *store) Delete(ref string) error {
 	ref = model.FullRef(ref)
 	dir := dirname(ref)
 	return os.RemoveAll(dir)
+}
+
+func (s *store) readWriter(dir string) imageReadWriter {
+	return imageReadWriter{dir: filepath.Join(s.storageDir, dir)}
 }
 
 func dirname(ref string) string {
