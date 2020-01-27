@@ -1,84 +1,39 @@
-This repo contains the tooling that allows you to build and push WASM envoy filters,
-so they will be accessible to gloo.
 
-To do so, first build the tool
-```
-go build .
-```
+<h1 align="center">
+    <img src="https://github.com/solo-io/wasme/blob/master/docs/content/img/logo.png?raw=true" alt="WebAssembly Hub" width="330" height="242">
+  <br>
+  The WebAssembly Hub
+</h1>
 
-The build the example filter (mostly copied from the envoy-wasm):
-```
-(cd example; bazel build :filter.wasm :filter_proto)
-```
+The WebAssembly Hub is a meeting place for the community to share and consume WebAssembly Envoy extensions. Easily search and find extensions that meet the functionality you want to add and give them a try.
 
-Push:
-```
-./wasme push gcr.io/solo-public/example-filter:v1 example/bazel-bin/filter.wasm example/bazel-bin/filter_proto-descriptor-set.proto.bin
-```
+Please see the [announcement blog](https://medium.com/solo-io/introducing-the-webassembly-hub-a-service-for-building-deploying-sharing-and-discovering-wasm-d461719383ca) that goes into more detail on the motivation for WebAssembly Hub and how we see it driving the future direction of Envoy-based networking projects/products including API Gateways and Service Mesh.
 
-load in to gloo:
-```
-kubectl edit -n gloo-system gateways.gateway.solo.io gateway-proxy
-```
+The `wasme` CLI provides a tool for building and sharing Envoy WebAssembly extensions.
 
-set the httpGateway field like so:
-```
-  httpGateway:
-    options:
-      wasm:
-        config: |
-          {}
-        image: webassemblyhub.io/yuval-k/metrics:v1
-        name: yuval
-        root_id: stats_root_id
-```
+[**Installation**](https://docs.solo.io/web-assembly-hub/latest/installation/) &nbsp; |
+&nbsp; [**Documentation**](https://docs.solo.io/web-assembly-hub/latest) &nbsp; |
+&nbsp; [**Blog**](https://medium.com/solo-io/introducing-the-webassembly-hub-a-service-for-building-deploying-sharing-and-discovering-wasm-d461719383ca) &nbsp; |
+&nbsp; [**Slack**](https://slack.solo.io) &nbsp; |
+&nbsp; [**Twitter**](https://twitter.com/soloio_inc)
 
-Download the petstore from the following tutorial https://docs.solo.io/gloo/latest/gloo_routing/hello_world/
+### How does it work?
 
-Then apply the following virtual service to enable routing to the petstore.
+The WebAssembly Hub, in combination with the `wasme` CLI, provides an easy way to build, push, pull, and share Envoy WebAssembly Filters.
 
-```
-apiVersion: gateway.solo.io/v1
-kind: VirtualService
-metadata:
-  name: default
-  namespace: gloo-system
-spec:
-  virtualHost:
-    domains:
-    - '*'
-    routes:
-    - matchers:
-        - exact: /sample-route-1
-      routeAction:
-        single:
-          upstream:
-            name: default-petstore-8080
-            namespace: gloo-system
-      options:
-        prefixRewrite: /api/pets
-```
+The WebAssembly Hub acts as an image registry for WebAssembly Filters hosted at https://webassemblyhub.io. Use the `wasme` CLI to:
 
-Now call the API with the following command
-```bash
-$ curl $(glooctl proxy url)/sample-route-1
+- compile [Envoy WebAssembly](https://github.com/envoyproxy/envoy-wasm) filters on a local machine (the only dependency is `docker`)
+- push filters to https://webassemblyhub.io
+- pull filters from https://webassemblyhub.io
+- publish filters to the catalog at https://webassemblyhub.io/extensions/ 
 
+### Getting Started
 
-[{"id":1,"name":"Dog","status":"available"},{"id":2,"name":"Cat","status":"pending"}]
-```
+See the [Getting Started tutorial](https://docs.solo.io/web-assembly-hub/latest/tutorial_code/) to build, push, and run your first WebAssembly Filter!
 
-Congrats, you officially used a WASM filter.
-This is a simple stats filter so all it is doing is updating some basic prometheus statistics on the routes living on this listener.
-For more complex and interesting filters check out https://webassemblyhub.io/.
-
-# emscripten sdk
-If you change the emscripten SDK, an sdk with PR merged is needed:
-https://github.com/emscripten-core/emscripten/pull/9812/files
-
-# Problems?
-
-WASM support in envoy is in a very initial stage as of now (Dec 2019). As it is being upstreamed to 
-main envoy, breaking API changes can happen. If and when they happen, your wasm code will not load.
-
-While these errors might look intimidating, fixing them is something we would love to help with! 
-If this happens to you please reach out to us! [Open an issue](https://github.com/solo-io/wasme/issues/new) here, or [join our slack](https://slack.solo.io) and ask us directly.
+### Next Steps
+- Join us on our Slack channel: [https://slack.solo.io/](https://slack.solo.io/)
+- Follow us on Twitter: [https://twitter.com/soloio_inc](https://twitter.com/soloio_inc)
+- Check out the docs: [https://docs.solo.io/web-assembly-hub/latest](https://docs.solo.io/web-assembly-hub/latest)
+- Contribute to the [Docs](https://github.com/solo-io/wasme)
