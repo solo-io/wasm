@@ -4,17 +4,15 @@ import (
 	"context"
 
 	"github.com/solo-io/wasme/pkg/auth"
-	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/spf13/cobra"
 )
 
-type catalogOptions struct {
-	*opts.GeneralOptions
+type loginOptions struct {
+	skipBrowser bool
 }
 
-func LoginCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.Command {
-	var opts catalogOptions
-	opts.GeneralOptions = generalOptions
+func LoginCmd(ctx *context.Context) *cobra.Command {
+	var opts loginOptions
 	cmd := &cobra.Command{
 		Use:   "login",
 		Short: "login so you can push images to webassemblyhub.io and submit them to the curated catalog",
@@ -26,9 +24,12 @@ func LoginCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.
 		},
 	}
 
+	cmd.Flags().BoolVar(&opts.skipBrowser, "skip-browser", false, "skip opening the default browser to the " +
+		"login URL")
+
 	return cmd
 }
 
-func runLogin(ctx context.Context, opts catalogOptions) error {
-	return auth.Login(ctx)
+func runLogin(ctx context.Context, opts loginOptions) error {
+	return auth.Login(ctx, opts.skipBrowser)
 }

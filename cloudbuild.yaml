@@ -14,14 +14,17 @@ steps:
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
     id: 'install dependencies'
-    
+
+    # NOTE: Do not randomize the ginkgo specs.
+    # The `build` suite must run before the `operator` suite
   - name: 'gcr.io/$PROJECT_ID/e2e-go-mod-ginkgo:wasme'
     env:
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'BUILD_ID=$BUILD_ID'
       - 'IMAGE_REGISTRY=gcr.io/$PROJECT_ID'
+      - 'FILTER_IMAGE_TAG=webassemblyhub.io/soloio-bot/test-image:$TAG_NAME'
     args: ['-r', '-failFast', '-trace', '-progress']
-    secretEnv: ['GITHUB_TOKEN']
+    secretEnv: ['GITHUB_TOKEN', 'WASME_PUSH_TOKEN']
     id: 'run-tests'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
@@ -61,6 +64,14 @@ secrets:
     secretEnv:
       GITHUB_TOKEN: CiQABlzmSYYiveU0gTxGH2139eaBUedjV3vNCxQmJU+nRPlfQ/YSUQCCPGSGzbGp49fwDYuefAx9V94b8mivdp9AqB7zQAa07VtGJmrGdg9ZuhKGFrrgqxwABE0LLVNHyngCSHYSYMH8Vn/mRtT7wQuEHBlKVGtqPw==
       QUAY_IO_PASSWORD: CiQABlzmSRx5TcOqbldXa/d/+bkmAfpNAWa3PTS06WvuloZL+vASaQCCPGSGCogonVZVEUNx4G3YJtWi18gSuNx4PvLe08q8xAflTMFkjsyQirAOK3Y2oCvgYwiw/ITcuydjkpMjxDygFyENXS9FKFJoAXHlPQE5qidKr8xxmxF5ezhmjGB0gjyjXIIkbSEnBg==
+      # to create the WASME_PUSH_TOKEN:
+      # cat <TOKEN-FILE> | gcloud kms encrypt \
+      #  --plaintext-file=- \
+      #  --ciphertext-file=- \
+      #  --location=global \
+      #  --keyring=build \
+      #  --key=build-key | base64
+      WASME_PUSH_TOKEN: CiQABlzmSehLy7reVIoNFf+wZHVS1j70PPZ47atXTMc2q9BHon8SUACCPGSGUUYGmRXiF5bRBRkm8/WIod+iyNDcjANWcv7mZZ5SbImIjKj2uvBVNjjJf2qmS0uBqN2YkuTPv5NE77iC50n9bWc5WLgo2lBSiAJt
 
 timeout: 1200s
 tags: ['wasme']

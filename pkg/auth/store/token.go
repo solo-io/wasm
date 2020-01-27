@@ -30,7 +30,9 @@ func SaveToken(t string) error {
 }
 
 func GetToken() (string, error) {
-
+	if customToken := os.Getenv("WASME_PUSH_TOKEN"); customToken != "" {
+		return customToken, nil
+	}
 	f, err := getTokenFile()
 	if err != nil {
 		return "", err

@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"github.com/solo-io/wasme/test"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -48,7 +49,11 @@ func withManifest(file, ns string, fn func(manifest []byte, extraArgs ...string)
 	return fn(b, extraArgs...)
 }
 
-func generateCrdExample() error {
+func generateCrdExample(image string) error {
+	if image == "" {
+		image = "webassemblyhub.io/ilackarms/istio-example:1.4.2"
+	}
+
 	filterDeployment := &v1.FilterDeployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "FilterDeployment",
@@ -60,7 +65,7 @@ func generateCrdExample() error {
 		},
 		Spec: v1.FilterDeploymentSpec{
 			Filter: &v1.FilterSpec{
-				Image:  "webassemblyhub.io/ilackarms/istio-example:1.4.2",
+				Image:  image,
 				Config: `{"name":"hello","value":"world"}`,
 			},
 			Deployment: &v1.DeploymentSpec{
@@ -98,9 +103,6 @@ var _ = BeforeSuite(func() {
 	err := runMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = generateCrdExample()
-	Expect(err).NotTo(HaveOccurred())
-
 	// ensure no collision between tests
 	err = waitNamespaceTerminated(ns, time.Minute)
 	Expect(err).NotTo(HaveOccurred())
@@ -128,10 +130,15 @@ var _ = AfterSuite(func() {
 	utils.Kubectl(nil, "delete", "ns", ns)
 })
 
+// Test Order matters here.
+// Do not randomize ginkgo specs when running, if the build & push test is enabled
 var _ = Describe("AutopilotGenerate", func() {
 	It("runs the wasme operator", func() {
 
-		err := applyFile("test_filter.yaml", ns)
+		err := generateCrdExample(os.Getenv("FILTER_IMAGE_TAG"))
+		Expect(err).NotTo(HaveOccurred())
+
+		err = applyFile("test_filter.yaml", ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		testRequest := func() (string, error) {
