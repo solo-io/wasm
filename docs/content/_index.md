@@ -34,7 +34,7 @@ The WebAssembly Hub acts as an image registry for WebAssembly Filters hosted at 
 
 ### Getting Started
 
-See the [Getting Started tutorial]({{< versioned_link_path fromRoot="/tutorial_code/getting_started_1">}}) to build, push, and run your first WebAssembly Filter!
+See the [Getting Started tutorial]({{< versioned_link_path fromRoot="/tutorial_code/getting_started">}}) to build, push, and run your first WebAssembly Filter!
 
 ### Next Steps
 - Join us on our Slack channel: [https://slack.solo.io/](https://slack.solo.io/)
