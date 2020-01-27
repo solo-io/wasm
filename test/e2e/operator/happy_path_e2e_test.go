@@ -1,4 +1,4 @@
-package main_test
+package operator_test
 
 import (
 	"github.com/solo-io/wasme/test"
