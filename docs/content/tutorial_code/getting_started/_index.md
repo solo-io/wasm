@@ -306,7 +306,7 @@ Adding the the catalog is a git-ops workflow that involves a Pull Request. To in
 
 
 ```shell
-$  wasme catalog add ilackarms/add-header
+$  wasme catalog add ilackarms/add-header:gloo-1.3
 ```
 
 Note, the tag we are adding matches what we built in previous steps.
