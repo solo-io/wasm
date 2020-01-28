@@ -916,6 +916,8 @@ github.com/solo-io/anyvendor v0.0.1 h1:csAXLNLkUQWlr/ll4tgmc+Id9kHw2ibncf35weg03
 github.com/solo-io/anyvendor v0.0.1/go.mod h1:SLucIeU8qBOYI82BveNVn2LzZFcMWJSCf8Kd1S4Jcr4=
 github.com/solo-io/autopilot v0.1.1-0.20200121203626-e502fb63902d h1:J2TN3VSWBGkt/7kpEkMH0OZeHxGLqiv5zsYHLiXtZyc=
 github.com/solo-io/autopilot v0.1.1-0.20200121203626-e502fb63902d/go.mod h1:ufYqjstCFzvALsvvcEHzRMbcouFCGnyHHd7ejY26APE=
+github.com/solo-io/autopilot v0.1.1-0.20200121204049-3637f04dec25 h1:WB1qP/FwtpKdthLM/MnsWm3dJ0jAXFGxWwfKNgiosLU=
+github.com/solo-io/autopilot v0.1.1-0.20200121204049-3637f04dec25/go.mod h1:ufYqjstCFzvALsvvcEHzRMbcouFCGnyHHd7ejY26APE=
 github.com/solo-io/envoy-operator v0.1.1/go.mod h1:ZP5hB+khljAFCROj/yDjVPXCPHntdewy6mqYybcCneQ=
 github.com/solo-io/gloo v1.2.10 h1:NuALnVCPmBWVgRPHgou0nFMz1xQa0W/e9TXUmdbyzvQ=
 github.com/solo-io/gloo v1.2.10/go.mod h1:qJmoMYyIbWavBjG8+uOsnG/lwG82RLNkWsQABNaLcbQ=
