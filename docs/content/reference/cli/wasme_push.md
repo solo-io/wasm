@@ -4,36 +4,36 @@ weight: 5
 ---
 ## wasme push
 
-Push wasm filter to remote registry
+Push a wasm filter to remote registry
 
 ### Synopsis
 
 Push wasm filter to remote registry. E.g.:
 
-wasme push webassemblyhub.io/my/filter:v1 filter.wasm
+wasme push webassemblyhub.io/my/filter:v1
 
 
 ```
-wasme push name[:tag|@digest] code.wasm [config_proto-descriptor-set.proto.bin] [flags]
+wasme push name[:tag|@digest] [flags]
 ```
 
 ### Options
 
 ```
-  -d, --debug                  debug mode
-  -h, --help                   help for push
-  -r, --root-id wasme deploy   Specify the root_id of the filter to be loaded by Envoy. If not specified, users of this filter will have to specify the --root-id flag to the wasme deploy command.
-  -v, --verbose                verbose output
+  -h, --help           help for push
+      --store string   Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store
 ```
 
 ### Options inherited from parent commands
 
 ```
   -c, --config stringArray   auth config path
+  -d, --debug                debug mode
       --insecure             allow connections to SSL registry without certs
   -p, --password string      registry password
       --plain-http           use plain http and not https
   -u, --username string      registry username
+  -v, --verbose              verbose output
 ```
 
 ### SEE ALSO

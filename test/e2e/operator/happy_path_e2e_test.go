@@ -84,10 +84,10 @@ var _ = BeforeSuite(func() {
 	err = utils.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = test.ApplyFile("install/wasme/crds/wasme.io_v1_crds.yaml", "")
+	err = test.ApplyFile("../operator/install/wasme/crds/wasme.io_v1_crds.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = test.ApplyFile("install/wasme-default.yaml", "")
+	err = test.ApplyFile("../operator/install/wasme-default.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
 	err = test.ApplyFile("bookinfo.yaml", ns)
@@ -96,6 +96,7 @@ var _ = BeforeSuite(func() {
 	err = waitDeploymentReady("productpage", "bookinfo", time.Minute*2)
 	Expect(err).NotTo(HaveOccurred())
 })
+
 var _ = AfterSuite(func() {
 	test.DeleteFile("bookinfo.yaml", ns)
 	test.DeleteFile("install/wasme-default.yaml", "")
