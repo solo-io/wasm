@@ -104,7 +104,7 @@ func runBuild(opts buildOptions) error {
 			"run",
 			"--rm",
 			"-v", sourceDir + ":/src/workspace",
-			"-v", tmpDir + ":/tmp/build_output",
+			"-v", tmpDir + ":/build_output",
 			"-w", "/src/workspace",
 			"-e", "BUILD_BASE=" + opts.buildDir,
 			"-e", "BAZEL_OUTPUT=" + opts.bazelOutput,

@@ -23,7 +23,11 @@ steps:
       - 'BUILD_ID=$BUILD_ID'
       - 'IMAGE_REGISTRY=gcr.io/$PROJECT_ID'
       - 'FILTER_IMAGE_TAG=webassemblyhub.io/soloio-bot/test-image:$BUILD_ID'
-    args: ['-r', '-failFast', '-trace', '-progress']
+    args:
+    - '-r'
+    - '-failFast'
+    - '-trace'
+    - '-progress'
     secretEnv: ['GITHUB_TOKEN', 'WASME_PUSH_TOKEN']
     id: 'run-tests'
 
