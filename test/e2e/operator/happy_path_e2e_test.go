@@ -99,7 +99,7 @@ var _ = BeforeSuite(func() {
 
 var _ = AfterSuite(func() {
 	test.DeleteFile("bookinfo.yaml", ns)
-	test.DeleteFile("install/wasme-default.yaml", "")
+	test.DeleteFile("../operator/install/wasme-default.yaml", "")
 	utils.Kubectl(nil, "delete", "ns", ns)
 })
 
