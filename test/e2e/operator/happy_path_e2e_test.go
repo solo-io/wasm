@@ -90,7 +90,7 @@ var _ = BeforeSuite(func() {
 	err = test.ApplyFile("../operator/install/wasme-default.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = test.ApplyFile("bookinfo.yaml", ns)
+	err = test.ApplyFile("e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = waitDeploymentReady("productpage", "bookinfo", time.Minute*2)
@@ -98,7 +98,7 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	test.DeleteFile("bookinfo.yaml", ns)
+	test.DeleteFile("e2e/operator/bookinfo.yaml", ns)
 	test.DeleteFile("../operator/install/wasme-default.yaml", "")
 	utils.Kubectl(nil, "delete", "ns", ns)
 })
