@@ -21,7 +21,7 @@ import (
 	"github.com/solo-io/autopilot/codegen/util"
 )
 
-func generateCrdExample(image string) error {
+func generateCrdExample(filename, image string) error {
 	if image == "" {
 		image = "webassemblyhub.io/ilackarms/istio-example:1.4.2"
 	}
@@ -61,7 +61,6 @@ func generateCrdExample(image string) error {
 		return err
 	}
 
-	filename := filepath.Join(util.MustGetThisDir(), "test_filter.yaml")
 	if err := ioutil.WriteFile(filename, []byte(filterDeploymentFile[0].Content), 0644); err != nil {
 		return err
 	}
@@ -75,6 +74,10 @@ var _ = BeforeSuite(func() {
 	err := test.RunMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
+	// ensure this test executes from the project root, to fix file paths
+	err = os.Chdir(filepath.Dir(util.GoModPath()))
+	Expect(err).NotTo(HaveOccurred())
+
 	// ensure no collision between tests
 	err = waitNamespaceTerminated(ns, time.Minute)
 	Expect(err).NotTo(HaveOccurred())
@@ -84,13 +87,13 @@ var _ = BeforeSuite(func() {
 	err = utils.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = test.ApplyFile("../operator/install/wasme/crds/wasme.io_v1_crds.yaml", "")
+	err = test.ApplyFile("operator/install/wasme/crds/wasme.io_v1_crds.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = test.ApplyFile("../operator/install/wasme-default.yaml", "")
+	err = test.ApplyFile("operator/install/wasme-default.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = test.ApplyFile("e2e/operator/bookinfo.yaml", ns)
+	err = test.ApplyFile("test/e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = waitDeploymentReady("productpage", "bookinfo", time.Minute*2)
@@ -98,8 +101,8 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	test.DeleteFile("e2e/operator/bookinfo.yaml", ns)
-	test.DeleteFile("../operator/install/wasme-default.yaml", "")
+	test.DeleteFile("test/e2e/operator/bookinfo.yaml", ns)
+	test.DeleteFile("operator/install/wasme-default.yaml", "")
 	utils.Kubectl(nil, "delete", "ns", ns)
 })
 
@@ -107,11 +110,12 @@ var _ = AfterSuite(func() {
 // Do not randomize ginkgo specs when running, if the build & push test is enabled
 var _ = Describe("AutopilotGenerate", func() {
 	It("runs the wasme operator", func() {
+		filterFile := filepath.Join(util.MustGetThisDir(), "test_filter.yaml")
 
-		err := generateCrdExample(os.Getenv("FILTER_IMAGE_TAG"))
+		err := generateCrdExample(filterFile, os.Getenv("FILTER_IMAGE_TAG"))
 		Expect(err).NotTo(HaveOccurred())
 
-		err = test.ApplyFile("test_filter.yaml", ns)
+		err = test.ApplyFile(filterFile, ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		testRequest := func() (string, error) {
@@ -126,7 +130,7 @@ var _ = Describe("AutopilotGenerate", func() {
 		// expect header in response
 		Eventually(testRequest, time.Minute*5).Should(ContainSubstring("hello: world"))
 
-		err = test.DeleteFile("test_filter.yaml", ns)
+		err = test.DeleteFile(filterFile, ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
