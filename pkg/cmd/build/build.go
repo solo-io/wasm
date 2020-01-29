@@ -129,17 +129,18 @@ func runBuild(opts buildOptions) error {
 		"tag":         opts.tag,
 	}).Info("adding image to cache...")
 
-	fetchFilter := func() (model.Filter, error) {
-		return os.Open(filterFile)
-	}
-
-	// need to read filter to generate descriptor
-	descriptor, err := getDescriptor(fetchFilter)
+	filterBytes, err := ioutil.ReadFile(filterFile)
 	if err != nil {
 		return err
 	}
 
-	image := store.NewStorableImage(opts.tag, descriptor, fetchFilter, cfg)
+	// need to read filter to generate descriptor
+	descriptor, err := getDescriptor(filterBytes)
+	if err != nil {
+		return err
+	}
+
+	image := store.NewStorableImage(opts.tag, descriptor, filterBytes, cfg)
 
 	if err := store.NewStore(opts.storageDir).Add(context.Background(), image); err != nil {
 		return err
@@ -164,22 +165,8 @@ func execCmd(stdout, stderr io.Writer, cmd string, args ...string) error {
 	return command.Run()
 }
 
-func getDescriptor(fetchFilter func() (model.Filter, error)) (ocispec.Descriptor, error) {
-	filter, err := fetchFilter()
-	if err != nil {
-		return ocispec.Descriptor{}, err
-	}
-	b, err := ioutil.ReadAll(filter)
-	if err != nil {
-		return ocispec.Descriptor{}, err
-	}
-	if closer, ok := filter.(io.ReadCloser); ok {
-		if err := closer.Close(); err != nil {
-			return ocispec.Descriptor{}, err
-		}
-	}
-
-	descriptor, err := model.GetDescriptor(bytes.NewBuffer(b))
+func getDescriptor(filterBytes []byte) (ocispec.Descriptor, error) {
+	descriptor, err := model.GetDescriptor(bytes.NewBuffer(filterBytes))
 	if err != nil {
 		return ocispec.Descriptor{}, err
 	}
