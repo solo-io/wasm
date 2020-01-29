@@ -1,7 +1,6 @@
 package operator_test
 
 import (
-	"github.com/solo-io/wasme/test"
 	"io/ioutil"
 	"os"
 	"os/exec"
