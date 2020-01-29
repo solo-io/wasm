@@ -71,7 +71,7 @@ secrets:
       #  --location=global \
       #  --keyring=build \
       #  --key=build-key | base64
-      WASME_PUSH_TOKEN: CiQABlzmSehLy7reVIoNFf+wZHVS1j70PPZ47atXTMc2q9BHon8SUACCPGSGUUYGmRXiF5bRBRkm8/WIod+iyNDcjANWcv7mZZ5SbImIjKj2uvBVNjjJf2qmS0uBqN2YkuTPv5NE77iC50n9bWc5WLgo2lBSiAJt
+      WASME_PUSH_TOKEN: CiQABlzmSbSXrnhlpeysRAc3+IGoyoS9WdaM1HHdGSnNP5t+klsSUQCCPGSGce2fHFXrQ+l4cx7v+T2VJLHO6hCXl0wU+HRAv06KQTH+CQMeW09cD3OIUzbXKZaAeNaEm8mGQgzV7+ISEDRn3BWyreLqV0Gu5RPjuQ==
 
 timeout: 1200s
 tags: ['wasme']

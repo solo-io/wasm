@@ -30,14 +30,20 @@ func SaveToken(t string) error {
 }
 
 func GetToken() (string, error) {
+	var token string
 	if customToken := os.Getenv("WASME_PUSH_TOKEN"); customToken != "" {
-		return customToken, nil
-	}
-	f, err := getTokenFile()
-	if err != nil {
-		return "", err
-	}
+		token = customToken
+	} else {
+		f, err := getTokenFile()
+		if err != nil {
+			return "", err
+		}
 
-	token, err := ioutil.ReadFile(f)
-	return strings.TrimSpace(string(token)), err
+		t, err := ioutil.ReadFile(f)
+		if err != nil {
+			return "", err
+		}
+		token = string(t)
+	}
+	return strings.TrimSpace(token), nil
 }
