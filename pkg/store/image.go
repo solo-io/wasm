@@ -16,10 +16,10 @@ type Image interface {
 
 // an image stored on disk
 type storedImage struct {
-	ref        string
-	descriptor ocispec.Descriptor
+	ref         string
+	descriptor  ocispec.Descriptor
 	filterBytes []byte
-	config     *config.Config
+	config      *config.Config
 }
 
 func NewStorableImage(ref string, descriptor ocispec.Descriptor, filterBytes []byte, config *config.Config) *storedImage {

@@ -24,7 +24,7 @@ func LoginCmd(ctx *context.Context) *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVar(&opts.skipBrowser, "skip-browser", false, "skip opening the default browser to the " +
+	cmd.Flags().BoolVar(&opts.skipBrowser, "skip-browser", false, "skip opening the default browser to the "+
 		"login URL")
 
 	return cmd
