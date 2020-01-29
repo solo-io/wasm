@@ -3,6 +3,8 @@ package pull
 import (
 	"context"
 
+	"github.com/solo-io/wasme/pkg/model"
+
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/remotes"
 	"github.com/deislabs/oras/pkg/content"
@@ -10,6 +12,8 @@ import (
 )
 
 //go:generate mockgen -destination ./mocks/pull.go github.com/solo-io/wasme/pkg/pull Image,ImageContent,ImagePuller
+
+type Image = model.Image
 
 // CodePuller Pulls the .wasm file descriptor from the image ref
 // ImagePuller pulls oci image descriptors by their ref.
@@ -31,6 +35,8 @@ func NewPuller(resolver remotes.Resolver) *puller {
 }
 
 func (p *puller) Pull(ctx context.Context, ref string) (Image, error) {
+	ref = model.FullRef(ref)
+
 	store := content.NewMemoryStore()
 
 	name, desc, err := p.resolver.Resolve(ctx, ref)
@@ -53,7 +59,7 @@ func (p *puller) Pull(ctx context.Context, ref string) (Image, error) {
 	}
 	logrus.Debugf("%+v %+v %+v %+v\n", name, children, desc, err)
 
-	return &imageDescriptors{
+	return &pulledImage{
 		children: children,
 		ref:      ref,
 		resolver: p.resolver,

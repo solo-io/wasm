@@ -61,8 +61,8 @@ func (d *Deployer) getRootId(ref string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if len(cfg.Roots) < 1 {
+	if len(cfg.RootIds) < 1 {
 		return "", errors.Errorf("no roots found in config")
 	}
-	return cfg.Roots[0].Id, nil
+	return cfg.RootIds[0], nil
 }

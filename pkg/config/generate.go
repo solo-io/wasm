@@ -1,3 +1,3 @@
 package config
 
-//go:generate protoc --go_out=. index.proto
+//go:generate protoc --go_out=. config.proto

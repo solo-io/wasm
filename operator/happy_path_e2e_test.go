@@ -101,6 +101,10 @@ var _ = BeforeSuite(func() {
 	err = generateCrdExample()
 	Expect(err).NotTo(HaveOccurred())
 
+	// ensure no collision between tests
+	err = waitNamespaceTerminated(ns, time.Minute)
+	Expect(err).NotTo(HaveOccurred())
+
 	utils.Kubectl(nil, "create", "ns", ns)
 
 	err = utils.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
@@ -163,6 +167,25 @@ func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
 			}
 			if strings.Contains(out, "Running") && strings.Contains(out, "2/2") {
 				return nil
+			}
+			time.Sleep(time.Second * 2)
+		}
+	}
+}
+
+func waitNamespaceTerminated(namespace string, timeout time.Duration) error {
+	timedOut := time.After(timeout)
+	for {
+		select {
+		case <-timedOut:
+			return errors.Errorf("timed out after %s", timeout)
+		default:
+			_, err := utils.KubectlOut(nil, "get", "namespace", namespace)
+			if err != nil {
+				if strings.Contains(err.Error(), "not found") {
+					return nil
+				}
+				return err
 			}
 			time.Sleep(time.Second * 2)
 		}

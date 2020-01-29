@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package solo.extendenvoy.config;
+
+option go_package = "config";
+
+message Config {
+  repeated string root_ids = 1;
+  string abi_version = 2;
+}

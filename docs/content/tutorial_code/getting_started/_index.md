@@ -1,13 +1,21 @@
 ---
-title: "Building filters to WebAssembly Hub"
+title: "Getting Started"
 weight: 1
-description: Create a simple WebAssembly filter and run it with Envoy
+description: "Create a simple WebAssembly filter and deploy it to Envoy."
 ---
 
-In this tutorial we'll take a look at creating a new WebAssembly (WASM) module using the tooling from [WebAssembly Hub](https://webassemblyhub.io) to simplify a lot of the packaging and sharing aspects. We'll then load the new module into a running Envoy Proxy and verify it works. Lastly, we'll look at the workflow to get the new module into the WebAssembly Hub via a pull-request workflow. 
+In this tutorial we will:
 
-You can use your own distribution of Envoy that supports WebAssembly, but for this tutorial, we'll use Gloo which is an API Gateway based on Envoy. Gloo 1.0 announced beta support for WASM
+1. Write our own custom filter for Envoy
+2. `build` a WASM module from our filter and store it as an OCI image/
+3. `push` the module to the [WebAssembly Hub](https://webassemblyhub.io)
+4. `deploy` the image to a running instance of Envoy.
+4. `curl` the instance to see our filter act on a request.
 
+For in-depth guides, please refer to:
+
+- [Build tutorials](../build_tutorials) for topics relating to *building* WASM filters 
+- [Deployment tutorials](../deploy_tutorials) for topics relating to *deploying* WASM filters 
 
 ## Prepare environment
 
@@ -31,11 +39,27 @@ petstore-5dcf5d6b66-n8tjt   1/1     Running   0          2m20s
 
 In this tutorial, we'll use Gloo, an API Gateway based on Envoy that has built-in wasm support but these steps should also work for base Envoy.
 
-First, install gloo by applying [the manifest](../gloo.yaml).
+First, install Gloo using one of the following installation options: 
 
-```shell
-$  kubectl apply -f gloo.yaml
+{{< tabs >}}
+{{< tab name="install-gloo" codelang="shell">}}
+helm repo add gloo https://storage.googleapis.com/solo-public-helm
+helm repo update
+kubectl create ns gloo-system
+helm install --namespace gloo-system --set global.wasm.enabled=true gloo gloo/gloo
+{{< /tab >}}
+{{< tab name="glooctl" codelang="shell" >}}
+glooctl install gateway -n gloo-system --values <(echo '{"namespace":{"create":true},"crds":{"create":true},"global":{"wasm":{"enabled":true}}}')
+{{< /tab >}}
+{{< /tabs >}}
+
+{{% notice note %}}
+You can install `glooctl` via 
 ```
+curl -sL https://run.solo.io/gloo/install | sh
+export PATH=$HOME/.gloo/bin:$PATH
+```
+{{% /notice %}}
 
 Gloo will be installed to the `gloo-system` namespace.
 
@@ -53,7 +77,7 @@ You can add the `--dry-run` flag to glooctl to generate a yaml for you instead o
 
 Lastly, we'll set up our routing rules to be able to call our `petstore` service. Let's add a route to the routing table:
 
-Download and apply the [virtual service manifest](../default-virtualservice.yaml)
+Download and apply the [virtual service manifest](default-virtualservice.yaml)
 ```shell
 $  kubectl apply -f default-virtualservice.yaml
 ```
@@ -92,12 +116,23 @@ If you're able to get to this point, we have a working Envoy proxy and we're abl
 
 ## Creating a new WASM module
 
-Refer to the [installation guide]({{< versioned_link_path fromRoot="/installation">}}) for getting the WebAssembly Hub CLI tools.
+Refer to the [installation guide]({{< versioned_link_path fromRoot="/installation">}}) for installing `wasme`, the WebAssembly Hub CLI.
 
 Let's create a new project called `new-filter`:
 
 ```shell
 $  wasme init ./new-filter
+```
+
+You'll be asked with an interactive prompt which language platform you are building for.
+
+Select `cpp` and `gloo-1.3.x`:
+
+```noop
+? What language do you wish to use for the filter:
+  ▸ cpp
+? With which platform do you wish to use the filter?:
+  ▸ gloo 1.3.x
 ```
 
 We should now have a new folder with our new project:
@@ -109,9 +144,9 @@ $  ls -l
 -rw-r--r--  1 ceposta  staff    505 Dec 10 09:06 README.md
 -rw-r--r--  1 ceposta  staff   2782 Dec 10 09:06 WORKSPACE
 drwxr-xr-x  3 ceposta  staff     96 Dec 10 09:06 bazel
+drwxr-xr-x  3 ceposta  staff     34 Dec 10 09:06 filter-config.json
 -rw-r--r--  1 ceposta  staff   2797 Dec 10 09:06 filter.cc
 -rw-r--r--  1 ceposta  staff     60 Dec 10 09:06 filter.proto
--rw-r--r--  1 ceposta  staff  30776 Dec 10 09:06 gloo-gateway-wasm.yaml
 drwxr-xr-x  7 ceposta  staff    224 Dec 10 09:06 toolchain
 ```
 
@@ -141,27 +176,35 @@ FilterHeadersStatus AddHeaderContext::onResponseHeaders(uint32_t) {
 
 ## Building the filter
 
-Now, let's build our filter. We can build using Bazel if we have that installed, or we can leverage a docker container that sets up all of the dependencies for us.
+Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored
+in a local registry, similar to how [Docker](https://www.docker.com/) stores images. 
 
-For Bazel directly:
+In this example we'll include the registry address `webassemblyhub.io` as well as 
+our GitHub username which will be used to authenticate to the registry.
 
-```shell
-$  bazel build :filter.wasm
-```
-
-From the docker container using the `wasme` tooling:
+Build and tag our image like so:
 
 ```shell
-$  wasme build . 
+wasme build . -t ilackarms/add-header:gloo-1.3
 ```
 
-This will download all of the necessary dependencies and compile the output `filter.wasm` into the current folder if using the `wasme` tooling. Otherwise you can find filter in `./bazel-bin/filter.wasm`.
+The module will take up to a few minutes to build. In the background, `wasme` has launched a Docker container to run the necessary 
+build steps. 
 
-Now that we've built the `wasm` module, let's package it and load it into a registry so we can consume it in our Envoy proxy.
+When the build has finished, you'll be able to see the image with `wasme list`:
 
-## Pushing wasm module to registry
+```bash
+wasme list
+```
 
-Before we use our new filter.wasm module, let's push it into a registry that can be used as a source for the module when we configure Envoy. Alternatively we could try load it from the disk, but that involves a lot more.
+```
+NAME                                    SHA      UPDATED             SIZE   TAGS
+webassemblyhub.io/ilackarms/add-header  bbfdf674 26 Jan 20 10:45 EST 1.0 MB gloo-1.3
+```
+
+Now that we've built the WASM module, let's publish it into a registry so we can deploy it to our Envoy proxy running in Kubernetes.
+
+## Pushing WASM module to registry
 
 To do that, let's login to the `webassemblyhub.io` using GitHub as the OAuth provider. From the CLI:
 
@@ -187,51 +230,36 @@ success ! you are now authenticated
 Now let's push to the webassemblyhub.io registry. 
 
 ```shell
-$  wasme push webassemblyhub.io/christian-posta/test:v0.1 ./filter.wasm
+$  wasme push webassemblyhub.io/ilackarms/add-header:gloo-1.3
+INFO[0000] Pushing image webassemblyhub.io/ilackarms/add-header:gloo-1.3
+INFO[0001] Pushed webassemblyhub.io/ilackarms/add-header:gloo-1.3
+INFO[0001] Digest: sha256:22f2d81f9b61ebbf1aaeb00aa7bde20a90b90ec8bb5f492cc18a140de205dc32
 ```
+
 {{% notice note %}}
 The tag name to use is
-`webassemblyhub.io/<your-git-username>/<whatever-name>:<whatever-version>`
+`webassemblyhub.io/<your-git-username>/<some-name>:<some-version>`
 {{% /notice %}}
 
 When you've pushed, you should be able to see your new module in the registry:
 
 ```shell
-$  wasme list
+$  wasme list --published  
 
 NAME                        SHA      UPDATED             SIZE   TAGS
-christian-posta/test        6aef37f3 13 Jan 10 12:54 MST 1.0 MB v0.1
+ilackarms/add-header        6aef37f3 13 Jan 10 12:54 MST 1.0 MB gloo-1.3
 ```
 
 ## Deploy our new module
 
-To deploy this new WASM module into Envoy, using Gloo we can configure the gateway to load the module from the `webassembly.io` registry:
+To deploy the module to Envoy via Gloo:
 
-```yaml
-apiVersion: gateway.solo.io/v1
-kind: Gateway
-metadata:
-  labels:
-    app: gloo
-  name: gateway-proxy
-  namespace: gloo-system
-spec:
-  bindAddress: '::'
-  bindPort: 8080
-  httpGateway:
-    options:
-      wasm:
-        image: webassemblyhub.io/christian-posta/test:v0.1
-        name: christian
-        root_id: add_header_root_id
-  proxyNames:
-  - gateway-proxy
-  useProxyProto: false
+```bash
+wasme deploy gloo webassemblyhub.io/ilackarms/add-header:gloo-1.3 --id=add-header \
+  --config '{"name":"hello","value":"World!"}'
 ```
 
-If we `kubectl apply -f ` this configuration to our cluster, we should expect the Envoy proxy to pick up this new module and dynamically load it into the proxy. 
-
-Note, it could take a few seconds for the module to get picked up.
+It will take a few moments for the image to be pulled by the server-side cache.
 
 ## Verify behavior
 
@@ -243,28 +271,28 @@ curl -v $URL/api/pets
 
 We expect to see our new headers in the response:
 
-```shell
-*   Trying 35.184.102.75...
+```
+*   Trying 34.73.225.160...
 * TCP_NODELAY set
-* Connected to 35.184.102.75 (35.184.102.75) port 80 (#0)
+* Connected to 34.73.225.160 (34.73.225.160) port 80 (#0)
 > GET /api/pets HTTP/1.1
-> Host: 35.184.102.75
+> Host: 34.73.225.160
 > User-Agent: curl/7.54.0
 > Accept: */*
-> 
+>
 < HTTP/1.1 200 OK
 < content-type: application/xml
-< date: Tue, 10 Dec 2019 16:43:19 GMT
+< date: Fri, 20 Dec 2019 19:17:13 GMT
 < content-length: 86
-< x-envoy-upstream-service-time: 2
-< newheader: 
-< doc-header: it-worked
+< x-envoy-upstream-service-time: 0
+< hello: World!
 < location: envoy-wasm
 < server: envoy
-< 
+<
 [{"id":1,"name":"Dog","status":"available"},{"id":2,"name":"Cat","status":"pending"}]
 ```
-You can see our new header `doc-header` in our response!
+
+You can see our new header `hello: World!` in our response!
 
 ## Add this new module to the Web Assembly Hub catalog
 
@@ -278,7 +306,7 @@ Adding the the catalog is a git-ops workflow that involves a Pull Request. To in
 
 
 ```shell
-$  wasme catalog add webassemblyhub.io/christian-posta/test:v0.1
+$  wasme catalog add ilackarms/add-header:gloo-1.3
 ```
 
 Note, the tag we are adding matches what we built in previous steps.
@@ -302,7 +330,7 @@ Lastly, you'll be prompted one last time whether to proceed. Type `Y` and hit en
 creatorName: christian-posta
 creatorUrl: https://blog.christianposta.com
 documentationUrl: https://url.com
-extensionRef: webassemblyhub.io/christian-posta/test:v0.1
+extensionRef: ilackarms/add-header:gloo-1.3
 logoUrl: http://logo.com
 longDescription: long desc
 name: test
@@ -311,8 +339,8 @@ shortDescription: short des
 
 In these steps we will:
          Fork github.com/solo-io/wasme
-         Create a feature branch named test-v0.1
-         Add your spec to this branch in this location: catalog/test/v0.1/spec.yaml
+         Create a feature branch named test-gloo-1.3
+         Add your spec to this branch in this location: catalog/test/gloo-1.3/spec.yaml
          And open a Pull Request against github.com/solo-io/wasme
  Yes
 Making sure your fork is available

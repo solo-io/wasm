@@ -2,46 +2,32 @@ package pull
 
 import (
 	"context"
-	"io"
+
+	"github.com/solo-io/wasme/pkg/model"
 
 	"github.com/containerd/containerd/remotes"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"github.com/solo-io/wasme/pkg/config"
-	"github.com/solo-io/wasme/pkg/model"
 )
 
-// represents the descriptors for an image, as well as accessors to the image contents
-type Image interface {
-	// ref to the image
-	Ref() string
-
-	// get the image (Filter) descriptor
-	Descriptor() (ocispec.Descriptor, error)
-
-	// get the filter .wasm file from the image
-	FetchFilter(ctx context.Context) (io.ReadCloser, error)
-
-	// get the filter config from the image
-	FetchConfig(ctx context.Context) (*config.Config, error)
-}
-
-type imageDescriptors struct {
+// an image that was pulled from a remote registry
+type pulledImage struct {
 	children []ocispec.Descriptor
 	ref      string
 	resolver remotes.Resolver
 }
 
-func (i *imageDescriptors) Ref() string {
+func (i *pulledImage) Ref() string {
 	return i.ref
 }
 
-func (i *imageDescriptors) Descriptor() (ocispec.Descriptor, error) {
+func (i *pulledImage) Descriptor() (ocispec.Descriptor, error) {
 	return i.getDescriptor(model.CodeMediaType)
 }
 
-func (i *imageDescriptors) FetchFilter(ctx context.Context) (io.ReadCloser, error) {
-	desc, err := i.getDescriptor(model.CodeMediaType)
+func (i *pulledImage) FetchFilter(ctx context.Context) (model.Filter, error) {
+	desc, err := i.Descriptor()
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +40,7 @@ func (i *imageDescriptors) FetchFilter(ctx context.Context) (io.ReadCloser, erro
 	return fetcher.Fetch(ctx, desc)
 }
 
-func (i *imageDescriptors) FetchConfig(ctx context.Context) (*config.Config, error) {
+func (i *pulledImage) FetchConfig(ctx context.Context) (*config.Config, error) {
 	desc, err := i.getDescriptor(model.ConfigMediaType)
 	if err != nil {
 		return nil, err
@@ -73,7 +59,7 @@ func (i *imageDescriptors) FetchConfig(ctx context.Context) (*config.Config, err
 	return config.FromReader(rc)
 }
 
-func (i *imageDescriptors) getDescriptor(mediaType string) (ocispec.Descriptor, error) {
+func (i *pulledImage) getDescriptor(mediaType string) (ocispec.Descriptor, error) {
 	for _, child := range i.children {
 		if child.MediaType == mediaType {
 			return child, nil

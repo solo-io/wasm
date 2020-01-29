@@ -141,7 +141,7 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 		if opts.dryRun {
 			gwClient = newDryRunGatewayClient(os.Stdout)
 		} else {
-			gwClient = helpers.MustGatewayV2Client()
+			gwClient = helpers.MustGatewayClient()
 		}
 
 		return &gloo.Provider{

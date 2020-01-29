@@ -46,7 +46,7 @@ Gloo will be installed to the `gloo-system` namespace.
 
 Lastly, we'll set up our routing rules to be able to call our `petstore` service. Let's add a route to the routing table:
 
-Download and apply the [virtual service manifest](../default-virtualservice.yaml)
+Download and apply the [virtual service manifest](../getting_started/default-virtualservice.yaml)
 ```shell
 kubectl apply -f default-virtualservice.yaml
 ```
@@ -61,7 +61,7 @@ URL=$(kubectl get svc -n gloo-system gateway-proxy \
 Now let's curl that URL:
 
 ```shell
-    curl -v $URL/api/pets
+curl -v $URL/api/pets
 ```
 
 ```
@@ -106,7 +106,7 @@ ilackarms/hello:v0.1 3753eeaf 15 Sep 19 23:41 EST 1.0 MB v0.1
 Let's try deploying one of these to Gloo:
 
 ```bash
-wasme deploy gloo webassemblyhub.io/ilackarms/hello:v0.1 --id=myfilter
+wasme deploy gloo webassemblyhub.io/ilackarms/hello:v0.1 --id=myfilter --config '{"name":"hello","value":"World!"}'
 ```
 
 This filter adds the header `hello: World!` to responses.

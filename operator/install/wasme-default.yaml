@@ -1,0 +1,217 @@
+---
+# Source: Wasme Operator/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wasme
+---
+# Source: Wasme Operator/templates/configmap.yaml
+# ConfigMap wasme-cache
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: wasme-cache
+    configmap: wasme-cache
+  name: wasme-cache
+  namespace: wasme
+data:
+  images: ""
+---
+# Source: Wasme Operator/templates/deployment.yaml
+# Service account for wasme-cache
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: wasme-cache
+  name: wasme-cache
+  namespace: wasme
+---
+# Source: Wasme Operator/templates/deployment.yaml
+# Service account for wasme-operator
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: wasme-operator
+  name: wasme-operator
+  namespace: wasme
+---
+# Source: Wasme Operator/templates/rbac.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: wasme-operator
+  labels:
+    app: wasme-operator
+rules:
+- apiGroups:
+  - wasme.io
+  resources:
+  - filterdeployments
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - wasme.io
+  resources:
+  - filterdeployments/status
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - daemonsets
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - networking.istio.io
+  resources:
+  - envoyfilters
+  verbs:
+  - '*'
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - '*'
+---
+# Source: Wasme Operator/templates/rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: wasme-operator
+  labels:
+    app: wasme-operator
+subjects:
+- kind: ServiceAccount
+  name: wasme-operator
+  namespace: wasme
+roleRef:
+  kind: ClusterRole
+  name: wasme-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+# Source: Wasme Operator/templates/deployment.yaml
+# DaemonSet manifest for wasme-cache
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: wasme-cache
+  name: wasme-cache
+  namespace: wasme
+spec:
+  selector:
+    matchLabels:
+      app: wasme-cache
+  template:
+    metadata:
+      labels:
+        app: wasme-cache
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9091"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: wasme-cache
+      volumes:
+      - hostPath:
+          path: /var/local/lib/wasme-cache
+          type: DirectoryOrCreate
+        name: cache-dir
+      - configMap:
+          items:
+          - key: images
+            path: images.txt
+          name: wasme-cache
+        name: config
+      containers:
+      - image: quay.io/solo-io/wasme:dev
+        args:
+        - cache
+        - --directory
+        - /var/local/lib/wasme-cache
+        - --ref-file
+        - /etc/wasme-cache/images.txt
+        volumeMounts:
+        - mountPath: /var/local/lib/wasme-cache
+          name: cache-dir
+        - mountPath: /etc/wasme-cache
+          name: config
+        imagePullPolicy: Always
+        name: wasme-cache
+        resources:
+          requests:
+            cpu: 125m
+            memory: 256Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+---
+# Source: Wasme Operator/templates/deployment.yaml
+# Deployment manifest for wasme-operator
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: wasme-operator
+  name: wasme-operator
+  namespace: wasme
+spec:
+  selector:
+    matchLabels:
+      app: wasme-operator
+  template:
+    metadata:
+      labels:
+        app: wasme-operator
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9091"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: wasme-operator
+      containers:
+      - image: quay.io/solo-io/wasme:dev
+        args:
+        - operator
+        - --log-level=debug
+        imagePullPolicy: Always
+        name: wasme-operator
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+---
+# Source: Wasme Operator/templates/rbac.yaml
+# Rbac manifests for wasme-operator

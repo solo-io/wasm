@@ -70,8 +70,6 @@ func (p *Provider) updateGateways(updateFunc func(gateway *gatewayv1.Gateway) er
 	return nil
 }
 
-// TODO: currently gloo only supports 1 wasm filter
-// when it is updated, this should become an APPEND
 func apendWasmConfig(filter *v1.FilterSpec, gateway *gatewayv1.Gateway) error {
 	httpGw := gateway.GetHttpGateway()
 	if httpGw == nil {
@@ -82,16 +80,18 @@ func apendWasmConfig(filter *v1.FilterSpec, gateway *gatewayv1.Gateway) error {
 		opts = &gloov1.HttpListenerOptions{}
 		httpGw.Options = opts
 	}
+	if opts.Wasm == nil {
+		opts.Wasm = &wasm.PluginSource{}
+	}
 
-	// this SET should become an APPEND
-	// when gloo supports multiple wasm filters
-	opts.Wasm = &wasm.PluginSource{
+	// append the user's filter
+	opts.Wasm.Filters = append(opts.Wasm.Filters, &wasm.WasmFilter{
 		Image:  filter.Image,
 		Config: filter.Config,
 		Name:   filter.Id,
 		RootId: filter.RootID,
-		VmType: wasm.PluginSource_V8, // default to V8
-	}
+		VmType: wasm.WasmFilter_V8, // default to V8
+	})
 
 	return nil
 }
@@ -110,9 +110,11 @@ func removeWasmConfig(filterID string, gateway *gatewayv1.Gateway) error {
 		return nil
 	}
 
-	// when it is updated, this should become a REMOVE
-	if opts.Wasm != nil && opts.Wasm.Name == filterID {
-		opts.Wasm = nil
+	// remove the filter
+	for i, filter := range opts.GetWasm().GetFilters() {
+		if filter.GetName() == filterID {
+			opts.Wasm.Filters = append(opts.Wasm.Filters[:i], opts.Wasm.Filters[i+1:]...)
+		}
 	}
 
 	return nil

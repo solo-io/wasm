@@ -2,7 +2,10 @@ package push
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+	"github.com/solo-io/wasme/pkg/store"
 
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/push"
@@ -11,10 +14,8 @@ import (
 )
 
 type pushOptions struct {
-	targetRef   string
-	code        string
-	descriptors string
-	rootId      string
+	ref        string
+	storageDir string
 
 	*opts.GeneralOptions
 }
@@ -23,36 +24,37 @@ func PushCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.C
 	var opts pushOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
-		Use:   "push name[:tag|@digest] code.wasm [config_proto-descriptor-set.proto.bin]",
-		Short: "Push wasm filter to remote registry",
+		Use:   "push name[:tag|@digest]",
+		Short: "Push a wasm filter to remote registry",
 		Long: `Push wasm filter to remote registry. E.g.:
 
-wasme push webassemblyhub.io/my/filter:v1 filter.wasm
+wasme push webassemblyhub.io/my/filter:v1
 `,
-		Args: cobra.MinimumNArgs(2),
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) != 2 && len(args) != 3 {
-				return fmt.Errorf("invalid number of arguments")
-			}
-			opts.targetRef = args[0]
-			opts.code = args[1]
-			if len(args) == 3 {
-				opts.descriptors = args[2]
-			}
+			opts.ref = args[0]
 			return runPush(*ctx, opts)
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.rootId, "root-id", "r", "", "Specify the root_id of the filter to be loaded by Envoy. If not specified, users of this filter will have to specify the --root-id flag to the `wasme deploy` command.")
+	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store")
 
 	return cmd
 }
 
 func runPush(ctx context.Context, opts pushOptions) error {
-	resolver, authorizer := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
-	pusher := push.PusherImpl{
-		Resolver:   resolver,
-		Authorizer: authorizer,
+	logrus.Infof("Pushing image %v", opts.ref)
+
+	image, err := store.NewStore(opts.storageDir).Get(opts.ref)
+	if err != nil {
+		return errors.Wrap(err, "image not found. run `wasme list` to see locally cahced images")
 	}
-	return pusher.Push(ctx, push.NewLocalFilter(opts.code, opts.descriptors, opts.targetRef, opts.rootId))
+
+	resolver, authorizer := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
+	pusher := push.NewPusher(resolver, authorizer)
+	if err := pusher.Push(ctx, image); err != nil {
+		return err
+	}
+
+	return nil
 }

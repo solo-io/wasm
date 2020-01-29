@@ -14,6 +14,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/opencontainers/go-digest"
+	"github.com/solo-io/wasme/pkg/model"
 	"github.com/solo-io/wasme/pkg/pull"
 )
 
@@ -24,7 +25,7 @@ type Cache interface {
 	Add(ctx context.Context, image string) (digest.Digest, error)
 
 	// retrieve the wasm file from the image
-	Get(ctx context.Context, digest digest.Digest) (io.ReadCloser, error)
+	Get(ctx context.Context, digest digest.Digest) (model.Filter, error)
 	http.Handler
 }
 
@@ -115,7 +116,7 @@ func (c *CacheImpl) Add(ctx context.Context, ref string) (digest.Digest, error) 
 	return desc.Digest, nil
 }
 
-func (c *CacheImpl) Get(ctx context.Context, digest digest.Digest) (io.ReadCloser, error) {
+func (c *CacheImpl) Get(ctx context.Context, digest digest.Digest) (model.Filter, error) {
 	image := c.cacheState.find(digest)
 	if image == nil {
 		return nil, errors.Errorf("image with digest %v not found", digest)
@@ -139,16 +140,18 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rc, err := image.FetchFilter(ctx)
+	filter, err := image.FetchFilter(ctx)
 	if err != nil {
 		http.NotFound(rw, r)
 		return
 	}
-	defer rc.Close()
+	if closer, ok := filter.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
 
 	rw.Header().Set("Content-Type", desc.MediaType)
 	rw.Header().Set("Etag", "\""+string(desc.Digest)+"\"")
-	if rs, ok := rc.(io.ReadSeeker); ok {
+	if rs, ok := filter.(io.ReadSeeker); ok {
 		// content of digests never changes so set mod time to a constant
 		// don't use zero time because serve content doesn't use that.
 		modTime := time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -156,7 +159,7 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	} else {
 		rw.Header().Add("Content-Length", strconv.Itoa(int(desc.Size)))
 		if r.Method != "HEAD" {
-			_, err = io.Copy(rw, rc)
+			_, err = io.Copy(rw, filter)
 			if err != nil {
 				// TODO: use real log
 				fmt.Printf("error http %v\n", err)

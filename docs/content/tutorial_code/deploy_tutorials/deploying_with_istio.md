@@ -6,7 +6,7 @@ description: Deploy a wasm filter using Istio as the control plane.
 
 Using Envoy's Web Assembly capabilities, we can add custom filters to an [Istio](https://istio.io) service mesh. This allows us to customize and extend functionality of the mesh's [data plane](https://blog.envoyproxy.io/service-mesh-data-plane-vs-control-plane-2774e720f7fc).
 
-In this tutorial we'll use `wasme` to deploy a simple "hello world" filter that adds a header to HTTP responses. This WebAssembly (WASM) module has already been built and can be pulled from [the WebAssembly Hub](https://webassemblyhub.io). To learn how to build and push filters, [see the tutorial on building and pushing wasm filters](./getting_started_1.md).
+In this tutorial we'll use `wasme` to deploy a simple "hello world" filter that adds a header to HTTP responses. This WebAssembly (WASM) module has already been built and can be pulled from [the WebAssembly Hub](https://webassemblyhub.io). To learn how to build and push filters, [see the tutorial on building and pushing wasm filters](../getting_started.md).
 
 
 ## Prepare environment

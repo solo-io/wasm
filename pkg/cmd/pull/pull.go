@@ -2,9 +2,9 @@ package pull
 
 import (
 	"context"
-	"io/ioutil"
 
 	"github.com/sirupsen/logrus"
+	"github.com/solo-io/wasme/pkg/store"
 
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/pull"
@@ -13,15 +13,8 @@ import (
 )
 
 type pullOptions struct {
-	targetRef          string
-	allowedMediaTypes  []string
-	allowAllMediaTypes bool
-	keepOldFiles       bool
-	pathTraversal      bool
-	output             string
-	verbose            bool
-
-	debug bool
+	ref        string
+	storageDir string
 
 	*opts.GeneralOptions
 }
@@ -30,41 +23,44 @@ func PullCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.C
 	var opts pullOptions
 	opts.GeneralOptions = generalOptions
 	cmd := &cobra.Command{
-		Use:   "pull <name:tag|name@digest> [-o output-file]",
+		Use:   "pull <name:tag|name@digest>",
 		Short: "Pull wasm filters from remote registry",
 		Long: `Pull wasm filters from remote registry
 `,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.targetRef = args[0]
+			opts.ref = args[0]
 			return runPull(*ctx, opts)
 		},
 	}
 
-	cmd.Flags().StringVarP(&opts.output, "output", "o", "filter.wasm", "output file")
+	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store")
+
 	return cmd
 }
 
 func runPull(ctx context.Context, opts pullOptions) error {
+	logrus.Infof("Pulling image %v", opts.ref)
+
 	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
 	var puller pull.ImagePuller = pull.NewPuller(resolver)
 
-	image, err := puller.Pull(ctx, opts.targetRef)
+	image, err := puller.Pull(ctx, opts.ref)
 	if err != nil {
 		return err
 	}
 
-	filterCode, err := image.FetchFilter(ctx)
+	desc, err := image.Descriptor()
 	if err != nil {
 		return err
 	}
 
-	logrus.Printf("Pulled filter image %v", opts.targetRef)
-
-	raw, err := ioutil.ReadAll(filterCode)
-	if err != nil {
+	if err := store.NewStore(opts.storageDir).Add(ctx, image); err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(opts.output, raw, 0644)
+	logrus.Infof("Image: %v", image.Ref())
+	logrus.Infof("Digest: %v", desc.Digest)
+
+	return nil
 }

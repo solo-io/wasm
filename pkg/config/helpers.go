@@ -7,6 +7,10 @@ import (
 	"github.com/solo-io/go-utils/protoutils"
 )
 
+func (cfg *Config) ToBytes() ([]byte, error) {
+	return protoutils.MarshalBytes(cfg)
+}
+
 func FromBytes(b []byte) (*Config, error) {
 	var cfg Config
 	return &cfg, protoutils.UnmarshalBytes(b, &cfg)

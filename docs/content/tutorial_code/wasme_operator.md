@@ -1,12 +1,12 @@
 ---
-title: "Filters in Production with the Wasme Operator"
+title: "Running Filters in Production"
 weight: 6
 description: For CI/CD workflows and production deployments of web assembly filters, the Wasme Operator offers a declarative custom resource for managing deployed wasm filters.
 ---
 
 The `wasme` CLI provides an easy way to get started building and deploying Web Assembly filters to an Envoy service mesh.
 
-While this is useful in development and testing, it does not provide a declarative, stateless means by which to configure production Kubernetes clusters.
+This is intended to be used in development and testing, but does not provide a declarative, stateless means by which to configure production Kubernetes clusters.
 
 The **Wasme Operator** makes it possible to manage the deployment of WebAssembly Filters to a supported service mesh using Kubernetes CRDs.
 
