@@ -89,7 +89,11 @@ func runBuild(opts buildOptions) error {
 			return err
 		}
 
-		tmpDir, err := ioutil.TempDir("/tmp", "wasme")
+		pwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+		tmpDir, err := ioutil.TempDir(pwd, "wasme")
 		if err != nil {
 			return err
 		}
