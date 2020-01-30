@@ -2,6 +2,7 @@ package operator_test
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -116,12 +117,16 @@ var _ = Describe("AutopilotGenerate", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		testRequest := func() (string, error) {
-			return utils.KubectlOut(nil,
+			out, err := utils.KubectlOut(nil,
 				"exec",
 				"-n", ns,
 				"deploy/productpage-v1",
 				"-c", "istio-proxy", "--",
 				"curl", "-v", "http://details."+ns+":9080/details/123")
+
+			log.Printf("output: %v", out)
+			log.Printf("err: %v", err)
+			return out, err
 		}
 
 		// expect header in response
