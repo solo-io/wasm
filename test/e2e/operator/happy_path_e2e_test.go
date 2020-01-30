@@ -1,6 +1,7 @@
 package operator_test
 
 import (
+	"github.com/solo-io/autopilot/codegen/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -18,7 +19,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/autopilot/cli/pkg/utils"
-	"github.com/solo-io/autopilot/codegen/util"
 )
 
 func generateCrdExample(filename, image string) error {
@@ -61,7 +61,7 @@ func generateCrdExample(filename, image string) error {
 		return err
 	}
 
-	if err := ioutil.WriteFile(filename, []byte(filterDeploymentFile[0].Content), 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(filepath.Dir(util.GoModPath()), filename), []byte(filterDeploymentFile[0].Content), 0644); err != nil {
 		return err
 	}
 
@@ -106,7 +106,7 @@ var _ = AfterSuite(func() {
 // Do not randomize ginkgo specs when running, if the build & push test is enabled
 var _ = Describe("AutopilotGenerate", func() {
 	It("runs the wasme operator", func() {
-		filterFile := filepath.Join(util.MustGetThisDir(), "test_filter.yaml")
+		filterFile := "test/e2e/operator/test_filter.yaml"
 
 		err := generateCrdExample(filterFile, os.Getenv("FILTER_IMAGE_TAG"))
 		Expect(err).NotTo(HaveOccurred())
