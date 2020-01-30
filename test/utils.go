@@ -40,8 +40,9 @@ func DeleteFile(file, ns string) error {
 	return WithManifest(file, ns, utils.KubectlDelete)
 }
 
+// execute a callback for a manifest relative to the root of the project
 func WithManifest(file, ns string, do func(manifest []byte, extraArgs ...string) error) error {
-	path := filepath.Join(util.MustGetThisDir(), file)
+	path := filepath.Join(filepath.Dir(util.GoModPath()), file)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err

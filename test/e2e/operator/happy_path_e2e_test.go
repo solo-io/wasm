@@ -74,10 +74,6 @@ var _ = BeforeSuite(func() {
 	err := test.RunMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
-	// ensure this test executes from the project root, to fix file paths
-	err = os.Chdir(filepath.Dir(util.GoModPath()))
-	Expect(err).NotTo(HaveOccurred())
-
 	// ensure no collision between tests
 	err = waitNamespaceTerminated(ns, time.Minute)
 	Expect(err).NotTo(HaveOccurred())
