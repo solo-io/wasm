@@ -23,6 +23,7 @@ steps:
       - 'BUILD_ID=$BUILD_ID'
       - 'IMAGE_REGISTRY=gcr.io/$PROJECT_ID'
       - 'FILTER_IMAGE_TAG=webassemblyhub.io/soloio-bot/test-image:$BUILD_ID'
+      - 'IMAGE_PUSH=1'
     args:
     - '-r'
     - '-failFast'

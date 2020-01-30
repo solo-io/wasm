@@ -1,12 +1,13 @@
 package operator_test
 
 import (
-	"github.com/solo-io/autopilot/codegen/util"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/solo-io/autopilot/codegen/util"
 
 	"github.com/solo-io/wasme/test"
 
