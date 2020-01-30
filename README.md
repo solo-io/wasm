@@ -1,8 +1,6 @@
 
 <h1 align="center">
     <img src="https://github.com/solo-io/wasme/blob/master/docs/content/img/logo.png?raw=true" alt="WebAssembly Hub" width="330" height="242">
-  <br>
-  The WebAssembly Hub
 </h1>
 
 The WebAssembly Hub is a meeting place for the community to share and consume WebAssembly Envoy extensions. Easily search and find extensions that meet the functionality you want to add and give them a try.
