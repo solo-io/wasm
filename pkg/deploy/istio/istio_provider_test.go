@@ -79,7 +79,7 @@ var _ = Describe("IstioProvider", func() {
 		workloadName = "work"
 
 		puller = &mockPuller{
-			image: mockImage{digest: "sha256:e454cab754cf9234e8b41d7c5e30f53a4c125d7d9443cb3ef2b2eb1c4bd1ec14"},
+			image: mockImage{ref: filter.Image, digest: "sha256:e454cab754cf9234e8b41d7c5e30f53a4c125d7d9443cb3ef2b2eb1c4bd1ec14"},
 		}
 		cancel = func() {}
 	)
@@ -255,11 +255,11 @@ var _ = Describe("IstioProvider", func() {
 		}
 		err := p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
-			Image:  "webassemblyhub.io/ilackarms/gloo-hello:v0.1",
+			Image:  "webassemblyhub.io/ilackarms/gloo-hello:1.3.3",
 			Config: "{}",
 		})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("image webassemblyhub.io/ilackarms/gloo-hello:v0.1 not supported by istio version 1.4.2"))
+		Expect(err.Error()).To(ContainSubstring("image webassemblyhub.io/ilackarms/gloo-hello:1.3.3 not supported by istio version 1.4.2"))
 
 		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
@@ -281,11 +281,12 @@ func (p *mockPuller) Pull(ctx context.Context, ref string) (pull.Image, error) {
 }
 
 type mockImage struct {
+	ref string
 	digest string
 }
 
 func (m *mockImage) Ref() string {
-	panic("implement me")
+	return m.ref
 }
 
 func (m *mockImage) Descriptor() (v1.Descriptor, error) {
@@ -299,7 +300,7 @@ func (m *mockImage) FetchFilter(ctx context.Context) (model.Filter, error) {
 }
 
 func (m *mockImage) FetchConfig(ctx context.Context) (*config.Config, error) {
-	panic("implement me")
+	return &config.Config{}, nil
 }
 
 func pointerToInt64(value int64) *int64 {
