@@ -11,7 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//go:generate mockgen -destination ./mocks/pull.go github.com/solo-io/wasme/pkg/pull Image,ImageContent,ImagePuller
+//go:generate mockgen -destination ./mocks/pull.go github.com/solo-io/wasme/pkg/pull ImagePuller
 
 type Image = model.Image
 
