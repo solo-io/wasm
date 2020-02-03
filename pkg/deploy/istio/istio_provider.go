@@ -108,10 +108,6 @@ func requiredSidecarAnnotations() map[string]string {
 
 // applies the filter to all selected workloads and updates the image cache configmap
 func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
-	istioVersion, err := p.getIstioVersion()
-	if err != nil {
-		return err
-	}
 
 	image, err := p.Puller.Pull(p.Ctx, filter.Image)
 	if err != nil {
@@ -123,8 +119,21 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 		return err
 	}
 
-	if err := abi.DefaultRegistry.ValidateIstioVersion(cfg.AbiVersion, istioVersion); err != nil {
-		return errors.Errorf("image %v not supported by istio version %v", image.Ref(), istioVersion)
+	abiVersion := cfg.AbiVersion
+
+	if abiVersion != "" {
+		istioVersion, err := p.getIstioVersion()
+		if err != nil {
+			return err
+		}
+
+		if err := abi.DefaultRegistry.ValidateIstioVersion(abiVersion, istioVersion); err != nil {
+			return errors.Errorf("image %v not supported by istio version %v", image.Ref(), istioVersion)
+		}
+	} else {
+		logrus.WithFields(logrus.Fields{
+			"image":   image.Ref(),
+		}).Warnf("no ABI Version found for image, skipping ABI version check")
 	}
 
 	if err := p.addImageToCacheConfigMap(filter.Image); err != nil {
