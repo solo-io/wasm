@@ -29,6 +29,7 @@ wasme deploy istio <image> --id=<unique name> [--config=<inline string>] [--root
       --cache-repo string              name of the image repository to use for the cache server daemonset (default "quay.io/solo-io/wasme")
       --cache-tag string               image tag to use for the cache server daemonset (default "0.0.1")
   -h, --help                           help for istio
+      --istio-namespace string         the namespace where the Istio control plane is installed (default "istio-system")
       --name string                    name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace
   -n, --namespace string               namespace of the workload(s) to inject the filter. (default "default")
   -t, --workload-type string           type of workload into which the filter should be injected. possible values are deployment or daemonset (default "deployment")

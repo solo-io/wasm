@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/solo-io/wasme/pkg/abi"
+
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 
@@ -68,9 +70,15 @@ type Provider struct {
 	// updates a workload.
 	// err != nil in the case that update failed
 	OnWorkload func(workloadMeta metav1.ObjectMeta, err error)
+
+	// namespace of the istio control plane
+	// Provider will use this to determine the installed version of istio
+	// for abi compatibility
+	// defaults to istio-system
+	IstioNamespace string
 }
 
-func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error)) (*Provider, error) {
+func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error), istioNamespace string) (*Provider, error) {
 
 	// ensure istio types are added to scheme
 	if err := v1alpha3.AddToScheme(client.Manager().GetScheme()); err != nil {
@@ -78,14 +86,15 @@ func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ez
 	}
 
 	return &Provider{
-		Ctx:          ctx,
-		KubeClient:   kubeClient,
-		Client:       client,
-		Puller:       puller,
-		Workload:     workload,
-		Cache:        cache,
-		ParentObject: parentObject,
-		OnWorkload:   onWorkload,
+		Ctx:            ctx,
+		KubeClient:     kubeClient,
+		Client:         client,
+		Puller:         puller,
+		Workload:       workload,
+		Cache:          cache,
+		ParentObject:   parentObject,
+		OnWorkload:     onWorkload,
+		IstioNamespace: istioNamespace,
 	}, nil
 }
 
@@ -99,12 +108,31 @@ func requiredSidecarAnnotations() map[string]string {
 
 // applies the filter to all selected workloads and updates the image cache configmap
 func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
+	istioVersion, err := p.getIstioVersion()
+	if err != nil {
+		return err
+	}
+
+	image, err := p.Puller.Pull(p.Ctx, filter.Image)
+	if err != nil {
+		return err
+	}
+
+	cfg, err := image.FetchConfig(p.Ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := abi.DefaultRegistry.ValidateIstioVersion(cfg.AbiVersion, istioVersion); err != nil {
+		return errors.Errorf("image %v not supported by istio version %v", image.Ref(), istioVersion)
+	}
+
 	if err := p.addImageToCacheConfigMap(filter.Image); err != nil {
 		return errors.Wrap(err, "adding image to cache")
 	}
 
-	err := p.forEachWorkload(func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
-		err := p.applyFilterToWorkload(filter, meta, spec)
+	err = p.forEachWorkload(func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
+		err := p.applyFilterToWorkload(filter, image, meta, spec)
 		if p.OnWorkload != nil {
 			p.OnWorkload(meta, err)
 		}
@@ -118,7 +146,7 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 }
 
 // applies the filter to the target workload: adds annotations and creates the EnvoyFilter CR
-func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
+func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
 	p.setAnnotations(spec)
 	labels := spec.Labels
 	workloadName := meta.Name
@@ -132,6 +160,7 @@ func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, meta metav1.Obje
 
 	istioEnvoyFilter, err := p.makeIstioEnvoyFilter(
 		filter,
+		image,
 		workloadName,
 		labels,
 	)
@@ -279,12 +308,7 @@ func (p *Provider) setAnnotations(template *corev1.PodTemplateSpec) {
 }
 
 // construct Istio EnvoyFilter Custom Resource
-func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, workloadName string, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
-	image, err := p.Puller.Pull(p.Ctx, filter.Image)
-	if err != nil {
-		return nil, err
-	}
-
+func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image, workloadName string, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
 	descriptor, err := image.Descriptor()
 	if err != nil {
 		return nil, err
@@ -431,4 +455,12 @@ func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
 	}
 
 	return nil
+}
+
+func (p *Provider) getIstioVersion() (string, error) {
+	inspector := &versionInspector{
+		kube:           p.KubeClient,
+		istioNamespace: p.IstioNamespace,
+	}
+	return inspector.GetIstioVersion()
 }

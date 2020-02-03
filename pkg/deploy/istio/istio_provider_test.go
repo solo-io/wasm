@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/solo-io/wasme/pkg/resolver"
+
 	"github.com/solo-io/wasme/pkg/config"
 	"github.com/solo-io/wasme/pkg/model"
 	"github.com/solo-io/wasme/pkg/pull"
@@ -137,6 +139,7 @@ var _ = Describe("IstioProvider", func() {
 				// test callback is called
 				callbackCalled = true
 			},
+			"",
 		)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -226,6 +229,40 @@ var _ = Describe("IstioProvider", func() {
 
 		Expect(ef2.Spec.WorkloadSelector.Labels).To(Equal(dep2.Spec.Template.Labels))
 		Expect(ef2.Spec.ConfigPatches).To(HaveLen(1))
+	})
+
+	// note: this test assumes istio 1.4.2 installed to cluster
+	FIt("returns an error when the image abi version does not support the istio version", func() {
+		workload := Workload{
+			Name:      "", //all workloads
+			Namespace: ns,
+			Kind:      WorkloadTypeDeployment,
+		}
+		resolver, _ := resolver.NewResolver("", "", false, false)
+		puller := pull.NewPuller(resolver)
+
+		p := &Provider{
+			Ctx:        context.TODO(),
+			KubeClient: kube,
+			Client:     client,
+			Puller:     puller,
+			Workload:   workload,
+			Cache:      cache,
+		}
+		err := p.ApplyFilter(&wasmev1.FilterSpec{
+			Id:     "incompatible-filter",
+			Image:  "webassemblyhub.io/ilackarms/gloo-hello:v0.1",
+			Config: "{}",
+		})
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("image webassemblyhub.io/ilackarms/gloo-hello:v0.1 not supported by istio version 1.4.2"))
+
+		err = p.ApplyFilter(&wasmev1.FilterSpec{
+			Id:     "compatible-filter",
+			Image:  "webassemblyhub.io/ilackarms/istio-hello",
+			Config: "{}",
+		})
+		Expect(err).NotTo(HaveOccurred())
 	})
 })
 

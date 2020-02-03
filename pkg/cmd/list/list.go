@@ -14,6 +14,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/solo-io/wasme/pkg/util"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/wasme/pkg/consts"
@@ -119,13 +121,7 @@ func getLocalImages(storageDir string) ([]image, error) {
 
 	var images []image
 	for _, img := range storedImages {
-		var name, tag string
-		parts := strings.Split(img.Ref(), ":")
-		if len(parts) != 2 {
-			name = img.Ref()
-		} else {
-			name, tag = parts[0], parts[1]
-		}
+		name, tag := util.SplitImageRef(img.Ref())
 
 		descriptor, err := img.Descriptor()
 		if err != nil {

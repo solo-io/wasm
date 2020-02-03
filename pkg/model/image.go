@@ -4,11 +4,11 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
-	"strings"
 
 	"github.com/deislabs/oras/pkg/content"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/solo-io/wasme/pkg/config"
+	"github.com/solo-io/wasme/pkg/util"
 )
 
 // represents the descriptors for an image, as well as accessors to the image contents
@@ -55,9 +55,6 @@ func GetDescriptor(filter Filter) (ocispec.Descriptor, error) {
 
 // expand the ref to contain :latest suffix if no tag provided
 func FullRef(ref string) string {
-	parts := strings.Split(ref, ":")
-	if len(parts) == 2 {
-		return ref
-	}
-	return ref + ":latest"
+	name, tag := util.SplitImageRef(ref)
+	return name + ":" + tag
 }
