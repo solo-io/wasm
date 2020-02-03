@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/golang/mock/gomock"
+	mock_ezkube "github.com/solo-io/autopilot/pkg/ezkube/mocks"
+
 	"github.com/solo-io/wasme/pkg/resolver"
 
 	"github.com/solo-io/wasme/pkg/config"
@@ -232,7 +235,7 @@ var _ = Describe("IstioProvider", func() {
 	})
 
 	// note: this test assumes istio 1.4.2 installed to cluster
-	FIt("returns an error when the image abi version does not support the istio version", func() {
+	It("returns an error when the image abi version does not support the istio version", func() {
 		workload := Workload{
 			Name:      "", //all workloads
 			Namespace: ns,
@@ -240,6 +243,7 @@ var _ = Describe("IstioProvider", func() {
 		}
 		resolver, _ := resolver.NewResolver("", "", false, false)
 		puller := pull.NewPuller(resolver)
+		client := mock_ezkube.NewMockEnsurer(gomock.NewController(GinkgoT()))
 
 		p := &Provider{
 			Ctx:        context.TODO(),
@@ -257,9 +261,11 @@ var _ = Describe("IstioProvider", func() {
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("image webassemblyhub.io/ilackarms/gloo-hello:v0.1 not supported by istio version 1.4.2"))
 
+		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
-			Image:  "webassemblyhub.io/ilackarms/istio-hello",
+			Image:  "webassemblyhub.io/ilackarms/istio-hello:1.4.2",
 			Config: "{}",
 		})
 		Expect(err).NotTo(HaveOccurred())
