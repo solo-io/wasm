@@ -115,16 +115,16 @@ If --language, --platform, or --platform-version are not provided, the CLI will 
 		},
 	}
 
-	cmd.PersistentFlags().StringVar(&opts.language, "--language", "",
+	cmd.PersistentFlags().StringVar(&opts.language, "language", "",
 		fmt.Sprintf("The programming language with which to create the filter. Supported languages are: %v", supportedLanguages))
 
-	cmd.PersistentFlags().StringVar(&opts.platform.Name, "--platform", "",
+	cmd.PersistentFlags().StringVar(&opts.platform.Name, "platform", "",
 		fmt.Sprintf("The name of the target platform against which to build. Supported platforms are: %v", []string{"gloo", "istio"}))
 
-	cmd.PersistentFlags().StringVar(&opts.platform.Version, "--platform-version", "",
+	cmd.PersistentFlags().StringVar(&opts.platform.Version, "platform-version", "",
 		fmt.Sprintf("The version of the target platform against which to build. Supported Istio versions are: %v. Supported Gloo versions are: %v", []string{abi.Version14x, abi.Version15x}, []string{abi.Version13x}))
 
-	cmd.PersistentFlags().BoolVar(&opts.disablePrompt, "--disable-prompt", false,
+	cmd.PersistentFlags().BoolVar(&opts.disablePrompt, "disable-prompt", false,
 		"Disable the interactive prompt if a required parameter is not passed. If set to true and one of the required flags is not provided, wasme CLI will return an error.")
 
 	return cmd

@@ -112,7 +112,7 @@ kubectl create ns bookinfo
 kubectl label namespace bookinfo istio-injection=enabled --overwrite
 
 # install the bookinfo application
-kubectl apply -n bookinfo -f https://github.com/solo-io/wasme/blob/master/operator/bookinfo.yaml
+kubectl apply -n bookinfo -f https://github.com/solo-io/wasme/blob/master/test/e2e/operator/bookinfo.yaml
 ```
 
 {{% notice note %}}

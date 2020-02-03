@@ -48,7 +48,7 @@ func Cmd() *cobra.Command {
 		pull.PullCmd(ctx, &opts),
 		cache.CacheCmd(ctx, &opts),
 		catalog.CatalogCmd(ctx, &opts),
-		login.LoginCmd(ctx, &opts),
+		login.LoginCmd(ctx),
 		list.ListCmd(),
 		deploy.DeployCmd(ctx),
 		deploy.UndeployCmd(ctx),

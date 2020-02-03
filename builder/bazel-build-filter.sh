@@ -2,8 +2,8 @@
 
 set -ex
 
-# must have mounted /tmp/build_output
-DESTFILE=${DESTFILE:-/tmp/build_output/filter.wasm}
+# must have mounted /build_output
+DESTFILE=${DESTFILE:-/build_output/filter.wasm}
 
 # subpath within bazel-bin where bazel puts the file
 BAZEL_OUTPUT=${BAZEL_OUTPUT:-filter.wasm}

@@ -1,7 +1,9 @@
 package store
 
 import (
+	"bytes"
 	"context"
+	"io/ioutil"
 
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/solo-io/wasme/pkg/config"
@@ -14,16 +16,16 @@ type Image interface {
 
 // an image stored on disk
 type storedImage struct {
-	ref        string
-	descriptor ocispec.Descriptor
-	filter     func() (model.Filter, error)
-	config     *config.Config
+	ref         string
+	descriptor  ocispec.Descriptor
+	filterBytes []byte
+	config      *config.Config
 }
 
-func NewStorableImage(ref string, descriptor ocispec.Descriptor, filter func() (model.Filter, error), config *config.Config) *storedImage {
+func NewStorableImage(ref string, descriptor ocispec.Descriptor, filterBytes []byte, config *config.Config) *storedImage {
 	ref = model.FullRef(ref)
 
-	return &storedImage{ref: ref, descriptor: descriptor, filter: filter, config: config}
+	return &storedImage{ref: ref, descriptor: descriptor, filterBytes: filterBytes, config: config}
 }
 
 func (i *storedImage) Ref() string {
@@ -35,7 +37,8 @@ func (i *storedImage) Descriptor() (ocispec.Descriptor, error) {
 }
 
 func (i *storedImage) FetchFilter(ctx context.Context) (model.Filter, error) {
-	return i.filter()
+	filter := model.Filter(ioutil.NopCloser(bytes.NewBuffer(i.filterBytes)))
+	return filter, nil
 }
 
 func (i *storedImage) FetchConfig(ctx context.Context) (*config.Config, error) {

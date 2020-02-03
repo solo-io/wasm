@@ -136,14 +136,9 @@ func (w imageReadWriter) readConfig() (*config.Config, error) {
 	return cfg, nil
 }
 
-func (w imageReadWriter) readFilter() (model.Filter, error) {
+func (w imageReadWriter) readFilter() ([]byte, error) {
 	filterFile := filepath.Join(w.dir, filterFilename)
-
-	file, err := os.Open(filterFile)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
+	return ioutil.ReadFile(filterFile)
 }
 
 // will skip loading the filter
@@ -160,6 +155,10 @@ func (w imageReadWriter) readImage() (*storedImage, error) {
 	if err != nil {
 		return nil, err
 	}
+	filterBytes, err := w.readFilter()
+	if err != nil {
+		return nil, err
+	}
 
-	return NewStorableImage(ref, desc, w.readFilter, cfg), nil
+	return NewStorableImage(ref, desc, filterBytes, cfg), nil
 }

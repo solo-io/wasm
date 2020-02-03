@@ -45,7 +45,11 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 		}
 	}
 
-	token, _ := store.GetToken()
+	token, err := store.GetToken()
+	if err != nil {
+		// TODO: log err for pushes
+		//logrus.Warnf("Warning: No token found. Make sure to run `wasme login`: %v", err)
+	}
 
 	credentials := func(hostName string) (string, string, error) {
 

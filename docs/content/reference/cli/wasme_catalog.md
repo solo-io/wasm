@@ -20,10 +20,12 @@ interact with catalog
 
 ```
   -c, --config stringArray   auth config path
+  -d, --debug                debug mode
       --insecure             allow connections to SSL registry without certs
   -p, --password string      registry password
       --plain-http           use plain http and not https
   -u, --username string      registry username
+  -v, --verbose              verbose output
 ```
 
 ### SEE ALSO

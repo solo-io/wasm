@@ -32,6 +32,7 @@ wasme deploy envoy <image> --id=<unique id> [--config=<inline string>] [--root-i
 
 ```
       --config string     optional config that will be passed to the filter. accepts an inline string.
+  -d, --debug             debug mode
       --dry-run           print output any configuration changes to stdout rather than applying them to the target file / kubernetes cluster
       --id string         unique id for naming the deployed filter. this is used for logging as well as removing the filter. when running wasme deploy istio, this name must be a valid Kubernetes resource name.
       --insecure          allow connections to SSL registry without certs
@@ -39,6 +40,7 @@ wasme deploy envoy <image> --id=<unique id> [--config=<inline string>] [--root-i
       --plain-http        use plain http and not https
       --root-id string    optional root ID used to bind the filter at the Envoy level. this value is normally read from the filter image directly.
   -u, --username string   registry username
+  -v, --verbose           verbose output
 ```
 
 ### SEE ALSO

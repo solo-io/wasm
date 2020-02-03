@@ -34,7 +34,7 @@ func ResolveHubEndpoint(path string) *url.URL {
 	return HubEndpoint().ResolveReference(&url.URL{Path: path})
 }
 
-func Login(ctx context.Context) error {
+func Login(ctx context.Context, skipBrowser bool) error {
 	// start http server on a random port
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
@@ -51,10 +51,14 @@ func Login(ctx context.Context) error {
 	fmt.Println("Using port:", port)
 	urlString := authUrl.String()
 
-	if err := openBrowser(urlString); err != nil {
-		fmt.Println("Cannot launch browser. Please open this url in your browser: ", urlString)
+	if !skipBrowser {
+		if err := openBrowser(urlString); err != nil {
+			fmt.Println("Cannot launch browser. Please open this url in your browser: ", urlString)
+		} else {
+			fmt.Println("Opening browser for login. If the browser did not open for you, please go to: ", urlString)
+		}
 	} else {
-		fmt.Println("Opening browser for login. If the browser did not open for you, please go to: ", urlString)
+		fmt.Println("Open this url in your browser: ", urlString)
 	}
 
 	handler, accessTokenChan := NewHandler()

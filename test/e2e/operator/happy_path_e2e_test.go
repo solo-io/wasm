@@ -1,12 +1,16 @@
-package main_test
+package operator_test
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/solo-io/autopilot/codegen/util"
+
+	"github.com/solo-io/wasme/test"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/autopilot/codegen/model"
@@ -17,38 +21,13 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/autopilot/cli/pkg/utils"
-	"github.com/solo-io/autopilot/codegen/util"
 )
 
-func runMake(target string) error {
-	cmd := exec.Command("make", "-C", filepath.Dir(util.GoModPath()), target)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
-	return cmd.Run()
-}
-
-func applyFile(file, ns string) error {
-	return withManifest(file, ns, utils.KubectlApply)
-}
-
-func deleteFile(file, ns string) error {
-	return withManifest(file, ns, utils.KubectlDelete)
-}
-
-func withManifest(file, ns string, fn func(manifest []byte, extraArgs ...string) error) error {
-	path := filepath.Join(util.MustGetThisDir(), file)
-	b, err := ioutil.ReadFile(path)
-	if err != nil {
-		return err
+func generateCrdExample(filename, image string) error {
+	if image == "" {
+		image = "webassemblyhub.io/ilackarms/istio-example:1.4.2"
 	}
-	extraArgs := []string{}
-	if ns != "" {
-		extraArgs = []string{"-n", ns}
-	}
-	return fn(b, extraArgs...)
-}
 
-func generateCrdExample() error {
 	filterDeployment := &v1.FilterDeployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "FilterDeployment",
@@ -60,7 +39,7 @@ func generateCrdExample() error {
 		},
 		Spec: v1.FilterDeploymentSpec{
 			Filter: &v1.FilterSpec{
-				Image:  "webassemblyhub.io/ilackarms/istio-example:1.4.2",
+				Image:  image,
 				Config: `{"name":"hello","value":"world"}`,
 			},
 			Deployment: &v1.DeploymentSpec{
@@ -84,8 +63,7 @@ func generateCrdExample() error {
 		return err
 	}
 
-	filename := filepath.Join(util.MustGetThisDir(), "test_filter.yaml")
-	if err := ioutil.WriteFile(filename, []byte(filterDeploymentFile[0].Content), 0644); err != nil {
+	if err := ioutil.WriteFile(filepath.Join(filepath.Dir(util.GoModPath()), filename), []byte(filterDeploymentFile[0].Content), 0644); err != nil {
 		return err
 	}
 
@@ -95,10 +73,7 @@ func generateCrdExample() error {
 var ns = "bookinfo"
 
 var _ = BeforeSuite(func() {
-	err := runMake("manifest-gen")
-	Expect(err).NotTo(HaveOccurred())
-
-	err = generateCrdExample()
+	err := test.RunMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
 	// ensure no collision between tests
@@ -110,43 +85,54 @@ var _ = BeforeSuite(func() {
 	err = utils.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = applyFile("install/wasme/crds/wasme.io_v1_crds.yaml", "")
+	err = test.ApplyFile("operator/install/wasme/crds/wasme.io_v1_crds.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = applyFile("install/wasme-default.yaml", "")
+	err = test.ApplyFile("operator/install/wasme-default.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
-	err = applyFile("bookinfo.yaml", ns)
+	err = test.ApplyFile("test/e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = waitDeploymentReady("productpage", "bookinfo", time.Minute*2)
 	Expect(err).NotTo(HaveOccurred())
 })
+
 var _ = AfterSuite(func() {
-	deleteFile("bookinfo.yaml", ns)
-	deleteFile("install/wasme-default.yaml", "")
+	test.DeleteFile("test/e2e/operator/bookinfo.yaml", ns)
+	test.DeleteFile("operator/install/wasme-default.yaml", "")
 	utils.Kubectl(nil, "delete", "ns", ns)
 })
 
+// Test Order matters here.
+// Do not randomize ginkgo specs when running, if the build & push test is enabled
 var _ = Describe("AutopilotGenerate", func() {
 	It("runs the wasme operator", func() {
+		filterFile := "test/e2e/operator/test_filter.yaml"
 
-		err := applyFile("test_filter.yaml", ns)
+		err := generateCrdExample(filterFile, os.Getenv("FILTER_IMAGE_TAG"))
+		Expect(err).NotTo(HaveOccurred())
+
+		err = test.ApplyFile(filterFile, ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		testRequest := func() (string, error) {
-			return utils.KubectlOut(nil,
+			out, err := utils.KubectlOut(nil,
 				"exec",
 				"-n", ns,
 				"deploy/productpage-v1",
 				"-c", "istio-proxy", "--",
 				"curl", "-v", "http://details."+ns+":9080/details/123")
+
+			log.Printf("output: %v", out)
+			log.Printf("err: %v", err)
+			return out, err
 		}
 
 		// expect header in response
 		Eventually(testRequest, time.Minute*5).Should(ContainSubstring("hello: world"))
 
-		err = deleteFile("test_filter.yaml", ns)
+		err = test.DeleteFile(filterFile, ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
