@@ -19,6 +19,7 @@ type Store interface {
 	Add(ctx context.Context, image Image) error
 	Get(ref string) (*storedImage, error)
 	Delete(ref string) error
+	Dir(ref string) string
 }
 
 type store struct {

@@ -141,7 +141,6 @@ func getLocalImages(storageDir string) ([]image, error) {
 			tags:      []string{tag},
 			sizeBytes: descriptor.Size,
 		})
-
 	}
 
 	sort.Slice(images, func(i, j int) bool {

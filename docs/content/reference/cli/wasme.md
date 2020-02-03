@@ -43,5 +43,6 @@ If --language, --platform, or --platform-version are not provided, the CLI will 
 * [wasme login](../wasme_login)	 - login so you can push images to webassemblyhub.io and submit them to the curated catalog
 * [wasme pull](../wasme_pull)	 - Pull wasm filters from remote registry
 * [wasme push](../wasme_push)	 - Push a wasm filter to remote registry
+* [wasme tag](../wasme_tag)	 - Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
 * [wasme undeploy](../wasme_undeploy)	 - Remove a deployed Envoy WASM Filter from the data plane (Envoy proxies).
 

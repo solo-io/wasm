@@ -126,7 +126,7 @@ var (
 // match a real version to an X version, e.g.
 // 1.4.2 == 1.4.x
 func matchVersion(realVersion, xVersion string) (bool, error) {
-	rxp, err := regexp.Compile(strings.ReplaceAll(xVersion, "x", "*"))
+	rxp, err := regexp.Compile(strings.ReplaceAll(xVersion, "x", `\d*`))
 	if err != nil {
 		return false, err
 	}
