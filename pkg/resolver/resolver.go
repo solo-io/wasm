@@ -2,13 +2,8 @@ package resolver
 
 import (
 	"crypto/tls"
-	"net/http"
-	"strings"
-
 	auth "github.com/deislabs/oras/pkg/auth/docker"
-
-	"github.com/solo-io/wasme/pkg/auth/store"
-	"github.com/solo-io/wasme/pkg/consts"
+	"net/http"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
@@ -39,29 +34,13 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 		return docker.NewResolver(opts), nil
 	}
 	var dockerCreds func(hostname string) (string, string, error)
-	if cli, err := auth.NewClient(configs...); err != nil {
+	if cli, err := auth.NewClient(configs...); err == nil {
 		if authcli, ok := cli.(*auth.Client); ok {
 			dockerCreds = authcli.Credential
 		}
 	}
 
-	token, err := store.GetToken()
-	if err != nil {
-		// TODO: log err for pushes
-		//logrus.Warnf("Warning: No token found. Make sure to run `wasme login`: %v", err)
-	}
-
 	credentials := func(hostName string) (string, string, error) {
-
-		if token != "" {
-			if hostName == consts.HubDomain {
-				return basicAuthToTokenUser, token, nil
-			}
-			if strings.HasPrefix(hostName, "localhost") {
-				return basicAuthToTokenUser, token, nil
-			}
-		}
-
 		if dockerCreds != nil {
 			return dockerCreds(hostName)
 		}

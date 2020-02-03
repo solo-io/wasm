@@ -24,6 +24,7 @@ steps:
       - 'IMAGE_REGISTRY=gcr.io/$PROJECT_ID'
       - 'FILTER_IMAGE_TAG=webassemblyhub.io/soloio-bot/test-image:$BUILD_ID'
       - 'IMAGE_PUSH=1'
+      - 'TMPDIR=/workspace' # needed to enable wasme build on GCB
     args:
     - '-r'
     - '-failFast'

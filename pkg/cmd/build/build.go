@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
@@ -36,7 +37,7 @@ type buildOptions struct {
 	bazelTarget  string
 }
 
-func BuildCmd() *cobra.Command {
+func BuildCmd(ctx *context.Context) *cobra.Command {
 	var opts buildOptions
 	cmd := &cobra.Command{
 		Use:   "build SOURCE_DIRECTORY [-b <bazel target>] [-t <name:tag>]",
@@ -49,7 +50,7 @@ func BuildCmd() *cobra.Command {
 			} else {
 				opts.sourceDir = args[0]
 			}
-			return runBuild(opts)
+			return runBuild(*ctx, opts)
 		},
 	}
 
@@ -64,7 +65,7 @@ func BuildCmd() *cobra.Command {
 	return cmd
 }
 
-func runBuild(opts buildOptions) error {
+func runBuild(ctx context.Context, opts buildOptions) error {
 	configFile := opts.configFile
 	if configFile == "" {
 		configFile = filepath.Join(opts.sourceDir, "filter-config.json")
@@ -89,11 +90,12 @@ func runBuild(opts buildOptions) error {
 			return err
 		}
 
-		pwd, err := os.Getwd()
-		if err != nil {
-			return err
+		// workaround for darwin, cannot mount /var to docker
+		var tmpDirName string
+		if runtime.GOOS == "darwin" {
+			tmpDirName = "/tmp"
 		}
-		tmpDir, err := ioutil.TempDir(pwd, "wasme")
+		tmpDir, err := ioutil.TempDir(tmpDirName, "wasme")
 		if err != nil {
 			return err
 		}
@@ -142,7 +144,7 @@ func runBuild(opts buildOptions) error {
 
 	image := store.NewStorableImage(opts.tag, descriptor, filterBytes, cfg)
 
-	if err := store.NewStore(opts.storageDir).Add(context.Background(), image); err != nil {
+	if err := store.NewStore(opts.storageDir).Add(ctx, image); err != nil {
 		return err
 	}
 
