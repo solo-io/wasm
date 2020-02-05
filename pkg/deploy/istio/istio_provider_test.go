@@ -4,6 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/golang/mock/gomock"
+	mock_ezkube "github.com/solo-io/autopilot/pkg/ezkube/mocks"
+
+	"github.com/solo-io/wasme/pkg/resolver"
+
 	"github.com/solo-io/wasme/pkg/config"
 	"github.com/solo-io/wasme/pkg/model"
 	"github.com/solo-io/wasme/pkg/pull"
@@ -74,7 +79,7 @@ var _ = Describe("IstioProvider", func() {
 		workloadName = "work"
 
 		puller = &mockPuller{
-			image: mockImage{digest: "sha256:e454cab754cf9234e8b41d7c5e30f53a4c125d7d9443cb3ef2b2eb1c4bd1ec14"},
+			image: mockImage{ref: filter.Image, digest: "sha256:e454cab754cf9234e8b41d7c5e30f53a4c125d7d9443cb3ef2b2eb1c4bd1ec14"},
 		}
 		cancel = func() {}
 	)
@@ -137,6 +142,7 @@ var _ = Describe("IstioProvider", func() {
 				// test callback is called
 				callbackCalled = true
 			},
+			"",
 		)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -227,6 +233,43 @@ var _ = Describe("IstioProvider", func() {
 		Expect(ef2.Spec.WorkloadSelector.Labels).To(Equal(dep2.Spec.Template.Labels))
 		Expect(ef2.Spec.ConfigPatches).To(HaveLen(1))
 	})
+
+	// note: this test assumes istio 1.4.2 installed to cluster
+	It("returns an error when the image abi version does not support the istio version", func() {
+		workload := Workload{
+			Name:      "", //all workloads
+			Namespace: ns,
+			Kind:      WorkloadTypeDeployment,
+		}
+		resolver, _ := resolver.NewResolver("", "", false, false)
+		puller := pull.NewPuller(resolver)
+		client := mock_ezkube.NewMockEnsurer(gomock.NewController(GinkgoT()))
+
+		p := &Provider{
+			Ctx:        context.TODO(),
+			KubeClient: kube,
+			Client:     client,
+			Puller:     puller,
+			Workload:   workload,
+			Cache:      cache,
+		}
+		err := p.ApplyFilter(&wasmev1.FilterSpec{
+			Id:     "incompatible-filter",
+			Image:  "webassemblyhub.io/ilackarms/gloo-hello:1.3.3",
+			Config: "{}",
+		})
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("image webassemblyhub.io/ilackarms/gloo-hello:1.3.3 not supported by istio version 1.4.2"))
+
+		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
+		err = p.ApplyFilter(&wasmev1.FilterSpec{
+			Id:     "compatible-filter",
+			Image:  "webassemblyhub.io/ilackarms/istio-hello:1.4.2",
+			Config: "{}",
+		})
+		Expect(err).NotTo(HaveOccurred())
+	})
 })
 
 type mockPuller struct {
@@ -238,11 +281,12 @@ func (p *mockPuller) Pull(ctx context.Context, ref string) (pull.Image, error) {
 }
 
 type mockImage struct {
+	ref string
 	digest string
 }
 
 func (m *mockImage) Ref() string {
-	panic("implement me")
+	return m.ref
 }
 
 func (m *mockImage) Descriptor() (v1.Descriptor, error) {
@@ -256,7 +300,7 @@ func (m *mockImage) FetchFilter(ctx context.Context) (model.Filter, error) {
 }
 
 func (m *mockImage) FetchConfig(ctx context.Context) (*config.Config, error) {
-	panic("implement me")
+	return &config.Config{}, nil
 }
 
 func pointerToInt64(value int64) *int64 {

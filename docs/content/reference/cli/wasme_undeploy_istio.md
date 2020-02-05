@@ -22,10 +22,11 @@ wasme undeploy istio --id=<unique name> --namespace=<deployment namespace> [--na
 ### Options
 
 ```
-  -h, --help                   help for istio
-      --name string            name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace
-  -n, --namespace string       namespace of the workload(s) to inject the filter. (default "default")
-  -t, --workload-type string   type of workload into which the filter should be injected. possible values are deployment or daemonset (default "deployment")
+  -h, --help                     help for istio
+      --istio-namespace string   the namespace where the Istio control plane is installed (default "istio-system")
+      --name string              name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace
+  -n, --namespace string         namespace of the workload(s) to inject the filter. (default "default")
+  -t, --workload-type string     type of workload into which the filter should be injected. possible values are deployment or daemonset (default "deployment")
 ```
 
 ### Options inherited from parent commands

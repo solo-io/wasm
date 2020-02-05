@@ -82,6 +82,10 @@ message IstioDeploymentSpec {
     // the workload must live in the same namespace as the FilterDeployment
     // if empty, the filter will be deployed to all workloads in the namespace
     string name = 2;
+
+    // the namespace where the Istio control plane is installed.
+    // defaults to `istio-system`.
+    string istioNamespace = 3;
 }
 
 // the current status of the deployment

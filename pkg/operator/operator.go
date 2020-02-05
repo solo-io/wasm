@@ -180,6 +180,7 @@ func (f *filterDeploymentHandler) makeProvider(obj *v1.FilterDeployment, puller 
 			f.cache,
 			obj,
 			onWorkload,
+			dep.Istio.IstioNamespace,
 		)
 		if err != nil {
 			return nil, err
