@@ -39,8 +39,8 @@ require (
 	gopkg.in/AlecAivazis/survey.v1 v1.8.7
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
-	k8s.io/api v0.0.0
-	k8s.io/apimachinery v0.0.0
+	k8s.io/api v0.17.1
+	k8s.io/apimachinery v0.17.1
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/code-generator v0.17.1
 	sigs.k8s.io/controller-runtime v0.4.0

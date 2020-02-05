@@ -5,13 +5,10 @@ package v1
 
 import (
 	fmt "fmt"
-
-	proto "github.com/gogo/protobuf/proto"
-
 	math "math"
 
 	_ "github.com/gogo/protobuf/gogoproto"
-
+	proto "github.com/gogo/protobuf/proto"
 	_ "github.com/gogo/protobuf/types"
 )
 

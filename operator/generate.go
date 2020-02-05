@@ -16,6 +16,78 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
+func main() {
+	pushImage := os.Getenv("IMAGE_PUSH") == "1"
+
+	cmd := &codegen.Command{
+		AppName: "wasme",
+		Groups: []model.Group{
+			{
+				ProtoDir: "operator/api",
+				GroupVersion: schema.GroupVersion{
+					Group:   "wasme.io",
+					Version: "v1",
+				},
+				Module: "github.com/solo-io/wasme",
+				Resources: []model.Resource{
+					{
+						Kind: "FilterDeployment",
+						Spec: model.Field{
+							Type: "FilterDeploymentSpec",
+						},
+						Status: &model.Field{
+							Type: "FilterDeploymentStatus",
+						},
+					},
+				},
+				RenderProtos:     true,
+				RenderManifests:  true,
+				RenderTypes:      true,
+				RenderClients:    true,
+				RenderController: true,
+				ApiRoot:          "pkg/operator/api",
+			},
+		},
+
+		Chart: &model.Chart{
+			Operators: []model.Operator{
+				makeOperator(),
+				makeCache(),
+			},
+			Values: nil,
+			Data: model.Data{
+				ApiVersion:  "v1",
+				Description: "",
+				Name:        "Wasme Operator",
+				Version:     "v0.0.1",
+				Home:        "https://docs.solo.io/web-assembly-hub/latest",
+				Icon:        "https://raw.githubusercontent.com/solo-io/wasme/master/docs/content/img/logo.png",
+				Sources: []string{
+					"https://github.com/solo-io/wasme",
+				},
+			},
+		},
+
+		ManifestRoot: "operator/install",
+
+		Builds: []model.Build{
+			{
+				MainFile: "cmd/main.go",
+				Push:     pushImage,
+				Image:    makeImage(),
+			},
+		},
+		BuildRoot: "operator/build",
+	}
+	log.Printf("generating operator with opts: %v", cmd)
+
+	if err := cmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("operator generation successful")
+}
+
 var (
 	defaultRegistry = "quay.io/solo-io"
 )
@@ -156,75 +228,4 @@ func makeCache() model.Operator {
 			},
 		},
 	}
-}
-
-func main() {
-	pushImage := os.Getenv("IMAGE_PUSH") == "1"
-
-	cmd := &codegen.Command{
-		AppName: "wasme",
-		Groups: []model.Group{
-			{
-				ProtoDir: "operator/api",
-				GroupVersion: schema.GroupVersion{
-					Group:   "wasme.io",
-					Version: "v1",
-				},
-				Module: "github.com/solo-io/wasme",
-				Resources: []model.Resource{
-					{
-						Kind: "FilterDeployment",
-						Spec: model.Field{
-							Type: "FilterDeploymentSpec",
-						},
-						Status: &model.Field{
-							Type: "FilterDeploymentStatus",
-						},
-					},
-				},
-				RenderProtos:     true,
-				RenderManifests:  true,
-				RenderTypes:      true,
-				RenderClients:    false,
-				RenderController: true,
-				ApiRoot:          "pkg/operator/api",
-			},
-		},
-
-		Chart: &model.Chart{
-			Operators: []model.Operator{
-				makeOperator(),
-				makeCache(),
-			},
-			Values: nil,
-			Data: model.Data{
-				ApiVersion:  "v1",
-				Description: "",
-				Name:        "Wasme Operator",
-				Version:     "v0.0.1",
-				Home:        "https://docs.solo.io/web-assembly-hub/latest",
-				Icon:        "https://raw.githubusercontent.com/solo-io/wasme/master/docs/content/img/logo.png",
-				Sources: []string{
-					"https://github.com/solo-io/wasme",
-				},
-			},
-		},
-
-		ManifestRoot: "operator/install",
-
-		Builds: []model.Build{
-			{
-				MainFile: "cmd/main.go",
-				Push:     pushImage,
-				Image:    makeImage(),
-			},
-		},
-		BuildRoot: "operator/build",
-	}
-
-	if err := cmd.Execute(); err != nil {
-		log.Fatal(err)
-	}
-
-	log.Printf("executed generation with opts: %v", cmd)
 }

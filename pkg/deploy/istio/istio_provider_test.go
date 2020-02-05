@@ -281,7 +281,7 @@ func (p *mockPuller) Pull(ctx context.Context, ref string) (pull.Image, error) {
 }
 
 type mockImage struct {
-	ref string
+	ref    string
 	digest string
 }
 
