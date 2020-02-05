@@ -132,7 +132,7 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 		}
 	} else {
 		logrus.WithFields(logrus.Fields{
-			"image":   image.Ref(),
+			"image": image.Ref(),
 		}).Warnf("no ABI Version found for image, skipping ABI version check")
 	}
 

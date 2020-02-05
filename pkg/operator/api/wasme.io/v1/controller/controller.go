@@ -55,11 +55,15 @@ func (f *FilterDeploymentEventHandlerFuncs) Generic(obj *FilterDeployment) error
 	return f.OnGeneric(obj)
 }
 
-type FilterDeploymentController struct {
+type FilterDeploymentController interface {
+	AddEventHandler(ctx context.Context, h FilterDeploymentEventHandler, predicates ...predicate.Predicate) error
+}
+
+type FilterDeploymentControllerImpl struct {
 	watcher events.EventWatcher
 }
 
-func NewFilterDeploymentController(name string, mgr manager.Manager) (*FilterDeploymentController, error) {
+func NewFilterDeploymentController(name string, mgr manager.Manager) (FilterDeploymentController, error) {
 	if err := AddToScheme(mgr.GetScheme()); err != nil {
 		return nil, err
 	}
@@ -68,12 +72,12 @@ func NewFilterDeploymentController(name string, mgr manager.Manager) (*FilterDep
 	if err != nil {
 		return nil, err
 	}
-	return &FilterDeploymentController{
+	return &FilterDeploymentControllerImpl{
 		watcher: w,
 	}, nil
 }
 
-func (c *FilterDeploymentController) AddEventHandler(ctx context.Context, h FilterDeploymentEventHandler, predicates ...predicate.Predicate) error {
+func (c *FilterDeploymentControllerImpl) AddEventHandler(ctx context.Context, h FilterDeploymentEventHandler, predicates ...predicate.Predicate) error {
 	handler := genericFilterDeploymentHandler{handler: h}
 	if err := c.watcher.Watch(ctx, &FilterDeployment{}, handler, predicates...); err != nil {
 		return err
@@ -89,7 +93,7 @@ type genericFilterDeploymentHandler struct {
 func (h genericFilterDeploymentHandler) Create(object runtime.Object) error {
 	obj, ok := object.(*FilterDeployment)
 	if !ok {
-		return errors.Errorf("internal error: FilterDeployment handler received event for %T")
+		return errors.Errorf("internal error: FilterDeployment handler received event for %T", object)
 	}
 	return h.handler.Create(obj)
 }
@@ -97,7 +101,7 @@ func (h genericFilterDeploymentHandler) Create(object runtime.Object) error {
 func (h genericFilterDeploymentHandler) Delete(object runtime.Object) error {
 	obj, ok := object.(*FilterDeployment)
 	if !ok {
-		return errors.Errorf("internal error: FilterDeployment handler received event for %T")
+		return errors.Errorf("internal error: FilterDeployment handler received event for %T", object)
 	}
 	return h.handler.Delete(obj)
 }
@@ -105,11 +109,11 @@ func (h genericFilterDeploymentHandler) Delete(object runtime.Object) error {
 func (h genericFilterDeploymentHandler) Update(old, new runtime.Object) error {
 	objOld, ok := old.(*FilterDeployment)
 	if !ok {
-		return errors.Errorf("internal error: FilterDeployment handler received event for %T")
+		return errors.Errorf("internal error: FilterDeployment handler received event for %T", old)
 	}
 	objNew, ok := new.(*FilterDeployment)
 	if !ok {
-		return errors.Errorf("internal error: FilterDeployment handler received event for %T")
+		return errors.Errorf("internal error: FilterDeployment handler received event for %T", new)
 	}
 	return h.handler.Update(objOld, objNew)
 }
@@ -117,7 +121,7 @@ func (h genericFilterDeploymentHandler) Update(old, new runtime.Object) error {
 func (h genericFilterDeploymentHandler) Generic(object runtime.Object) error {
 	obj, ok := object.(*FilterDeployment)
 	if !ok {
-		return errors.Errorf("internal error: FilterDeployment handler received event for %T")
+		return errors.Errorf("internal error: FilterDeployment handler received event for %T", object)
 	}
 	return h.handler.Generic(obj)
 }

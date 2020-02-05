@@ -1325,6 +1325,8 @@ istio.io/gogo-genproto v0.0.0-20191009201739-17d570f95998 h1:uvW88tRzT6wjR+SdqPo
 istio.io/gogo-genproto v0.0.0-20191009201739-17d570f95998/go.mod h1:OzpAts7jljZceG4Vqi5/zXy/pOg1b209T3jb7Nv5wIs=
 istio.io/tools v0.0.0-20200117200958-8b2f24232142 h1:srbSLe6Q6icR6ociYksE7fPaM6nEsYanZNYcqK73eH4=
 istio.io/tools v0.0.0-20200117200958-8b2f24232142/go.mod h1:6u5K87o8AZvfCdPhr0M60yuZR5/4pPCOCiokv7P+I+0=
+istio.io/tools v0.0.0-20200128155652-36eceb1fcb9d/go.mod h1:6u5K87o8AZvfCdPhr0M60yuZR5/4pPCOCiokv7P+I+0=
+istio.io/tools v0.0.0-20200203233146-62bf0e246959/go.mod h1:6u5K87o8AZvfCdPhr0M60yuZR5/4pPCOCiokv7P+I+0=
 k8s.io/api v0.0.0-20191004120104-195af9ec3521 h1:StP5An9aFEWfPckudvHEJc4q/WUDCUVGoZJrE/efGME=
 k8s.io/api v0.0.0-20191004120104-195af9ec3521/go.mod h1:/L5qH+AD540e7Cetbui1tuJeXdmNhO8jM6VkXeDdDhQ=
 k8s.io/apiextensions-apiserver v0.0.0-20191204090712-e0e829f17bab h1:pu/YuiYiCpzZuoM+CCbMRg+6y/duiWp5QgD7MmmhtmQ=
