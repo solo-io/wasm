@@ -48,7 +48,25 @@ Lastly, we'll set up our routing rules to be able to call our `petstore` service
 
 Download and apply the [virtual service manifest](../getting_started/default-virtualservice.yaml)
 ```shell
-kubectl apply -f default-virtualservice.yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: gateway.solo.io/v1
+kind: VirtualService
+metadata:
+  name: default
+  namespace: gloo-system  
+spec:
+  virtualHost:
+    domains:
+    - '*'
+    routes:
+    - matchers:
+      - prefix: /
+      routeAction:
+        single:
+          upstream:
+            name: default-petstore-8080
+            namespace: gloo-system
+EOF
 ```
 
 To get Gloo's external IP, run the following:
@@ -106,10 +124,10 @@ ilackarms/hello:v0.1 3753eeaf 15 Sep 19 23:41 EST 1.0 MB v0.1
 Let's try deploying one of these to Gloo:
 
 ```bash
-wasme deploy gloo webassemblyhub.io/ilackarms/hello:v0.1 --id=myfilter --config '{"name":"hello","value":"World!"}'
+wasme deploy gloo webassemblyhub.io/ilackarms/gloo-hello:1.3.4 --id=myfilter --config '{"value":"something"}'
 ```
 
-This filter adds the header `hello: World!` to responses.
+This filter adds the header `newheader: something` to responses.
 
 The deployment should have added our filter to the Gloo Gateway. Let's check this with `kubectl`:
 
@@ -142,7 +160,7 @@ curl -v $URL/api/pets
 < date: Fri, 20 Dec 2019 19:17:13 GMT
 < content-length: 86
 < x-envoy-upstream-service-time: 0
-< hello: World!
+< newheader: something
 < location: envoy-wasm
 < server: envoy
 <
