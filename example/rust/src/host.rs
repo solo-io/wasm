@@ -11,15 +11,15 @@ extern "C" {
     // header values
     pub fn proxy_add_header_map_value(
         hm_type: HeaderMapType,
-        key_ptr: c_char,
+        key_ptr: *const c_char,
         key_size: usize,
-        value_ptr: c_char,
-        value_size: *mut usize,
+        value_ptr: *const c_char,
+        value_size: usize,
     ) -> WasmResult;
 
     pub fn proxy_get_header_map_value(
         hm_type: HeaderMapType,
-        key_ptr: c_char,
+        key_ptr: *const c_char,
         key_size: usize,
         value_ptr: *const c_char,
         value_size: *mut usize,
@@ -33,13 +33,13 @@ extern "C" {
 
     pub fn proxy_get_header_map_pairs(
         hm_type: HeaderMapType,
-        ptr: c_char,
+        ptr: *const c_char,
         size: usize,
     ) -> WasmResult;
 
     pub fn proxy_replace_header_map_value(
         hm_type: HeaderMapType,
-        key_ptr: c_char,
+        key_ptr: *const c_char,
         size: usize,
         value_ptr: *const c_char,
         value_size: usize,
@@ -47,7 +47,7 @@ extern "C" {
 
     pub fn proxy_remove_header_map_value(
         hm_type: HeaderMapType,
-        key_ptr: c_char,
+        key_ptr: *const c_char,
         key_size: usize,
     ) -> WasmResult;
 
