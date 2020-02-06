@@ -46,7 +46,7 @@ Gloo will be installed to the `gloo-system` namespace.
 
 Lastly, we'll set up our routing rules to be able to call our `petstore` service. Let's add a route to the routing table:
 
-Download and apply the [virtual service manifest](../getting_started/default-virtualservice.yaml)
+Apply the [virtual service manifest](https://docs.solo.io/gloo/latest/gloo_routing/virtual_services/)
 ```shell
 cat <<EOF | kubectl apply -f -
 apiVersion: gateway.solo.io/v1
