@@ -1,7 +1,6 @@
 package list
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,7 +15,6 @@ import (
 
 	"github.com/solo-io/wasme/pkg/util"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/wasme/pkg/consts"
 	"github.com/solo-io/wasme/pkg/store"
@@ -113,8 +111,9 @@ func byteCountSI(b int64) string {
 }
 
 func getLocalImages(storageDir string) ([]image, error) {
+	imageStore := store.NewStore(storageDir)
 
-	storedImages, err := store.NewStore(storageDir).List()
+	storedImages, err := imageStore.List()
 	if err != nil {
 		return nil, err
 	}
@@ -128,17 +127,9 @@ func getLocalImages(storageDir string) ([]image, error) {
 			return nil, err
 		}
 
-		filter, err := img.FetchFilter(context.TODO())
-		if err != nil {
-			return nil, err
-		}
+		dir := imageStore.Dir(img.Ref())
 
-		filterFile, ok := filter.(*os.File)
-		if !ok {
-			return nil, errors.Errorf("internal error: expected Filter type *os.File, got %T", filter)
-		}
-
-		filterFileInfo, err := filterFile.Stat()
+		imageInfo, err := os.Stat(dir)
 		if err != nil {
 			return nil, err
 		}
@@ -146,7 +137,7 @@ func getLocalImages(storageDir string) ([]image, error) {
 		images = append(images, image{
 			name:      name,
 			sum:       descriptor.Digest.String(),
-			updated:   filterFileInfo.ModTime(),
+			updated:   imageInfo.ModTime(),
 			tags:      []string{tag},
 			sizeBytes: descriptor.Size,
 		})

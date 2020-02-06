@@ -63,26 +63,32 @@ func (s *store) List() ([]Image, error) {
 }
 
 func (s *store) Add(ctx context.Context, image Image) error {
-	dir := dirname(image.Ref())
+	dir := Dirname(image.Ref())
 	return s.readWriter(dir).writeImage(ctx, image)
 }
 
 func (s *store) Get(ref string) (*storedImage, error) {
 	ref = model.FullRef(ref)
-	dir := dirname(ref)
+	dir := Dirname(ref)
 	return s.readWriter(dir).readImage()
 }
 
 func (s *store) Delete(ref string) error {
 	ref = model.FullRef(ref)
-	dir := dirname(ref)
+	dir := Dirname(ref)
 	return os.RemoveAll(dir)
+}
+
+func (s *store) Dir(ref string) string {
+	ref = model.FullRef(ref)
+	dir := Dirname(ref)
+	return filepath.Join(s.storageDir, dir)
 }
 
 func (s *store) readWriter(dir string) imageReadWriter {
 	return imageReadWriter{dir: filepath.Join(s.storageDir, dir)}
 }
 
-func dirname(ref string) string {
+func Dirname(ref string) string {
 	return fmt.Sprintf("%x", md5.Sum([]byte(ref)))
 }
