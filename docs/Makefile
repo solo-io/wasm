@@ -11,7 +11,7 @@
 # remove the "v" prefix
 VERSION ?= $(shell echo $(TAGGED_VERSION) | cut -c 2-)
 
-# Passed by cloudbuild
+# GCLOUD_PROJECT_ID Passed by cloudbuild
 GCLOUD_PROJECT_ID := $(PROJECT_ID)
 
 GCR_REPO_PREFIX ?= gcr.io/$(GCLOUD_PROJECT_ID)
