@@ -111,9 +111,11 @@ func removeWasmConfig(filterID string, gateway *gatewayv1.Gateway) error {
 	}
 
 	// remove the filter
-	for i, filter := range opts.GetWasm().GetFilters() {
+	filters :=  opts.GetWasm().GetFilters()
+	for i, filter := range filters {
 		if filter.GetName() == filterID {
 			opts.Wasm.Filters = append(opts.Wasm.Filters[:i], opts.Wasm.Filters[i+1:]...)
+			break
 		}
 	}
 
