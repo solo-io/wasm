@@ -22,7 +22,7 @@ LDFLAGS := "-X github.com/solo-io/$(PROJECT)/pkg/version.Version=$(VERSION)"
 GCFLAGS := all="-N -l"
 
 # Passed by cloudbuild
-GCLOUD_PROJECT_ID := $(PROJECT_ID)
+GCLOUD_PROJECT_ID := $(GCLOUD_PROJECT_ID)
 BUILD_ID := $(BUILD_ID)
 
 #----------------------------------------------------------------------------------
