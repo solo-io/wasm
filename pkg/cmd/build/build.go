@@ -54,7 +54,7 @@ func BuildCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&opts.tag, "tag", "t", "", "The image ref with which to tag this image. Specified in the format <name:tag>. Required")
-	cmd.Flags().StringVarP(&opts.configFile, "config", "c", "", "The path to the filter configuration file for the image. If not specified, defaults to <SOURCE_DIRECTOR>/filter-config.json. This file must be present in order to build the image.")
+	cmd.Flags().StringVarP(&opts.configFile, "config", "c", "", "The path to the filter configuration file for the image. If not specified, defaults to <SOURCE_DIRECTOR>/runtime-config.json. This file must be present in order to build the image.")
 	cmd.Flags().StringVarP(&opts.wasmFile, "wasm-file", "", "", "If specified, wasme will use the provided path to a compiled filter wasm to produce the image. The bazel build will be skipped and the wasm-file will be used instead.")
 	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store")
 	cmd.Flags().StringVarP(&opts.builderImage, "image", "i", "quay.io/solo-io/ee-builder:"+version.Version, "Name of the docker image containing the Bazel run instructions. Modify to run a custom builder image")
@@ -67,7 +67,7 @@ func BuildCmd() *cobra.Command {
 func runBuild(opts buildOptions) error {
 	configFile := opts.configFile
 	if configFile == "" {
-		configFile = filepath.Join(opts.sourceDir, "filter-config.json")
+		configFile = filepath.Join(opts.sourceDir, "runtime-config.json")
 	}
 
 	configBytes, err := ioutil.ReadFile(configFile)
