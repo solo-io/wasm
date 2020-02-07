@@ -25,7 +25,7 @@ import (
 
 func generateCrdExample(filename, image string) error {
 	if image == "" {
-		image = "webassemblyhub.io/ilackarms/istio-example:1.4.2"
+		image = "webassemblyhub.io/ilackarms/istio-test:1.4.2-0"
 	}
 
 	filterDeployment := &v1.FilterDeployment{

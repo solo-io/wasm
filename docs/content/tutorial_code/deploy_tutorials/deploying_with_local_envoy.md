@@ -104,18 +104,18 @@ This is the standard response if all of our setup steps worked correctly. Let's 
 
 ## Pull the filter
 
-Next we'll pull the filter with `wasme`. For this example we'll use the `webassemblyhub.io/ilackarms/hello:v0.1` filter,
+Next we'll pull the filter with `wasme`. For this example we'll use the `webassemblyhub.io/ilackarms/gloo-test:1.3.3-0` filter,
 which appends a `hello: World!` header to response requests. 
 
 To pull the filter:
 
 ```shell
-wasme pull webassemblyhub.io/ilackarms/hello:v0.1 -o hello.wasm
+wasme pull webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 -o hello.wasm
 ```
 
 ```
-webassemblyhub.io/ilackarms/hello:v0.1 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:c6c060cce61aedc5b04c92f62b0b3238897958e448e4c2498f8302dd3af03b55 Size:39 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:d23cdeb8e7096cc5b2b2f7959a9be9412f840bd0a5ff56f364005efd5fc41c66 Size:1042994 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:d64b8187e3f71922dbbb332d4f8136519e0768ae9ecf150b15150b5a02eb4d63 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
-INFO[0000] Pulled filter image webassemblyhub.io/ilackarms/hello:v0.1
+webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:c6c060cce61aedc5b04c92f62b0b3238897958e448e4c2498f8302dd3af03b55 Size:39 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:d23cdeb8e7096cc5b2b2f7959a9be9412f840bd0a5ff56f364005efd5fc41c66 Size:1042994 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:d64b8187e3f71922dbbb332d4f8136519e0768ae9ecf150b15150b5a02eb4d63 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
+INFO[0000] Pulled filter image webassemblyhub.io/ilackarms/gloo-test:1.3.3-0
 ```
 
 We should see the filter `hello.wasm` has been downloaded to our current directory:
@@ -141,7 +141,7 @@ In production environments, it's better to use dynamic configuration when possib
 To add our wasm filter to the config, simply run:
 
 ```bash
-wasme deploy envoy webassemblyhub.io/ilackarms/hello:v0.1 \
+wasme deploy envoy webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 \
   --id=myfilter \
   --in=envoy.yaml \
   --out=envoy.yaml \
