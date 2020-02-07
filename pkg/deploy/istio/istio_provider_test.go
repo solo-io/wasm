@@ -299,8 +299,8 @@ func (m *mockImage) FetchFilter(ctx context.Context) (model.Filter, error) {
 	panic("implement me")
 }
 
-func (m *mockImage) FetchConfig(ctx context.Context) (*config.Config, error) {
-	return &config.Config{}, nil
+func (m *mockImage) FetchConfig(ctx context.Context) (*config.Runtime, error) {
+	return &config.Runtime{}, nil
 }
 
 func pointerToInt64(value int64) *int64 {

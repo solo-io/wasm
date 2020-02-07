@@ -122,7 +122,7 @@ func (w imageReadWriter) readDescriptor() (ocispec.Descriptor, error) {
 	return desc, json.Unmarshal(descBytes, &desc)
 }
 
-func (w imageReadWriter) readConfig() (*config.Config, error) {
+func (w imageReadWriter) readConfig() (*config.Runtime, error) {
 	configFile := filepath.Join(w.dir, configFilename)
 	raw, err := ioutil.ReadFile(configFile)
 	if err != nil {

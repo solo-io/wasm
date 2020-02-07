@@ -99,13 +99,13 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	if err := test.DeleteFile("test/e2e/operator/bookinfo.yaml", ns); err != nil{
+	if err := test.DeleteFile("test/e2e/operator/bookinfo.yaml", ns); err != nil {
 		log.Printf("failed deleting file: %v", err)
 	}
-	if err := test.DeleteFile("operator/install/wasme-default.yaml", ""); err != nil{
+	if err := test.DeleteFile("operator/install/wasme-default.yaml", ""); err != nil {
 		log.Printf("failed deleting file: %v", err)
 	}
-	if err := utils.Kubectl(nil, "delete", "ns", ns); err != nil{
+	if err := utils.Kubectl(nil, "delete", "ns", ns); err != nil {
 		log.Printf("failed deleting ns: %v", err)
 	}
 })

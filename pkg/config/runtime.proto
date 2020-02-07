@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package solo.extendenvoy.config;
+
+option go_package = "config";
+
+// Runtime Configuration for a WASM OCI Image
+message Runtime {
+  // the type of the runtime
+  string type = 1;
+
+  // the version of the ABI of the target runtime
+  // this may be different than the version of the runtime itself
+  // this is used to ensure compatibility with the runtime
+  string abi_version = 2;
+
+  // the config for running the module
+  // currently, wasme only supports Envoy config
+  EnvoyConfig config = 3;
+}
+
+// configuration for an Envoy Filter WASM Image
+message EnvoyConfig {
+  // the set of root IDs exposed by the Envoy Filter
+  repeated string root_ids = 1;
+}

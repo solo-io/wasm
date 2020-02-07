@@ -2,6 +2,7 @@ package pull
 
 import (
 	"context"
+	"io"
 
 	"github.com/solo-io/wasme/pkg/model"
 
@@ -23,7 +24,7 @@ func (i *pulledImage) Ref() string {
 }
 
 func (i *pulledImage) Descriptor() (ocispec.Descriptor, error) {
-	return i.getDescriptor(model.CodeMediaType)
+	return i.getDescriptor(model.ContentMediaType)
 }
 
 func (i *pulledImage) FetchFilter(ctx context.Context) (model.Filter, error) {
@@ -32,26 +33,16 @@ func (i *pulledImage) FetchFilter(ctx context.Context) (model.Filter, error) {
 		return nil, err
 	}
 
-	fetcher, err := i.resolver.Fetcher(ctx, i.ref)
-	if err != nil {
-		return nil, err
-	}
-
-	return fetcher.Fetch(ctx, desc)
+	return i.fetchBlob(ctx, desc)
 }
 
-func (i *pulledImage) FetchConfig(ctx context.Context) (*config.Config, error) {
+func (i *pulledImage) FetchConfig(ctx context.Context) (*config.Runtime, error) {
 	desc, err := i.getDescriptor(model.ConfigMediaType)
 	if err != nil {
 		return nil, err
 	}
 
-	fetcher, err := i.resolver.Fetcher(ctx, i.ref)
-	if err != nil {
-		return nil, err
-	}
-
-	rc, err := fetcher.Fetch(ctx, desc)
+	rc, err := i.fetchBlob(ctx, desc)
 	if err != nil {
 		return nil, err
 	}
@@ -66,4 +57,13 @@ func (i *pulledImage) getDescriptor(mediaType string) (ocispec.Descriptor, error
 		}
 	}
 	return ocispec.Descriptor{}, errors.Errorf("media type %v not found on image", mediaType)
+}
+
+func (i *pulledImage) fetchBlob(ctx context.Context, desc ocispec.Descriptor) (io.ReadCloser, error) {
+	fetcher, err := i.resolver.Fetcher(ctx, i.ref)
+	if err != nil {
+		return nil, err
+	}
+
+	return fetcher.Fetch(ctx, desc)
 }
