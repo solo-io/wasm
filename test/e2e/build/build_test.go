@@ -17,8 +17,10 @@ var _ = Describe("Build", func() {
 		if imageName == "" {
 			Skip("Skipping build/push test. To enable, set FILTER_IMAGE_TAG to the tag to use for the built/pushed image")
 		}
+		err := test.RunMake("generated-code")
+		Expect(err).NotTo(HaveOccurred())
 
-		err := test.WasmeCliSplit("init test-filter --platform istio --platform-version 1.4.x --language cpp")
+		err = test.WasmeCliSplit("init test-filter --platform istio --platform-version 1.4.x --language cpp")
 		Expect(err).NotTo(HaveOccurred())
 
 		if precompiledFilter := os.Getenv("PRECOMPILED_FILTER_PATH"); precompiledFilter != "" {

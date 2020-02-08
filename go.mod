@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/containerd/containerd v1.3.0
 	github.com/deislabs/oras v0.7.0
+	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/elazarl/goproxy v0.0.0-20190421051319-9d40249d3c2f // indirect
 	github.com/elazarl/goproxy/ext v0.0.0-20190421051319-9d40249d3c2f // indirect
@@ -24,7 +25,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.8.1
 	github.com/sirupsen/logrus v1.4.2
-	github.com/solo-io/autopilot v0.1.1-0.20200121204049-3637f04dec25
+	github.com/solo-io/autopilot v0.1.1-0.20200205211911-ee21dd59807e
 	github.com/solo-io/gloo v1.3.1
 	github.com/solo-io/go-utils v0.11.7
 	github.com/solo-io/protoc-gen-ext v0.0.7
@@ -43,6 +44,7 @@ require (
 	k8s.io/apimachinery v0.17.1
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/code-generator v0.17.1
+	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f // indirect
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 

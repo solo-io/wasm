@@ -22,15 +22,17 @@ type storedImage struct {
 	config      *config.Runtime
 }
 
-func NewStorableImage(ref string, descriptor ocispec.Descriptor, filterBytes []byte, runtime *config.Runtime) *storedImage {
-	ref = model.FullRef(ref)
-
+func NewStorableImage(ref string, descriptor ocispec.Descriptor, filterBytes []byte, runtime *config.Runtime) (*storedImage, error) {
+	ref, err := model.FullRef(ref)
+	if err != nil {
+		return nil, err
+	}
 	return &storedImage{
 		ref:         ref,
 		descriptor:  descriptor,
 		filterBytes: filterBytes,
 		config:      runtime,
-	}
+	}, nil
 }
 
 func (i *storedImage) Ref() string {

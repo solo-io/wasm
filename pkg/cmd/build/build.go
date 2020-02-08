@@ -142,7 +142,10 @@ func runBuild(ctx context.Context, opts buildOptions) error {
 		return err
 	}
 
-	image := store.NewStorableImage(opts.tag, descriptor, filterBytes, cfg)
+	image, err := store.NewStorableImage(opts.tag, descriptor, filterBytes, cfg)
+	if err != nil {
+		return err
+	}
 
 	if err := store.NewStore(opts.storageDir).Add(ctx, image); err != nil {
 		return err

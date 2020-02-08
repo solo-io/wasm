@@ -49,13 +49,23 @@ func (i *taggedImage) Ref() string {
 func runTag(ctx context.Context, opts tagOptions) error {
 	imageStore := store.NewStore(opts.storageDir)
 
-	image, err := imageStore.Get(model.FullRef(opts.sourceImage))
+	sourceRef, err := model.FullRef(opts.sourceImage)
+	if err != nil {
+		return err
+	}
+
+	targetRef, err := model.FullRef(opts.targetImage)
+	if err != nil {
+		return err
+	}
+
+	image, err := imageStore.Get(sourceRef)
 	if err != nil {
 		return err
 	}
 
 	targetImage := &taggedImage{
-		ref:   model.FullRef(opts.targetImage),
+		ref:   targetRef,
 		Image: image,
 	}
 

@@ -2,8 +2,9 @@ package resolver
 
 import (
 	"crypto/tls"
-	auth "github.com/deislabs/oras/pkg/auth/docker"
 	"net/http"
+
+	auth "github.com/deislabs/oras/pkg/auth/docker"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"

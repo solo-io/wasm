@@ -160,5 +160,5 @@ func (w imageReadWriter) readImage() (*storedImage, error) {
 		return nil, err
 	}
 
-	return NewStorableImage(ref, desc, filterBytes, cfg), nil
+	return NewStorableImage(ref, desc, filterBytes, cfg)
 }

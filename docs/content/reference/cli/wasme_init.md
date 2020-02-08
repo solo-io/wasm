@@ -6,19 +6,8 @@ weight: 5
 
 Initialize a project directory for a new Envoy WASM Filter.
 
-The provided --language flag will determine the programming language used for the new filter. The default is 
-C++.
-
-The provided --platform flag will determine the target platform used for the new filter. This is important to 
-ensure compatibility between the filter and the 
-
-If --language, --platform, or --platform-version are not provided, the CLI will present an interactive prompt. Disable the prompt with --disable-prompt
-
-
-
 ### Synopsis
 
-Initialize a project directory for a new Envoy WASM Filter.
 
 The provided --language flag will determine the programming language used for the new filter. The default is 
 C++.

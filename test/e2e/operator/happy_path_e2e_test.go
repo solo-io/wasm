@@ -73,7 +73,10 @@ func generateCrdExample(filename, image string) error {
 var ns = "bookinfo"
 
 var _ = BeforeSuite(func() {
-	err := test.RunMake("manifest-gen")
+	err := test.RunMake("operator-gen")
+	Expect(err).NotTo(HaveOccurred())
+
+	err = test.RunMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
 	// ensure no collision between tests

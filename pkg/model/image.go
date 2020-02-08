@@ -66,7 +66,7 @@ func GetDescriptor(filter Filter) (ocispec.Descriptor, error) {
 }
 
 // expand the ref to contain :latest suffix if no tag provided
-func FullRef(ref string) string {
-	name, tag := util.SplitImageRef(ref)
-	return name + ":" + tag
+func FullRef(ref string) (string, error) {
+	name, tag, err := util.SplitImageRef(ref)
+	return name + ":" + tag, err
 }

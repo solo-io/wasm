@@ -19,7 +19,7 @@ type Store interface {
 	Add(ctx context.Context, image Image) error
 	Get(ref string) (*storedImage, error)
 	Delete(ref string) error
-	Dir(ref string) string
+	Dir(ref string) (string, error)
 }
 
 type store struct {
@@ -69,21 +69,30 @@ func (s *store) Add(ctx context.Context, image Image) error {
 }
 
 func (s *store) Get(ref string) (*storedImage, error) {
-	ref = model.FullRef(ref)
+	ref, err := model.FullRef(ref)
+	if err != nil {
+		return nil, err
+	}
 	dir := Dirname(ref)
 	return s.readWriter(dir).readImage()
 }
 
 func (s *store) Delete(ref string) error {
-	ref = model.FullRef(ref)
+	ref, err := model.FullRef(ref)
+	if err != nil {
+		return err
+	}
 	dir := Dirname(ref)
 	return os.RemoveAll(dir)
 }
 
-func (s *store) Dir(ref string) string {
-	ref = model.FullRef(ref)
+func (s *store) Dir(ref string) (string, error) {
+	ref, err := model.FullRef(ref)
+	if err != nil {
+		return "", err
+	}
 	dir := Dirname(ref)
-	return filepath.Join(s.storageDir, dir)
+	return filepath.Join(s.storageDir, dir), nil
 }
 
 func (s *store) readWriter(dir string) imageReadWriter {

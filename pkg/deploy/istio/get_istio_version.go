@@ -42,7 +42,7 @@ func (i *versionInspector) GetIstioVersion() (string, error) {
 		return "", errors.Errorf("did not find container named %s on pilot deployment", pilotContainerName)
 	}
 
-	_, tag := util.SplitImageRef(pilotImage)
+	_, tag, err := util.SplitImageRef(pilotImage)
 
-	return tag, nil
+	return tag, err
 }

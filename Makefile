@@ -46,7 +46,7 @@ install-deps: mod-download
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
 .PHONY: generated-code
-generated-code: operator-gen
+generated-code:
 	go generate ./...
 
 # Generate Operator Code & Chart

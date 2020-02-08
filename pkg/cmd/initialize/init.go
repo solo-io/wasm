@@ -77,7 +77,7 @@ type initOptions struct {
 func InitCmd() *cobra.Command {
 	var opts initOptions
 	cmd := &cobra.Command{
-		Use: "init DEST_DIRECTORY [--language=FILTER_LANGUAGE] [--platform=TARGET_PLATFORM] [--platform-version=TARGET_PLATFORM_VERSION]",
+		Use:   "init DEST_DIRECTORY [--language=FILTER_LANGUAGE] [--platform=TARGET_PLATFORM] [--platform-version=TARGET_PLATFORM_VERSION]",
 		Short: fmt.Sprintf(`Initialize a project directory for a new Envoy WASM Filter.`),
 		Long: `
 The provided --language flag will determine the programming language used for the new filter. The default is 
