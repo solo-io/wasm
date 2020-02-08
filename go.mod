@@ -14,7 +14,7 @@ require (
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.4.0
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.3.3
 	github.com/google/go-github/v28 v28.1.1
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/manifoldco/promptui v0.7.0
