@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pkg/errors"
+
 	"github.com/hashicorp/go-multierror"
 	"github.com/solo-io/wasme/pkg/model"
 )
@@ -74,7 +76,11 @@ func (s *store) Get(ref string) (*storedImage, error) {
 		return nil, err
 	}
 	dir := Dirname(ref)
-	return s.readWriter(dir).readImage()
+	img, err := s.readWriter(dir).readImage()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed reading image %v", ref)
+	}
+	return img, nil
 }
 
 func (s *store) Delete(ref string) error {
