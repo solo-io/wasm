@@ -35,6 +35,7 @@ type buildOptions struct {
 	buildDir     string
 	bazelOutput  string
 	bazelTarget  string
+	tmpDir       string
 }
 
 func BuildCmd(ctx *context.Context) *cobra.Command {
@@ -62,6 +63,7 @@ func BuildCmd(ctx *context.Context) *cobra.Command {
 	cmd.Flags().StringVarP(&opts.buildDir, "build-dir", "b", ".", "Directory containing the target BUILD file.")
 	cmd.Flags().StringVarP(&opts.bazelOutput, "bazel-ouptut", "f", "filter.wasm", "Path relative to `bazel-bin` to the wasm file produced by running the Bazel target.")
 	cmd.Flags().StringVarP(&opts.bazelTarget, "bazel-target", "g", ":filter.wasm", "Name of the bazel target to run.")
+	cmd.Flags().StringVarP(&opts.tmpDir, "tmp-dir", "", "", "Directory for storing temporary files during build. Defaults to /tmp on OSx and Linux.")
 	return cmd
 }
 
@@ -90,9 +92,9 @@ func runBuild(ctx context.Context, opts buildOptions) error {
 			return err
 		}
 
+		tmpDirName := opts.tmpDir
 		// workaround for darwin, cannot mount /var to docker
-		var tmpDirName string
-		if runtime.GOOS == "darwin" {
+		if tmpDirName == "" && runtime.GOOS == "darwin" {
 			tmpDirName = "/tmp"
 		}
 		tmpDir, err := ioutil.TempDir(tmpDirName, "wasme")
