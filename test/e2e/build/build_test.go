@@ -29,7 +29,8 @@ var _ = Describe("Build", func() {
 			err = test.RunMake("builder-image")
 			Expect(err).NotTo(HaveOccurred())
 
-			err = test.WasmeCliSplit("build -t " + imageName + " test-filter")
+			// need to run with --tmp-dir=. in CI due to docker mount concerns
+			err = test.WasmeCliSplit("build -t " + imageName + " test-filter --tmp-dir=.")
 		}
 		Expect(err).NotTo(HaveOccurred())
 
