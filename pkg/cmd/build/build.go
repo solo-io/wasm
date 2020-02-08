@@ -103,6 +103,12 @@ func runBuild(ctx context.Context, opts buildOptions) error {
 		}
 		defer os.RemoveAll(tmpDir)
 
+		// use abs dir because docker requires it
+		tmpDir, err = filepath.Abs(tmpDir)
+		if err != nil {
+			return err
+		}
+
 		// container paths are currently hard-coded in builder image
 		args := []string{
 			"run",
