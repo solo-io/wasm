@@ -136,7 +136,7 @@ kubectl get gateway -n gloo-system '-ojsonpath={.items[0].spec.httpGateway.optio
 ```
 
 ```
-map[image:webassemblyhub.io/ilackarms/hello:v0.1 name:myfilter rootId:add_header_root_id]
+map[image:webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 name:myfilter rootId:add_header_root_id]
 ```
 
 If we try our request again, we should see the `hello: World` header was added by our filter:

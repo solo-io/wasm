@@ -41,12 +41,13 @@ install-deps: mod-download
 	go get -u github.com/gogo/protobuf
 	go get -v istio.io/tools/cmd/protoc-gen-jsonshim
 	go get -v github.com/gogo/protobuf/protoc-gen-gogo
+	go get -v github.com/golang/protobuf/protoc-gen-go
 	go get -u github.com/solo-io/protoc-gen-ext
 	go get -v github.com/golang/mock/mockgen
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
 .PHONY: generated-code
-generated-code: operator-gen
+generated-code:
 	go generate ./...
 
 # Generate Operator Code & Chart

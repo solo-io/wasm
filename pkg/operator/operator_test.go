@@ -64,7 +64,7 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 			},
 			Spec: v1.FilterDeploymentSpec{
 				Filter: &v1.FilterSpec{
-					Image:  "webassemblyhub.io/ilackarms/istio-example:1.4.2",
+					Image:  "webassemblyhub.io/ilackarms/istio-test:1.4.2-0",
 					Config: `{"name":"hello","value":"world"}`,
 				},
 				Deployment: &v1.DeploymentSpec{

@@ -120,14 +120,22 @@ func getLocalImages(storageDir string) ([]image, error) {
 
 	var images []image
 	for _, img := range storedImages {
-		name, tag := util.SplitImageRef(img.Ref())
+		name, tag, err := util.SplitImageRef(img.Ref())
+		if err != nil {
+			logrus.Errorf("failed parsing image ref %v: %v", img.Ref(), err)
+			continue
+		}
 
 		descriptor, err := img.Descriptor()
 		if err != nil {
 			return nil, err
 		}
 
-		dir := imageStore.Dir(img.Ref())
+		dir, err := imageStore.Dir(img.Ref())
+		if err != nil {
+			logrus.Errorf("failed getting image %v dir: %v", img.Ref(), err)
+			continue
+		}
 
 		imageInfo, err := os.Stat(dir)
 		if err != nil {
@@ -141,7 +149,6 @@ func getLocalImages(storageDir string) ([]image, error) {
 			tags:      []string{tag},
 			sizeBytes: descriptor.Size,
 		})
-
 	}
 
 	sort.Slice(images, func(i, j int) bool {

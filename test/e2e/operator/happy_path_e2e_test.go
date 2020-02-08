@@ -25,7 +25,7 @@ import (
 
 func generateCrdExample(filename, image string) error {
 	if image == "" {
-		image = "webassemblyhub.io/ilackarms/istio-example:1.4.2"
+		image = "webassemblyhub.io/ilackarms/istio-test:1.4.2-0"
 	}
 
 	filterDeployment := &v1.FilterDeployment{
@@ -73,7 +73,10 @@ func generateCrdExample(filename, image string) error {
 var ns = "bookinfo"
 
 var _ = BeforeSuite(func() {
-	err := test.RunMake("manifest-gen")
+	err := test.RunMake("operator-gen")
+	Expect(err).NotTo(HaveOccurred())
+
+	err = test.RunMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
 	// ensure no collision between tests
@@ -99,13 +102,13 @@ var _ = BeforeSuite(func() {
 })
 
 var _ = AfterSuite(func() {
-	if err := test.DeleteFile("test/e2e/operator/bookinfo.yaml", ns); err != nil{
+	if err := test.DeleteFile("test/e2e/operator/bookinfo.yaml", ns); err != nil {
 		log.Printf("failed deleting file: %v", err)
 	}
-	if err := test.DeleteFile("operator/install/wasme-default.yaml", ""); err != nil{
+	if err := test.DeleteFile("operator/install/wasme-default.yaml", ""); err != nil {
 		log.Printf("failed deleting file: %v", err)
 	}
-	if err := utils.Kubectl(nil, "delete", "ns", ns); err != nil{
+	if err := utils.Kubectl(nil, "delete", "ns", ns); err != nil {
 		log.Printf("failed deleting ns: %v", err)
 	}
 })

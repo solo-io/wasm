@@ -19,13 +19,20 @@ type storedImage struct {
 	ref         string
 	descriptor  ocispec.Descriptor
 	filterBytes []byte
-	config      *config.Config
+	config      *config.Runtime
 }
 
-func NewStorableImage(ref string, descriptor ocispec.Descriptor, filterBytes []byte, config *config.Config) *storedImage {
-	ref = model.FullRef(ref)
-
-	return &storedImage{ref: ref, descriptor: descriptor, filterBytes: filterBytes, config: config}
+func NewStorableImage(ref string, descriptor ocispec.Descriptor, filterBytes []byte, runtime *config.Runtime) (*storedImage, error) {
+	ref, err := model.FullRef(ref)
+	if err != nil {
+		return nil, err
+	}
+	return &storedImage{
+		ref:         ref,
+		descriptor:  descriptor,
+		filterBytes: filterBytes,
+		config:      runtime,
+	}, nil
 }
 
 func (i *storedImage) Ref() string {
@@ -41,6 +48,6 @@ func (i *storedImage) FetchFilter(ctx context.Context) (model.Filter, error) {
 	return filter, nil
 }
 
-func (i *storedImage) FetchConfig(ctx context.Context) (*config.Config, error) {
+func (i *storedImage) FetchConfig(ctx context.Context) (*config.Runtime, error) {
 	return i.config, nil
 }

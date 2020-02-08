@@ -35,11 +35,14 @@ func NewPuller(resolver remotes.Resolver) *puller {
 }
 
 func (p *puller) Pull(ctx context.Context, ref string) (Image, error) {
-	ref = model.FullRef(ref)
+	ref, err := model.FullRef(ref)
+	if err != nil {
+		return nil, err
+	}
 
 	store := content.NewMemoryStore()
 
-	name, desc, err := p.resolver.Resolve(ctx, ref)
+	name, manifest, err := p.resolver.Resolve(ctx, ref)
 	if err != nil {
 		return nil, err
 	}
@@ -48,16 +51,16 @@ func (p *puller) Pull(ctx context.Context, ref string) (Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = remotes.FetchHandler(store, fetcher)(ctx, desc)
+	_, err = remotes.FetchHandler(store, fetcher)(ctx, manifest)
 	if err != nil {
 		return nil, err
 	}
 
-	children, err := images.ChildrenHandler(store)(ctx, desc)
+	children, err := images.ChildrenHandler(store)(ctx, manifest)
 	if err != nil {
 		return nil, err
 	}
-	logrus.Debugf("%+v %+v %+v %+v\n", name, children, desc, err)
+	logrus.Debugf("%+v %+v %+v %+v\n", name, children, manifest, err)
 
 	return &pulledImage{
 		children: children,

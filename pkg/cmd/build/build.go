@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
@@ -34,9 +35,10 @@ type buildOptions struct {
 	buildDir     string
 	bazelOutput  string
 	bazelTarget  string
+	tmpDir       string
 }
 
-func BuildCmd() *cobra.Command {
+func BuildCmd(ctx *context.Context) *cobra.Command {
 	var opts buildOptions
 	cmd := &cobra.Command{
 		Use:   "build SOURCE_DIRECTORY [-b <bazel target>] [-t <name:tag>]",
@@ -49,25 +51,26 @@ func BuildCmd() *cobra.Command {
 			} else {
 				opts.sourceDir = args[0]
 			}
-			return runBuild(opts)
+			return runBuild(*ctx, opts)
 		},
 	}
 
 	cmd.Flags().StringVarP(&opts.tag, "tag", "t", "", "The image ref with which to tag this image. Specified in the format <name:tag>. Required")
-	cmd.Flags().StringVarP(&opts.configFile, "config", "c", "", "The path to the filter configuration file for the image. If not specified, defaults to <SOURCE_DIRECTOR>/filter-config.json. This file must be present in order to build the image.")
+	cmd.Flags().StringVarP(&opts.configFile, "config", "c", "", "The path to the filter configuration file for the image. If not specified, defaults to <SOURCE_DIRECTOR>/runtime-config.json. This file must be present in order to build the image.")
 	cmd.Flags().StringVarP(&opts.wasmFile, "wasm-file", "", "", "If specified, wasme will use the provided path to a compiled filter wasm to produce the image. The bazel build will be skipped and the wasm-file will be used instead.")
 	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store")
 	cmd.Flags().StringVarP(&opts.builderImage, "image", "i", "quay.io/solo-io/ee-builder:"+version.Version, "Name of the docker image containing the Bazel run instructions. Modify to run a custom builder image")
 	cmd.Flags().StringVarP(&opts.buildDir, "build-dir", "b", ".", "Directory containing the target BUILD file.")
 	cmd.Flags().StringVarP(&opts.bazelOutput, "bazel-ouptut", "f", "filter.wasm", "Path relative to `bazel-bin` to the wasm file produced by running the Bazel target.")
 	cmd.Flags().StringVarP(&opts.bazelTarget, "bazel-target", "g", ":filter.wasm", "Name of the bazel target to run.")
+	cmd.Flags().StringVarP(&opts.tmpDir, "tmp-dir", "", "", "Directory for storing temporary files during build. Defaults to /tmp on OSx and Linux.")
 	return cmd
 }
 
-func runBuild(opts buildOptions) error {
+func runBuild(ctx context.Context, opts buildOptions) error {
 	configFile := opts.configFile
 	if configFile == "" {
-		configFile = filepath.Join(opts.sourceDir, "filter-config.json")
+		configFile = filepath.Join(opts.sourceDir, "runtime-config.json")
 	}
 
 	configBytes, err := ioutil.ReadFile(configFile)
@@ -89,15 +92,22 @@ func runBuild(opts buildOptions) error {
 			return err
 		}
 
-		pwd, err := os.Getwd()
-		if err != nil {
-			return err
+		tmpDirName := opts.tmpDir
+		// workaround for darwin, cannot mount /var to docker
+		if tmpDirName == "" && runtime.GOOS == "darwin" {
+			tmpDirName = "/tmp"
 		}
-		tmpDir, err := ioutil.TempDir(pwd, "wasme")
+		tmpDir, err := ioutil.TempDir(tmpDirName, "wasme")
 		if err != nil {
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
+
+		// use abs dir because docker requires it
+		tmpDir, err = filepath.Abs(tmpDir)
+		if err != nil {
+			return err
+		}
 
 		// container paths are currently hard-coded in builder image
 		args := []string{
@@ -140,9 +150,12 @@ func runBuild(opts buildOptions) error {
 		return err
 	}
 
-	image := store.NewStorableImage(opts.tag, descriptor, filterBytes, cfg)
+	image, err := store.NewStorableImage(opts.tag, descriptor, filterBytes, cfg)
+	if err != nil {
+		return err
+	}
 
-	if err := store.NewStore(opts.storageDir).Add(context.Background(), image); err != nil {
+	if err := store.NewStore(opts.storageDir).Add(ctx, image); err != nil {
 		return err
 	}
 

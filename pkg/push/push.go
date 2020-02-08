@@ -59,7 +59,7 @@ func (p *pusher) Push(ctx context.Context, image Image) error {
 		return err
 	}
 
-	filterDescriptor := store.Add(model.CodeFilename, model.CodeMediaType, filterBytes)
+	filterDescriptor := store.Add(model.CodeFilename, model.ContentMediaType, filterBytes)
 
 	files := []ocispec.Descriptor{
 		cfgDescriptor,

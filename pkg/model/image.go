@@ -11,30 +11,42 @@ import (
 	"github.com/solo-io/wasme/pkg/util"
 )
 
+// a WASM Module Runtime
+type Runtime struct {
+	Type       RuntimeType
+	AbiVersion string
+}
+
+type RuntimeType string
+
+const (
+	Runtime_EnvoyProxy RuntimeType = "envoy_proxy"
+)
+
 // represents the descriptors for an image, as well as accessors to the image contents
 type Image interface {
 	// ref to the image
 	Ref() string
 
-	// get the image (Filter) descriptor
+	// get the descriptor for the module layer
 	Descriptor() (ocispec.Descriptor, error)
 
 	// get the filter .wasm file from the image
 	FetchFilter(ctx context.Context) (Filter, error)
 
 	// get the filter config from the image
-	FetchConfig(ctx context.Context) (*config.Config, error)
+	FetchConfig(ctx context.Context) (*config.Runtime, error)
 }
 
 // media types stored in a Wasm Module image
 const (
-	ConfigMediaType = "application/vnd.io.solo.wasm.config.v1+json"
-	CodeMediaType   = "application/vnd.io.solo.wasm.code.v1+wasm"
+	ConfigMediaType  = "application/vnd.module.wasm.config.v1+json"
+	ContentMediaType = "application/vnd.module.wasm.content.layer.v1+wasm"
 )
 
 // default filenames stored in a Wasm Module Image
 const (
-	ConfigFilename = "config.json"
+	ConfigFilename = "runtime-config.json"
 	CodeFilename   = "filter.wasm"
 )
 
@@ -50,11 +62,11 @@ func GetDescriptor(filter Filter) (ocispec.Descriptor, error) {
 		return ocispec.Descriptor{}, err
 	}
 
-	return store.Add(CodeFilename, CodeMediaType, bytes), nil
+	return store.Add(CodeFilename, ContentMediaType, bytes), nil
 }
 
 // expand the ref to contain :latest suffix if no tag provided
-func FullRef(ref string) string {
-	name, tag := util.SplitImageRef(ref)
-	return name + ":" + tag
+func FullRef(ref string) (string, error) {
+	name, tag, err := util.SplitImageRef(ref)
+	return name + ":" + tag, err
 }

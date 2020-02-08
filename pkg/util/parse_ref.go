@@ -1,14 +1,19 @@
 package util
 
-import "strings"
+import "github.com/docker/distribution/reference"
 
 // splits a ref into the repo and tag
 // if tag is empty, returns "latest"
-func SplitImageRef(ref string) (string, string) {
-	parts := strings.Split(ref, ":")
-	if len(parts) == 2 {
-		return parts[0], parts[1]
+func SplitImageRef(ref string) (string, string, error) {
+	named, err := reference.ParseNormalizedNamed(ref)
+	if err != nil {
+		return "", "", err
 	}
-	return ref, "latest"
 
+	tag := "latest"
+	if tagged, isTagged := named.(reference.Tagged); isTagged {
+		tag = tagged.Tag()
+	}
+
+	return named.Name(), tag, nil
 }

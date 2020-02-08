@@ -60,6 +60,7 @@ func generateEmbeddedArchiveFile(prefix, dir string) error {
 	}
 
 	// generate embedded file with 2goarray
+	logrus.Printf("generating embedded assets for example %v: %v", prefix, dir)
 
 	destFile := examplesDir + "/../pkg/cmd/initialize/" + dir + "_archive_2gobytes.go"
 
