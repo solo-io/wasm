@@ -3,6 +3,10 @@ package resolver
 import (
 	"crypto/tls"
 	"net/http"
+	"strings"
+
+	"github.com/solo-io/wasme/pkg/auth/store"
+	"github.com/solo-io/wasme/pkg/consts"
 
 	auth "github.com/deislabs/oras/pkg/auth/docker"
 
@@ -41,7 +45,18 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 		}
 	}
 
+	token, _ := store.GetToken()
+
 	credentials := func(hostName string) (string, string, error) {
+		if token != "" {
+			if hostName == consts.HubDomain {
+				return basicAuthToTokenUser, token, nil
+			}
+			if strings.HasPrefix(hostName, "localhost") {
+				return basicAuthToTokenUser, token, nil
+			}
+		}
+
 		if dockerCreds != nil {
 			return dockerCreds(hostName)
 		}
