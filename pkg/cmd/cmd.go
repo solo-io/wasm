@@ -48,26 +48,31 @@ func Cmd() *cobra.Command {
 			}
 		},
 	}
-	cmd.AddCommand(
-		initialize.InitCmd(),
-		build.BuildCmd(ctx),
+
+	commandsWithAuth := []*cobra.Command{
 		push.PushCmd(ctx, &opts),
 		pull.PullCmd(ctx, &opts),
 		cache.CacheCmd(ctx, &opts),
+	}
+
+	for _, cmd := range commandsWithAuth {
+		opts.AddToFlags(cmd.PersistentFlags())
+	}
+
+	commands := append(commandsWithAuth,
+		initialize.InitCmd(),
+		build.BuildCmd(ctx),
 		login.LoginCmd(),
 		list.ListCmd(),
 		deploy.DeployCmd(ctx),
 		deploy.UndeployCmd(ctx),
 		operator.OperatorCmd(ctx),
-		tag.TagCmd(ctx),
+		tag.TagCmd(ctx))
+
+	cmd.AddCommand(
+		commands...,
 	)
-	cmd.PersistentFlags().StringArrayVarP(&opts.CredentialsFiles, "config", "c", nil, "path to auth config")
-	cmd.PersistentFlags().StringVarP(&opts.Username, "username", "u", "", "registry username")
-	cmd.PersistentFlags().StringVarP(&opts.Password, "password", "p", "", "registry password")
-	cmd.PersistentFlags().BoolVarP(&opts.Insecure, "insecure", "", false, "allow connections to SSL registry without certs")
-	cmd.PersistentFlags().BoolVarP(&opts.PlainHTTP, "plain-http", "", false, "use plain http and not https")
-	cmd.PersistentFlags().BoolVarP(&opts.Verbose, "verbose", "v", false, "verbose output")
-	cmd.PersistentFlags().BoolVarP(&opts.Debug, "debug", "d", false, "debug mode")
+
 	return cmd
 }
 
