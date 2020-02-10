@@ -18,7 +18,12 @@ func NewDefaultCache() cache.Cache {
 }
 
 var (
-	WasmeConfigDir       = os.Getenv("HOME") + "/.wasme"
+	WasmeConfigDir       = home() + "/.wasme"
 	WasmeImageDir        = filepath.Join(WasmeConfigDir, "store")
 	WasmeCredentialsFile = filepath.Join(WasmeConfigDir, "credentials.json")
 )
+
+func home() string {
+	dir, _ := os.UserHomeDir()
+	return dir
+}

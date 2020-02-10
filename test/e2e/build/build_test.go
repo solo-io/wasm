@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/solo-io/wasme/pkg/consts"
+
 	"github.com/solo-io/autopilot/codegen/util"
 
 	. "github.com/onsi/ginkgo"
@@ -11,12 +13,20 @@ import (
 	"github.com/solo-io/wasme/test"
 )
 
+func getEnv(env string) string {
+	val := os.Getenv(env)
+	if val == "" {
+		Skip("Skipping build/push test. To enable, set FILTER_IMAGE_TAG to the tag to use for the built/pushed image")
+	}
+	return val
+}
+
 var _ = Describe("Build", func() {
 	It("builds and pushes the image", func() {
-		imageName := os.Getenv("FILTER_IMAGE_TAG")
-		if imageName == "" {
-			Skip("Skipping build/push test. To enable, set FILTER_IMAGE_TAG to the tag to use for the built/pushed image")
-		}
+		imageName := getEnv("FILTER_IMAGE_TAG")
+		username := getEnv("WASME_LOGIN_USERNAME")
+		password := getEnv("WASME_LOGIN_PASSWORD")
+
 		err := test.RunMake("generated-code")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -32,6 +42,9 @@ var _ = Describe("Build", func() {
 			// need to run with --tmp-dir=. in CI due to docker mount concerns
 			err = test.WasmeCliSplit("build -t " + imageName + " test-filter --tmp-dir=.")
 		}
+		Expect(err).NotTo(HaveOccurred())
+
+		err = test.WasmeCliSplit("login -u" + username + " -p " + password + " -s " + consts.HubDomain)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = test.WasmeCliSplit("push " + imageName)
