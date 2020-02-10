@@ -1,7 +1,9 @@
 package auth
 
 import (
+	"github.com/pkg/errors"
 	"os"
+	"path/filepath"
 
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/cli/cli/config/types"
@@ -23,9 +25,13 @@ func SaveCredentials(username, password, serverAddress, path string) error {
 		Password: password,
 	}
 
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil{
+		return err
+	}
+
 	credsFile, err := os.Create(path)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "creating file")
 	}
 	defer credsFile.Close()
 
