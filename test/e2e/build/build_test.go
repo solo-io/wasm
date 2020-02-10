@@ -3,6 +3,7 @@ package build_test
 import (
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/solo-io/wasme/pkg/consts"
 
@@ -14,7 +15,7 @@ import (
 )
 
 func getEnv(env string) string {
-	val := os.Getenv(env)
+	val := strings.TrimSpace(os.Getenv(env))
 	if val == "" {
 		Skip("Skipping build/push test. To enable, set FILTER_IMAGE_TAG to the tag to use for the built/pushed image")
 	}
@@ -30,7 +31,7 @@ var _ = Describe("Build", func() {
 		err := test.RunMake("generated-code")
 		Expect(err).NotTo(HaveOccurred())
 
-		err = test.WasmeCliSplit("login -u" + username + " -p " + password + " -s " + consts.HubDomain)
+		err = test.WasmeCliSplit("login -u " + username + " -p " + password + " -s " + consts.HubDomain)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = test.WasmeCliSplit("init test-filter --platform istio --platform-version 1.4.x --language cpp")
