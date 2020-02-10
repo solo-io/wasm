@@ -22,7 +22,8 @@ steps:
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'BUILD_ID=$BUILD_ID'
       - 'IMAGE_REGISTRY=gcr.io/$PROJECT_ID'
-      - 'FILTER_IMAGE_TAG=webassemblyhub.io/soloio-bot/test-image:$BUILD_ID'
+      - 'WASM_IMAGE_REGISTRY=yuvaltest.solo.io'
+      - 'FILTER_IMAGE_TAG=yuvaltest.solo.io/soloio-bot/test-image:$BUILD_ID'
       - 'IMAGE_PUSH=1'
     entrypoint: 'make'
     args: ['run-tests']

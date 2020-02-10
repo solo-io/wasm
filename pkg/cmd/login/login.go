@@ -53,6 +53,12 @@ func runLogin(opts loginOptions) error {
 	if opts.credentialsFile == "" {
 		opts.credentialsFile = defaults.WasmeCredentialsFile
 	}
+	if opts.username == "" {
+		return errors.Errorf("must specify username")
+	}
+	if opts.password == "" {
+		return errors.Errorf("must specify password")
+	}
 	usr, err := getCurrentUser(opts.username, opts.password, opts.serverAddress, opts.usePlaintext)
 	if err != nil {
 		return err
