@@ -5,6 +5,7 @@ go 1.13
 require (
 	github.com/containerd/containerd v1.3.0
 	github.com/deislabs/oras v0.7.0
+	github.com/docker/cli v0.0.0-20191017083524-a8ff7f821017
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/elazarl/goproxy v0.0.0-20190421051319-9d40249d3c2f // indirect
@@ -15,7 +16,6 @@ require (
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.4.0
 	github.com/golang/protobuf v1.3.3
-	github.com/google/go-github/v28 v28.1.1
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
@@ -34,10 +34,8 @@ require (
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d // indirect
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 // indirect
-	gopkg.in/AlecAivazis/survey.v1 v1.8.7
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
 	k8s.io/api v0.17.1

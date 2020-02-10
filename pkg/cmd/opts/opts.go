@@ -1,11 +1,11 @@
 package opts
 
-type GeneralOptions struct {
-	Configs   []string
-	Username  string
-	Password  string
-	Insecure  bool
-	PlainHTTP bool
+type AuthOptions struct {
+	CredentialsFiles []string
+	Username         string
+	Password         string
+	Insecure         bool
+	PlainHTTP        bool
 
 	Verbose bool
 	Debug   bool

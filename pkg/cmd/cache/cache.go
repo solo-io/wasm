@@ -22,12 +22,12 @@ type cacheOptions struct {
 	directory string
 	refFile   string
 
-	*opts.GeneralOptions
+	*opts.AuthOptions
 }
 
-func CacheCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.Command {
+func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Command {
 	var opts cacheOptions
-	opts.GeneralOptions = generalOptions
+	opts.AuthOptions = loginOptions
 	cmd := &cobra.Command{
 		Use:   "cache name[:tag|@digest] ...",
 		Short: "Expose images using http and their sha",

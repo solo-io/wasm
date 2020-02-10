@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/solo-io/wasme/pkg/consts"
+
 	"github.com/solo-io/autopilot/codegen/util"
 
 	"github.com/solo-io/wasme/test"
@@ -25,7 +27,7 @@ import (
 
 func generateCrdExample(filename, image string) error {
 	if image == "" {
-		image = "webassemblyhub.io/ilackarms/istio-test:1.4.2-0"
+		image = consts.HubDomain + "/ilackarms/istio-test:1.4.2-0"
 	}
 
 	filterDeployment := &v1.FilterDeployment{

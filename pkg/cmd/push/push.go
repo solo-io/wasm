@@ -17,12 +17,12 @@ type pushOptions struct {
 	ref        string
 	storageDir string
 
-	*opts.GeneralOptions
+	*opts.AuthOptions
 }
 
-func PushCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.Command {
+func PushCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Command {
 	var opts pushOptions
-	opts.GeneralOptions = generalOptions
+	opts.AuthOptions = loginOptions
 	cmd := &cobra.Command{
 		Use:   "push name[:tag|@digest]",
 		Short: "Push a wasm filter to remote registry",
@@ -50,7 +50,7 @@ func runPush(ctx context.Context, opts pushOptions) error {
 		return errors.Wrap(err, "image not found. run `wasme list` to see locally cahced images")
 	}
 
-	resolver, authorizer := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
+	resolver, authorizer := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.CredentialsFiles...)
 	pusher := push.NewPusher(resolver, authorizer)
 	if err := pusher.Push(ctx, image); err != nil {
 		return err

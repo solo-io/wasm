@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/solo-io/wasme/pkg/defaults"
+
 	"github.com/pkg/errors"
 
 	"github.com/hashicorp/go-multierror"
@@ -28,11 +30,9 @@ type store struct {
 	storageDir string
 }
 
-var defaultStorageDir = os.Getenv("HOME") + "/.wasme/store"
-
 func NewStore(storageDir string) *store {
 	if storageDir == "" {
-		storageDir = defaultStorageDir
+		storageDir = defaults.WasmeImageDir
 	}
 	return &store{storageDir: storageDir}
 }

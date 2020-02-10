@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/solo-io/wasme/pkg/consts"
+
 	"github.com/golang/mock/gomock"
 	mock_ezkube "github.com/solo-io/autopilot/pkg/ezkube/mocks"
 
@@ -255,17 +257,17 @@ var _ = Describe("IstioProvider", func() {
 		}
 		err := p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
-			Image:  "webassemblyhub.io/ilackarms/gloo-test:1.3.3-0",
+			Image:  consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0",
 			Config: "{}",
 		})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("image webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 not supported by istio version 1.4.2"))
+		Expect(err.Error()).To(ContainSubstring("image " + consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0 not supported by istio version 1.4.2"))
 
 		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
-			Image:  "webassemblyhub.io/ilackarms/istio-test:1.4.2-0",
+			Image:  consts.HubDomain + "/ilackarms/istio-test:1.4.2-0",
 			Config: "{}",
 		})
 		Expect(err).NotTo(HaveOccurred())

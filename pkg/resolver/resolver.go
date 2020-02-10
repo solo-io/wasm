@@ -3,18 +3,12 @@ package resolver
 import (
 	"crypto/tls"
 	"net/http"
-	"strings"
-
-	"github.com/solo-io/wasme/pkg/auth/store"
-	"github.com/solo-io/wasme/pkg/consts"
 
 	auth "github.com/deislabs/oras/pkg/auth/docker"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 )
-
-const basicAuthToTokenUser = "basic2token"
 
 func NewResolver(username, password string, insecure bool, plainHTTP bool, configs ...string) (remotes.Resolver, docker.Authorizer) {
 
@@ -45,25 +39,18 @@ func NewResolver(username, password string, insecure bool, plainHTTP bool, confi
 		}
 	}
 
-	token, _ := store.GetToken()
-
 	credentials := func(hostName string) (string, string, error) {
-		if token != "" {
-			if hostName == consts.HubDomain {
-				return basicAuthToTokenUser, token, nil
-			}
-			if strings.HasPrefix(hostName, "localhost") {
-				return basicAuthToTokenUser, token, nil
-			}
-		}
-
 		if dockerCreds != nil {
 			return dockerCreds(hostName)
 		}
 		return "", "", nil
 	}
 
-	opts.Authorizer = docker.NewDockerAuthorizer(docker.WithAuthClient(opts.Client), docker.WithAuthHeader(opts.Headers), docker.WithAuthCreds(credentials))
+	opts.Authorizer = docker.NewDockerAuthorizer(
+		docker.WithAuthClient(opts.Client),
+		docker.WithAuthHeader(opts.Headers),
+		docker.WithAuthCreds(credentials),
+	)
 
 	return docker.NewResolver(opts), opts.Authorizer
 }
