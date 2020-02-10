@@ -23,7 +23,7 @@ steps:
       - 'BUILD_ID=$BUILD_ID'
       - 'IMAGE_REGISTRY=gcr.io/$PROJECT_ID'
       - 'WASM_IMAGE_REGISTRY=yuvaltest.solo.io'
-      - 'FILTER_IMAGE_TAG=yuvaltest.solo.io/soloio-bot/test-image:$BUILD_ID'
+      - 'FILTER_IMAGE_TAG=yuvaltest.solo.io/ilackarms/test-image:$BUILD_ID'
       - 'IMAGE_PUSH=1'
       - 'WASME_LOGIN_USERNAME=admin'
     entrypoint: 'make'
