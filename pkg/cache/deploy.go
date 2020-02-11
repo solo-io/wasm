@@ -169,9 +169,10 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 						},
 					},
 					Containers: []v1.Container{{
-						Name:  d.name,
-						Image: d.image,
-						Args:  d.args,
+						Name:            d.name,
+						Image:           d.image,
+						ImagePullPolicy: v1.PullAlways,
+						Args:            d.args,
 						VolumeMounts: []v1.VolumeMount{
 							{
 								MountPath: "/var/local/lib/wasme-cache",
