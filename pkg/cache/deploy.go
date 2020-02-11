@@ -24,15 +24,9 @@ var (
 	CacheName            = "wasme-cache"
 	CacheNamespace       = "wasme"
 	CacheImageRepository = "quay.io/solo-io/wasme"
-	CacheImageTag        = func() string {
-		// in dev, use a hard-coded version
-		if version.Version == version.DevVersion {
-			return "0.0.1"
-		}
-		return version.Version
-	}()
-	ImagesKey        = "images"
-	DefaultCacheArgs = []string{
+	CacheImageTag        = version.Version
+	ImagesKey            = "images"
+	DefaultCacheArgs     = []string{
 		"cache",
 		"--directory",
 		"/var/local/lib/wasme-cache",
