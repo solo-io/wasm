@@ -24,10 +24,6 @@ func assemblyscriptCmd(ctx *context.Context, opts *buildOptions) *cobra.Command 
 	return cmd
 }
 
-/*
-
-*/
-
 func runNpmBuild(build buildOptions) (string, error) {
 	sourceDir, err := filepath.Abs(build.sourceDir)
 	if err != nil {
