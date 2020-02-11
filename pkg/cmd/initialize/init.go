@@ -22,7 +22,7 @@ const (
 // map supported languages and abi versions to the archive for those sources
 var languageVersionArchives = map[string]map[abi.Version][]byte{
 	languageCpp: {
-		abi.Version_6d525c67f39b36cdff9d688697f266c1b55e9cb7: cppIstio1_4TarBytes,
+		abi.Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: cppIstio1_4TarBytes, //ONEFIVE
 		abi.Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6: cppTarBytes,
 	},
 }

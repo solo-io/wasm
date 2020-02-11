@@ -173,7 +173,7 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			return nil, err
 		}
 
-		go func(){
+		go func() {
 			err := mgr.Start(ctx.Done())
 			if err != nil {
 				log.Fatalf("failed to start kubernetes dynamic client")
