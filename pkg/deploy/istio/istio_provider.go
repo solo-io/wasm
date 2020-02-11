@@ -334,10 +334,8 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 		cache.Digest2filename(descriptor.Digest),
 	)
 
-	wasmFilterConfig := envoyfilter.MakeHackyIstioWasmFilter(filter,
-		// use Filename datasource as Istio doesn't yet support
-		// AsyncDatasource
-		envoyfilter.MakeFilenameDatasource(filename),
+	wasmFilterConfig := envoyfilter.MakeIstioWasmFilter(filter,
+		envoyfilter.MakeLocalDatasource(filename),
 	)
 
 	// here we need to use the gogo proto marshal

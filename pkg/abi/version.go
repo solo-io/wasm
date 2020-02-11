@@ -12,7 +12,6 @@ const (
 	PlatformNameGloo  = "gloo"
 
 	Version13x = "1.3.x"
-	Version14x = "1.4.x"
 	Version15x = "1.5.x"
 )
 
@@ -88,10 +87,6 @@ func (registry Registry) ValidateIstioVersion(abiVersion, istioVersion string) e
 
 // the default registry of AbiVersions used by Wasme
 var (
-	Istio14 = Platform{
-		Name:    PlatformNameIstio,
-		Version: Version14x,
-	}
 	Istio15 = Platform{
 		Name:    PlatformNameIstio,
 		Version: Version15x,
@@ -101,23 +96,22 @@ var (
 		Version: Version13x,
 	}
 
-	Version_6d525c67f39b36cdff9d688697f266c1b55e9cb7 = Version{
-		Name:       "v0-6d525c67f39b36cdff9d688697f266c1b55e9cb7",
-		Repository: "https://github.com/istio/envoy",
-		Commit:     "6d525c67f39b36cdff9d688697f266c1b55e9cb7",
-	}
 	Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6 = Version{
 		Name:       "v0-541b2c1155fffb15ccde92b8324f3e38f7339ba6",
 		Repository: "https://github.com/yuval-k/envoy-wasm",
 		Commit:     "541b2c1155fffb15ccde92b8324f3e38f7339ba6",
 	}
+	Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f = Version{
+		Name:       "v0-097b7f2e4cc1fb490cc1943d0d633655ac3c522f",
+		Repository: "https://github.com/envoyproxy/envoy-wasm",
+		Commit:     "097b7f2e4cc1fb490cc1943d0d633655ac3c522f",
+	}
 
 	DefaultRegistry = Registry{
-		Version_6d525c67f39b36cdff9d688697f266c1b55e9cb7: {
-			Istio14,
-		},
 		Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6: {
 			Gloo13,
+		},
+		Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: {
 			Istio15,
 		},
 	}
@@ -126,7 +120,7 @@ var (
 // match a real version to an X version, e.g.
 // 1.4.2 == 1.4.x
 func matchVersion(realVersion, xVersion string) (bool, error) {
-	rxp, err := regexp.Compile(strings.ReplaceAll(xVersion, "x", `\d*`))
+	rxp, err := regexp.Compile(strings.ReplaceAll(xVersion, "x", `.*`))
 	if err != nil {
 		return false, err
 	}
