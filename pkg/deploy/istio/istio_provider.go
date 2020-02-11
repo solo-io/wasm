@@ -119,15 +119,15 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 		return err
 	}
 
-	abiVersion := cfg.AbiVersion
+	abiVersions := cfg.AbiVersions
 
-	if abiVersion != "" {
+	if len(abiVersions) > 0 {
 		istioVersion, err := p.getIstioVersion()
 		if err != nil {
 			return err
 		}
 
-		if err := abi.DefaultRegistry.ValidateIstioVersion(abiVersion, istioVersion); err != nil {
+		if err := abi.DefaultRegistry.ValidateIstioVersion(abiVersions, istioVersion); err != nil {
 			return errors.Errorf("image %v not supported by istio version %v", image.Ref(), istioVersion)
 		}
 	} else {

@@ -60,29 +60,31 @@ func (registry Registry) SelectVersion(platform Platform) (Version, bool) {
 }
 
 // helper check the abi version compatibility
-func (registry Registry) ValidateIstioVersion(abiVersion, istioVersion string) error {
+func (registry Registry) ValidateIstioVersion(abiVersions []string, istioVersion string) error {
 	var versionFound bool
 	for version, platforms := range registry {
-		if version.Name == abiVersion {
-			versionFound = true
-			for _, platform := range platforms {
-				if platform.Name != PlatformNameIstio {
-					continue
-				}
-				match, err := matchVersion(istioVersion, platform.Version)
-				if err != nil {
-					return err
-				}
-				if match {
-					return nil
+		for _, abiVersion := range abiVersions {
+			if version.Name == abiVersion {
+				versionFound = true
+				for _, platform := range platforms {
+					if platform.Name != PlatformNameIstio {
+						continue
+					}
+					match, err := matchVersion(istioVersion, platform.Version)
+					if err != nil {
+						return err
+					}
+					if match {
+						return nil
+					}
 				}
 			}
 		}
 	}
 	if !versionFound {
-		return errors.Errorf("abi version %v not found", abiVersion)
+		return errors.Errorf("abi versions %v not found", abiVersions)
 	}
-	return errors.Errorf("no versions of istio found which match abi version %v. registered versions: %v", abiVersion, registry)
+	return errors.Errorf("no versions of istio found which support abi versions %v. registered versions: %v", abiVersions, registry)
 }
 
 // the default registry of AbiVersions used by Wasme
