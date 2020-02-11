@@ -46,7 +46,8 @@ func getCallerDirectory(skip ...int) (string, error) {
 // value is the directory name
 var examples = map[string]string{
 	"cpp":         "cpp",
-	"cppIstio1_4": "cpp-istio-1.4",
+	"cppIstio1_5": "cpp-istio-1.5",
+	"assemblyscript": "assemblyscript",
 }
 
 func generateEmbeddedArchiveFile(prefix, dir string) error {

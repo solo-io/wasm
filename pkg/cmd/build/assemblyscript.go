@@ -8,7 +8,12 @@ import (
 	"path/filepath"
 )
 
+type npmOpts struct {
+	username, password, email string
+}
+
 func assemblyscriptCmd(ctx *context.Context, opts *buildOptions) *cobra.Command {
+	var npm npmOpts
 	cmd := &cobra.Command{
 		Use:   "assemblyscript SOURCE_DIRECTORY [-b <bazel target>] -t <name:tag>",
 		Short: "Build a wasm image from an AssemblyScript filter using NPM-in-Docker",
@@ -16,15 +21,19 @@ func assemblyscriptCmd(ctx *context.Context, opts *buildOptions) *cobra.Command 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.sourceDir = args[0]
 			return runBuild(*ctx, opts, func(build *buildOptions) (s string, err error) {
-				return runNpmBuild(*build)
+				return runNpmBuild(*build, npm)
 			})
 		},
 	}
 
+	cmd.PersistentFlags().StringVarP(&npm.username, "username", "u", "", "Username for logging in to NPM before running npm install. Optional")
+	cmd.PersistentFlags().StringVarP(&npm.password, "password", "p", "", "Password for logging in to NPM before running npm install. Optional")
+	cmd.PersistentFlags().StringVarP(&npm.email, "email", "e", "", "Email for logging in to NPM before running npm install. Optional")
+
 	return cmd
 }
 
-func runNpmBuild(build buildOptions) (string, error) {
+func runNpmBuild(build buildOptions, npm npmOpts) (string, error) {
 	sourceDir, err := filepath.Abs(build.sourceDir)
 	if err != nil {
 		return "", err
@@ -38,12 +47,17 @@ func runNpmBuild(build buildOptions) (string, error) {
 		"-v", build.tmpDir + ":/build_output",
 		"-w", "/src/workspace",
 		"-e", "BUILD_TOOL=npm", // required by build-filter.sh in container
-		build.builderImage,
 	}
+
+	if npm.username != "" && npm.password != ""  && npm.email != "" {
+		args = append(args, "-e", "NPM_USERNAME="+npm.username, "-e", "NPM_PASSWORD="+npm.password, "-e", "NPM_EMAIL="+npm.email)
+	}
+
+	args = append(args, build.builderImage)
 
 	log.WithFields(logrus.Fields{
 		"args": args,
-	}).Info("running npm-in-docker build...")
+	}).Debug("running npm-in-docker build...")
 
 	if err := docker(os.Stdout, os.Stderr, args...); err != nil {
 		return "", err

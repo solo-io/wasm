@@ -28,7 +28,8 @@ import (
 )
 
 func Cmd() *cobra.Command {
-	var opts opts.AuthOptions
+	var auth opts.AuthOptions
+	var general opts.GeneralOptions
 
 	ctx2 := context.Background()
 	ctx := &ctx2
@@ -36,27 +37,27 @@ func Cmd() *cobra.Command {
 		Use:     "wasme [command]",
 		Version: version.Version,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if opts.Debug {
+			if general.Debug {
 				logrus.SetLevel(logrus.DebugLevel)
-			} else if !opts.Verbose {
+			} else if !general.Verbose {
 				ctx2 := ctxo.WithLoggerDiscarded(*ctx)
 				*ctx = ctx2
 			}
 			// set default auth configs
-			if len(opts.CredentialsFiles) == 0 {
-				opts.CredentialsFiles = []string{defaults.WasmeCredentialsFile}
+			if len(auth.CredentialsFiles) == 0 {
+				auth.CredentialsFiles = []string{defaults.WasmeCredentialsFile}
 			}
 		},
 	}
 
 	commandsWithAuth := []*cobra.Command{
-		push.PushCmd(ctx, &opts),
-		pull.PullCmd(ctx, &opts),
-		cache.CacheCmd(ctx, &opts),
+		push.PushCmd(ctx, &auth),
+		pull.PullCmd(ctx, &auth),
+		cache.CacheCmd(ctx, &auth),
 	}
 
 	for _, cmd := range commandsWithAuth {
-		opts.AddToFlags(cmd.PersistentFlags())
+		auth.AddToFlags(cmd.PersistentFlags())
 	}
 
 	commands := append(commandsWithAuth,
@@ -72,6 +73,8 @@ func Cmd() *cobra.Command {
 	cmd.AddCommand(
 		commands...,
 	)
+
+	general.AddToFlags(cmd.PersistentFlags())
 
 	return cmd
 }

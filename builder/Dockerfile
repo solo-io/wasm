@@ -6,6 +6,8 @@ RUN apt update && \
 RUN curl -sL https://deb.nodesource.com/setup_13.x | bash - && \
     apt install -y nodejs
 
+RUN apt install expect-dev -y
+
 COPY build-filter.sh /build-filter.sh
 
 ENTRYPOINT /build-filter.sh

@@ -1,12 +1,11 @@
 #!/usr/bin/env sh
 
-set -ex
+set -e
 
 find .
 pwd
 
-ls /build_output || exit 1
-echo I have /build_output!
+ls /build_output || echo "/build_output must be mounted to this container" exit 1
 
 # must have mounted /build_output
 DESTFILE=${DESTFILE:-/build_output/filter.wasm}
@@ -28,10 +27,26 @@ npm_build() {
   # subpath within source dir where node puts the file
   NPM_OUTPUT=${NPM_OUTPUT:-build/optimized.wasm}
 
+  if [ -z $NPM_USERNAME ]; then
+      echo skipping login
+    else
+      echo running "creating npm user $NPM_USERNAME"
+      /usr/bin/expect <<EOD
+spawn npm adduser
+expect {
+  "Username:" {send "$NPM_USERNAME\r"; exp_continue}
+  "Password:" {send "$NPM_PASSWORD\r"; exp_continue}
+  "Email: (this IS public)" {send "$NPM_EMAIL\r"; exp_continue}
+}
+EOD
+  fi
+
   echo running "npm install && npm run asbuild"
   npm install && npm run asbuild
 
   cp -r ${NPM_OUTPUT} ${DESTFILE}
+
+  rm -rf build
 }
 
 echo -n "Building with ${BUILD_TOOL}..."

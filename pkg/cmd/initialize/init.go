@@ -16,20 +16,25 @@ import (
 )
 
 const (
-	languageCpp = "cpp"
+	languageCpp            = "cpp"
+	languageAssemblyScript = "assemblyscript"
 )
 
 // map supported languages and abi versions to the archive for those sources
 var languageVersionArchives = map[string]map[abi.Version][]byte{
 	languageCpp: {
-		abi.Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: cppIstio1_4TarBytes, //ONEFIVE
+		abi.Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: cppIstio1_5TarBytes,
 		abi.Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6: cppTarBytes,
+	},
+	languageAssemblyScript: {
+		abi.Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: assemblyscriptTarBytes,
 	},
 }
 
 // map of language name to description
 var supportedLanguages = []string{
 	languageCpp,
+	languageAssemblyScript,
 }
 
 func selectSourceArchive(language string, platform abi.Platform) ([]byte, error) {

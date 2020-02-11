@@ -84,6 +84,7 @@ func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSour
 			VmConfig: &config.VmConfig{
 				Runtime: "envoy.wasm.runtime.v8", // default to v8
 				Code:    dataSrc,
+				VmId:    filter.Id,
 			},
 		},
 	}

@@ -2,6 +2,16 @@ package opts
 
 import "github.com/spf13/pflag"
 
+type GeneralOptions struct {
+	Verbose bool
+	Debug   bool
+}
+
+func (opts *GeneralOptions) AddToFlags(flags *pflag.FlagSet) {
+	flags.BoolVarP(&opts.Verbose, "verbose", "v", false, "verbose output")
+	flags.BoolVarP(&opts.Debug, "debug", "d", false, "debug mode")
+}
+
 type AuthOptions struct {
 	CredentialsFiles []string
 	Username         string
@@ -9,8 +19,6 @@ type AuthOptions struct {
 	Insecure         bool
 	PlainHTTP        bool
 
-	Verbose bool
-	Debug   bool
 }
 
 func (opts *AuthOptions) AddToFlags(flags *pflag.FlagSet) {
@@ -19,6 +27,4 @@ func (opts *AuthOptions) AddToFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&opts.Password, "password", "p", "", "registry password")
 	flags.BoolVarP(&opts.Insecure, "insecure", "", false, "allow connections to SSL registry without certs")
 	flags.BoolVarP(&opts.PlainHTTP, "plain-http", "", false, "use plain http and not https")
-	flags.BoolVarP(&opts.Verbose, "verbose", "v", false, "verbose output")
-	flags.BoolVarP(&opts.Debug, "debug", "d", false, "debug mode")
 }

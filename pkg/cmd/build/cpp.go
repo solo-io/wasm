@@ -76,7 +76,7 @@ func runBazelBuild(build buildOptions, bazel bazelOptions) (string, error) {
 
 	log.WithFields(logrus.Fields{
 		"args": args,
-	}).Info("running npm-in-docker build...")
+	}).Debug("running npm-in-docker build...")
 
 	if err := docker(os.Stdout, os.Stderr, args...); err != nil {
 		return "", err
