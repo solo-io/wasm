@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/solo-io/wasme/pkg/config"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -35,6 +37,8 @@ func NewPusher(resolver remotes.Resolver, authorizer docker.Authorizer) *pusher 
 }
 
 func (p *pusher) Push(ctx context.Context, image Image) error {
+	p.checkAuth(ctx, image.Ref())
+
 	store := content.NewMemoryStore()
 
 	cfg, err := image.FetchConfig(ctx)
@@ -65,9 +69,13 @@ func (p *pusher) Push(ctx context.Context, image Image) error {
 		cfgDescriptor,
 		filterDescriptor,
 	}
-	p.checkAuth(ctx, image.Ref())
 
-	desc, err := oras.Push(ctx, p.resolver, image.Ref(), store, files, oras.WithConfig(cfgDescriptor))
+	annotations := ManifestAnnotations(cfg)
+
+	desc, err := oras.Push(ctx, p.resolver, image.Ref(), store, files,
+		oras.WithConfig(cfgDescriptor),
+		oras.WithManifestAnnotations(annotations),
+	)
 	if err != nil {
 		return errors.Wrap(err, "oras push failed")
 	}
@@ -96,5 +104,17 @@ func (p *pusher) checkAuth(ctx context.Context, ref string) {
 	resp, err := http.Get(url.String())
 	if resp != nil && resp.StatusCode == http.StatusUnauthorized {
 		p.authorizer.AddResponses(ctx, []*http.Response{resp})
+	}
+}
+
+const (
+	ManifestAnnotation_AbiVersion = "module.wasm.runtime/abi_version"
+	ManifestAnnotation_Type       = "module.wasm.runtime/type"
+)
+
+func ManifestAnnotations(cfg *config.Runtime) map[string]string {
+	return map[string]string{
+		ManifestAnnotation_AbiVersion: cfg.AbiVersion,
+		ManifestAnnotation_Type:       cfg.Type,
 	}
 }

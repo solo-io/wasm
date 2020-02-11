@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/solo-io/wasme/pkg/consts"
+
 	"github.com/solo-io/autopilot/codegen/util"
 
 	"github.com/solo-io/wasme/test"
@@ -25,7 +27,7 @@ import (
 
 func generateCrdExample(filename, image string) error {
 	if image == "" {
-		image = "webassemblyhub.io/ilackarms/istio-test:1.4.2-0"
+		image = consts.HubDomain + "/ilackarms/istio-test:1.4.2-0"
 	}
 
 	filterDeployment := &v1.FilterDeployment{
@@ -73,10 +75,7 @@ func generateCrdExample(filename, image string) error {
 var ns = "bookinfo"
 
 var _ = BeforeSuite(func() {
-	err := test.RunMake("operator-gen")
-	Expect(err).NotTo(HaveOccurred())
-
-	err = test.RunMake("manifest-gen")
+	err := test.RunMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
 	// ensure no collision between tests

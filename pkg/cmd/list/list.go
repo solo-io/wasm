@@ -13,6 +13,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/solo-io/wasme/pkg/util"
 
 	"github.com/sirupsen/logrus"
@@ -66,7 +68,7 @@ func runList(opts listOpts) error {
 
 	w.Init(buf, 0, 0, 0, ' ', 0)
 
-	fmt.Fprintf(w, "NAME \tSHA \tUPDATED \tSIZE \tTAGS\n")
+	fmt.Fprintf(w, "NAME \tTAG \tSIZE \tSHA \tUPDATED\n")
 	for _, image := range images {
 		image.Write(w)
 	}
@@ -78,22 +80,21 @@ type image struct {
 	name      string
 	sum       string
 	updated   time.Time
-	tags      []string
+	tag       string
 	sizeBytes int64
 }
 
 func (i image) Write(w io.Writer) {
-	for idx, tag := range i.tags {
-		if idx == 0 {
-			sum := i.sum
-			if len(sum) > 8 {
-				sum = strings.TrimPrefix(sum, "sha256:")[:8]
-			}
-			fmt.Fprintf(w, "%v \t%v \t%v \t%v \t%v\n", i.name, sum, i.updated.Format(time.RFC822), byteCountSI(i.sizeBytes), tag)
-		} else {
-			fmt.Fprintf(w, "  \t  \t  \t  \t%v\n", tag)
-		}
+	sum := i.sum
+	if len(sum) > 8 {
+		sum = strings.TrimPrefix(sum, "sha256:")[:8]
 	}
+	tag := i.tag
+	if len(tag) > 8 {
+		tag = strings.TrimPrefix(tag, "sha256:")[:8]
+	}
+
+	fmt.Fprintf(w, "%v \t%v \t%v \t%v \t%v\n", i.name, tag, byteCountSI(i.sizeBytes), sum, i.updated.Format(time.RFC822))
 }
 
 func byteCountSI(b int64) string {
@@ -146,7 +147,7 @@ func getLocalImages(storageDir string) ([]image, error) {
 			name:      name,
 			sum:       descriptor.Digest.String(),
 			updated:   imageInfo.ModTime(),
-			tags:      []string{tag},
+			tag:       tag,
 			sizeBytes: descriptor.Size,
 		})
 	}
@@ -181,21 +182,13 @@ func getPublishedImages() ([]image, error) {
 				continue
 			}
 			for sha, manifest := range imgInfo.Manifest {
-				size, err := strconv.Atoi(manifest.ImageSizeBytes)
+				image, err := parsePublishedImage(imgName, sha, manifest)
 				if err != nil {
-					return nil, err
+					// this is a debug line as old images didn't require a tag
+					logrus.Debugf("failed to parse info for %v, skipping: %v", imgName, err)
+					continue
 				}
-				updated, err := strconv.Atoi(manifest.TimeUploadedMs)
-				if err != nil {
-					return nil, err
-				}
-				images = append(images, image{
-					name:      imgName,
-					sum:       sha,
-					updated:   time.Unix(int64(updated), 0),
-					tags:      manifest.Tag,
-					sizeBytes: int64(size),
-				})
+				images = append(images, image)
 			}
 		}
 	}
@@ -205,6 +198,28 @@ func getPublishedImages() ([]image, error) {
 	})
 
 	return images, nil
+}
+
+func parsePublishedImage(name, sha string, manifest manifest) (image, error) {
+	size, err := strconv.Atoi(manifest.ImageSizeBytes)
+	if err != nil {
+		return image{}, err
+	}
+	if len(manifest.Tag) < 1 {
+		return image{}, errors.Errorf("invalid manifest, missing tag")
+	}
+	tag := manifest.Tag[0]
+	updated, err := strconv.Atoi(manifest.TimeUploadedMs)
+	if err != nil {
+		return image{}, err
+	}
+	return image{
+		name:      name,
+		sum:       sha,
+		updated:   time.Unix(int64(updated/1000), 0),
+		tag:       tag,
+		sizeBytes: int64(size),
+	}, nil
 }
 
 func getTagInfo(repo string) (*tagInfo, error) {

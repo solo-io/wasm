@@ -4,6 +4,7 @@ import (
 	"context"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/solo-io/wasme/pkg/abi"
 
@@ -13,8 +14,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/go-utils/protoutils"
-	cachedeployment "github.com/solo-io/wasme/pkg/cache"
-	"github.com/solo-io/wasme/pkg/cmd/cache"
+	"github.com/solo-io/wasme/pkg/cache"
 	envoyfilter "github.com/solo-io/wasme/pkg/deploy/filter"
 	"github.com/solo-io/wasme/pkg/pull"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
@@ -206,7 +206,7 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 		cm.Data = map[string]string{}
 	}
 
-	images := strings.Split(cm.Data[cachedeployment.ImagesKey], "\n")
+	images := strings.Split(cm.Data[cache.ImagesKey], "\n")
 
 	for _, existingImage := range images {
 		if image == existingImage {
@@ -218,7 +218,7 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 
 	images = append(images, image)
 
-	cm.Data[cachedeployment.ImagesKey] = strings.Trim(strings.Join(images, "\n"), "\n")
+	cm.Data[cache.ImagesKey] = strings.Trim(strings.Join(images, "\n"), "\n")
 
 	_, err = p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Update(cm)
 	if err != nil {
@@ -226,6 +226,10 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 	}
 
 	logger.Info("added image to cache")
+
+	// TODO: remove sleep once we have a better way of synchronizing between
+	// image cache pull and the deployment
+	time.Sleep(time.Second * 10)
 
 	return nil
 

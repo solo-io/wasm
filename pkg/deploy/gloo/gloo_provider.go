@@ -2,6 +2,9 @@ package gloo
 
 import (
 	"context"
+	"sort"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/pkg/errors"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
@@ -65,6 +68,9 @@ func (p *Provider) updateGateways(updateFunc func(gateway *gatewayv1.Gateway) er
 			}); err != nil {
 				return err
 			}
+			logrus.WithFields(logrus.Fields{
+				"gateway": gw.Metadata.Namespace + "." + gw.Metadata.Name,
+			}).Infof("updated gateway")
 		}
 	}
 	return nil
@@ -84,21 +90,48 @@ func apendWasmConfig(filter *v1.FilterSpec, gateway *gatewayv1.Gateway) error {
 		opts.Wasm = &wasm.PluginSource{}
 	}
 
-	// append the user's filter
-	opts.Wasm.Filters = append(opts.Wasm.Filters, &wasm.WasmFilter{
+	filters := opts.Wasm.Filters
+
+	// Gloo consumes the filter from this config
+	glooWasmFilter := &wasm.WasmFilter{
 		Image:  filter.Image,
 		Config: filter.Config,
 		Name:   filter.Id,
 		RootId: filter.RootID,
 		VmType: wasm.WasmFilter_V8, // default to V8
+	}
+
+	// see if a filter with this ID already exists, if so, update it
+	var isUpdate bool
+	for i, wasmFilter := range filters {
+		if wasmFilter.Name == glooWasmFilter.Name {
+			filters[i] = glooWasmFilter
+			isUpdate = true
+			logrus.WithFields(logrus.Fields{
+				"filterID": glooWasmFilter.Name,
+			}).Infof("updating wasm filter")
+			break
+		}
+	}
+
+	if !isUpdate {
+		// append the user's filter
+		logrus.WithFields(logrus.Fields{
+			"filterID": glooWasmFilter.Name,
+		}).Infof("appending wasm filter")
+		filters = append(filters, glooWasmFilter)
+	}
+
+	// sort for idempotence
+	sort.SliceStable(filters, func(i, j int) bool {
+		return filters[i].Name < filters[j].Name
 	})
+
+	opts.Wasm.Filters = filters
 
 	return nil
 }
 
-// TODO: currently gloo only supports 1 wasm filter
-// when it is updated, this should become a REMOVE
-// currently it just sets to nil
 func removeWasmConfig(filterID string, gateway *gatewayv1.Gateway) error {
 	httpGw := gateway.GetHttpGateway()
 	if httpGw == nil {
@@ -115,6 +148,9 @@ func removeWasmConfig(filterID string, gateway *gatewayv1.Gateway) error {
 	for i, filter := range filters {
 		if filter.GetName() == filterID {
 			opts.Wasm.Filters = append(opts.Wasm.Filters[:i], opts.Wasm.Filters[i+1:]...)
+			logrus.WithFields(logrus.Fields{
+				"filterID": filterID,
+			}).Infof("removing wasm filter")
 			break
 		}
 	}

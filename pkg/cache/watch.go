@@ -12,29 +12,39 @@ import (
 
 	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
-
-	"github.com/solo-io/wasme/pkg/cache"
 )
 
-func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory string) error {
-	// for each ref in the file, add it to the cache,
-	// and if directory is not empty write it t here
-	fw := fileWatcher{
-		imageCache: imageCache,
-		refFile:    refFile,
-		directory:  directory,
-	}
-
-	return fw.watchFile(ctx)
+// pulls images for a local cache
+type LocalImagePuller interface {
+	// watches ref file (images.txt) pulls each image to disk
+	WatchFile(ctx context.Context) error
 }
 
-type fileWatcher struct {
-	imageCache cache.Cache
+type localImagePuller struct {
+	imageCache Cache
 	refFile    string
 	directory  string
 }
 
-func (f *fileWatcher) watchFileAndGetRefs(ctx context.Context, refFile string) <-chan string {
+func NewLocalImagePuller(imageCache Cache, refFile string, directory string) *localImagePuller {
+	return &localImagePuller{imageCache: imageCache, refFile: refFile, directory: directory}
+}
+
+func (f *localImagePuller) WatchFile(ctx context.Context) error {
+	for ref := range f.watchFileAndGetRefs(ctx, f.refFile) {
+		digest, err := f.imageCache.Add(ctx, ref)
+		if err != nil {
+			return err
+		}
+		err = f.addToDirectory(ctx, digest)
+		if err != nil {
+			return errors.Wrapf(err, "adding digest to directory %v", f.directory)
+		}
+	}
+	return nil
+}
+
+func (f *localImagePuller) watchFileAndGetRefs(ctx context.Context, refFile string) <-chan string {
 	res := make(chan string)
 	go func() {
 		defer close(res)
@@ -66,21 +76,7 @@ func (f *fileWatcher) watchFileAndGetRefs(ctx context.Context, refFile string) <
 	return res
 }
 
-func (f *fileWatcher) watchFile(ctx context.Context) error {
-	for ref := range f.watchFileAndGetRefs(ctx, f.refFile) {
-		digest, err := f.imageCache.Add(ctx, ref)
-		if err != nil {
-			return err
-		}
-		err = f.addToDirectory(ctx, digest)
-		if err != nil {
-			return errors.Wrapf(err, "adding digest to directory %v", f.directory)
-		}
-	}
-	return nil
-}
-
-func (f *fileWatcher) addToDirectory(ctx context.Context, digest digest.Digest) error {
+func (f *localImagePuller) addToDirectory(ctx context.Context, digest digest.Digest) error {
 	if f.directory == "" {
 		return nil
 	}
@@ -94,7 +90,7 @@ func (f *fileWatcher) addToDirectory(ctx context.Context, digest digest.Digest) 
 	return err
 }
 
-func (f *fileWatcher) copyToFile(ctx context.Context, filename string, digest digest.Digest) error {
+func (f *localImagePuller) copyToFile(ctx context.Context, filename string, digest digest.Digest) error {
 
 	if _, err := os.Stat(filename); err == nil {
 		// file already cached, nothing to do

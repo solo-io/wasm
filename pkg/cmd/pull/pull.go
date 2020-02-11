@@ -16,12 +16,12 @@ type pullOptions struct {
 	ref        string
 	storageDir string
 
-	*opts.GeneralOptions
+	*opts.AuthOptions
 }
 
-func PullCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.Command {
+func PullCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Command {
 	var opts pullOptions
-	opts.GeneralOptions = generalOptions
+	opts.AuthOptions = loginOptions
 	cmd := &cobra.Command{
 		Use:   "pull <name:tag|name@digest>",
 		Short: "Pull wasm filters from remote registry",
@@ -42,7 +42,7 @@ func PullCmd(ctx *context.Context, generalOptions *opts.GeneralOptions) *cobra.C
 func runPull(ctx context.Context, opts pullOptions) error {
 	logrus.Infof("Pulling image %v", opts.ref)
 
-	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
+	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.CredentialsFiles...)
 	var puller pull.ImagePuller = pull.NewPuller(resolver)
 
 	image, err := puller.Pull(ctx, opts.ref)

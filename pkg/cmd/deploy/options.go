@@ -1,8 +1,10 @@
 package deploy
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
@@ -33,7 +35,7 @@ type options struct {
 	providerOptions
 
 	// login
-	opts.GeneralOptions
+	opts.AuthOptions
 
 	// print yaml only
 	dryRun bool
@@ -119,7 +121,7 @@ func (opts *localOpts) addToFlags(flags *pflag.FlagSet) {
 }
 
 func (opts *localOpts) addFilesToFlags(flags *pflag.FlagSet) {
-	flags.StringVarP(&opts.infile, "in", "", "envoy.yaml", "the input configuration file. the filter config will be added to each listener found in the file. Set -in=- to use stdin.")
+	flags.StringVarP(&opts.infile, "in", "", "envoy.yaml", "the input configuration file. the filter config will be added to each listener found in the file. Set -in=- to use stdin. If empty, will use a default configuration template.")
 	flags.StringVarP(&opts.outfile, "out", "", "envoy.yaml", "the output configuration file. the resulting config will be written to the file. Set -out=- to use stdout.")
 	flags.BoolVarP(&opts.useJsonConfig, "use-json", "", false, "parse the input file as JSON instead of YAML")
 }
@@ -187,10 +189,15 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 		)
 	case Provider_Envoy:
 		var in io.ReadCloser
-		if opts.localOpts.infile == "-" {
+		switch opts.localOpts.infile {
+		case "-":
 			// use stdin
 			in = os.Stdin
-		} else {
+		case "":
+			// use default config
+			in = ioutil.NopCloser(bytes.NewBuffer([]byte(local.BasicEnvoyConfig)))
+			opts.localOpts.useJsonConfig = false
+		default:
 			f, err := os.Open(opts.localOpts.infile)
 			if err != nil {
 				return nil, err
@@ -211,7 +218,7 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 }
 
 func makeDeployer(ctx context.Context, opts *options) (*deploy.Deployer, error) {
-	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.Configs...)
+	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.CredentialsFiles...)
 	puller := pull.NewPuller(resolver)
 
 	// set istio puller

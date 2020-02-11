@@ -4,6 +4,8 @@ import (
 	"context"
 	"os"
 
+	"github.com/solo-io/wasme/pkg/defaults"
+
 	"github.com/solo-io/wasme/pkg/cmd/tag"
 
 	"github.com/solo-io/wasme/pkg/cmd/operator"
@@ -18,7 +20,6 @@ import (
 
 	ctxo "github.com/deislabs/oras/pkg/context"
 	"github.com/solo-io/wasme/pkg/cmd/cache"
-	"github.com/solo-io/wasme/pkg/cmd/catalog"
 	"github.com/solo-io/wasme/pkg/cmd/login"
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/cmd/pull"
@@ -27,7 +28,7 @@ import (
 )
 
 func Cmd() *cobra.Command {
-	var opts opts.GeneralOptions
+	var opts opts.AuthOptions
 
 	ctx2 := context.Background()
 	ctx := &ctx2
@@ -41,29 +42,37 @@ func Cmd() *cobra.Command {
 				ctx2 := ctxo.WithLoggerDiscarded(*ctx)
 				*ctx = ctx2
 			}
+			// set default auth configs
+			if len(opts.CredentialsFiles) == 0 {
+				opts.CredentialsFiles = []string{defaults.WasmeCredentialsFile}
+			}
 		},
 	}
-	cmd.AddCommand(
-		initialize.InitCmd(),
-		build.BuildCmd(ctx),
+
+	commandsWithAuth := []*cobra.Command{
 		push.PushCmd(ctx, &opts),
 		pull.PullCmd(ctx, &opts),
 		cache.CacheCmd(ctx, &opts),
-		catalog.CatalogCmd(ctx, &opts),
-		login.LoginCmd(ctx),
+	}
+
+	for _, cmd := range commandsWithAuth {
+		opts.AddToFlags(cmd.PersistentFlags())
+	}
+
+	commands := append(commandsWithAuth,
+		initialize.InitCmd(),
+		build.BuildCmd(ctx),
+		login.LoginCmd(),
 		list.ListCmd(),
 		deploy.DeployCmd(ctx),
 		deploy.UndeployCmd(ctx),
 		operator.OperatorCmd(ctx),
-		tag.TagCmd(ctx),
+		tag.TagCmd(ctx))
+
+	cmd.AddCommand(
+		commands...,
 	)
-	cmd.PersistentFlags().StringArrayVarP(&opts.Configs, "config", "c", nil, "auth config path")
-	cmd.PersistentFlags().StringVarP(&opts.Username, "username", "u", "", "registry username")
-	cmd.PersistentFlags().StringVarP(&opts.Password, "password", "p", "", "registry password")
-	cmd.PersistentFlags().BoolVarP(&opts.Insecure, "insecure", "", false, "allow connections to SSL registry without certs")
-	cmd.PersistentFlags().BoolVarP(&opts.PlainHTTP, "plain-http", "", false, "use plain http and not https")
-	cmd.PersistentFlags().BoolVarP(&opts.Verbose, "verbose", "v", false, "verbose output")
-	cmd.PersistentFlags().BoolVarP(&opts.Debug, "debug", "d", false, "debug mode")
+
 	return cmd
 }
 

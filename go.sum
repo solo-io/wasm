@@ -592,6 +592,7 @@ github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf/go.mod h
 github.com/inconshreveable/mousetrap v1.0.0 h1:Z8tu5sraLXCXIcARxBp/8cbvlwVa7Z1NHg9XEKhtSvM=
 github.com/inconshreveable/mousetrap v1.0.0/go.mod h1:PxqpIevigyE2G7u3NXJIT2ANytuPF1OarO4DADm73n8=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
+github.com/jessevdk/go-flags v1.4.0 h1:4IU2WS7AumrZ/40jfhf4QVDMsQwqA7VEHozFRrGARJA=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
 github.com/jhump/protoreflect v1.5.0 h1:NgpVT+dX71c8hZnxHof2M7QDK7QtohIJ7DYycjnkyfc=
 github.com/jhump/protoreflect v1.5.0/go.mod h1:eaTn3RZAmMBcV0fifFvlm6VHNz3wSkYyXYWUh7ymB74=
@@ -904,10 +905,10 @@ github.com/soheilhy/cmux v0.1.3/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4k
 github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4kGIyLM=
 github.com/solo-io/anyvendor v0.0.1 h1:csAXLNLkUQWlr/ll4tgmc+Id9kHw2ibncf35weg03mI=
 github.com/solo-io/anyvendor v0.0.1/go.mod h1:SLucIeU8qBOYI82BveNVn2LzZFcMWJSCf8Kd1S4Jcr4=
-github.com/solo-io/autopilot v0.1.1-0.20200121204049-3637f04dec25 h1:WB1qP/FwtpKdthLM/MnsWm3dJ0jAXFGxWwfKNgiosLU=
-github.com/solo-io/autopilot v0.1.1-0.20200121204049-3637f04dec25/go.mod h1:ufYqjstCFzvALsvvcEHzRMbcouFCGnyHHd7ejY26APE=
 github.com/solo-io/autopilot v0.1.1-0.20200205211911-ee21dd59807e h1:Zu34pXt/ByZDyA+/p+zDY8hkESasLQB9SmjO6VYxVrY=
 github.com/solo-io/autopilot v0.1.1-0.20200205211911-ee21dd59807e/go.mod h1:ChONxgEh+B2WxCOiX79u+gd2+5sABOwD3EG4cKtR6KA=
+github.com/solo-io/autopilot v0.1.1-0.20200211163026-f295a102fd94 h1:X+Ra7Pu/P8cVTPsaFkocG6hk/NKlkx4MFW0XCGQBL3M=
+github.com/solo-io/autopilot v0.1.1-0.20200211163026-f295a102fd94/go.mod h1:ChONxgEh+B2WxCOiX79u+gd2+5sABOwD3EG4cKtR6KA=
 github.com/solo-io/envoy-operator v0.1.1/go.mod h1:ZP5hB+khljAFCROj/yDjVPXCPHntdewy6mqYybcCneQ=
 github.com/solo-io/gloo v1.3.1 h1:UPRWy/9qQIyAjtpjHGVyNrn/OYeRuL267bgUNzRpKDY=
 github.com/solo-io/gloo v1.3.1/go.mod h1:08u6J9vpfFGRDsZybTQ65UX7UuJr+EBsZz++J1wtKkQ=
@@ -1327,10 +1328,7 @@ istio.io/gogo-genproto v0.0.0-20190930162913-45029607206a h1:w7zILua2dnYo9CxImhp
 istio.io/gogo-genproto v0.0.0-20190930162913-45029607206a/go.mod h1:OzpAts7jljZceG4Vqi5/zXy/pOg1b209T3jb7Nv5wIs=
 istio.io/gogo-genproto v0.0.0-20191009201739-17d570f95998 h1:uvW88tRzT6wjR+SdqPoDjR0jjKTYWmjOp2Z1jXs1ZJQ=
 istio.io/gogo-genproto v0.0.0-20191009201739-17d570f95998/go.mod h1:OzpAts7jljZceG4Vqi5/zXy/pOg1b209T3jb7Nv5wIs=
-istio.io/tools v0.0.0-20200117200958-8b2f24232142 h1:srbSLe6Q6icR6ociYksE7fPaM6nEsYanZNYcqK73eH4=
-istio.io/tools v0.0.0-20200117200958-8b2f24232142/go.mod h1:6u5K87o8AZvfCdPhr0M60yuZR5/4pPCOCiokv7P+I+0=
 istio.io/tools v0.0.0-20200128155652-36eceb1fcb9d/go.mod h1:6u5K87o8AZvfCdPhr0M60yuZR5/4pPCOCiokv7P+I+0=
-istio.io/tools v0.0.0-20200203233146-62bf0e246959/go.mod h1:6u5K87o8AZvfCdPhr0M60yuZR5/4pPCOCiokv7P+I+0=
 k8s.io/api v0.0.0-20191004120104-195af9ec3521 h1:StP5An9aFEWfPckudvHEJc4q/WUDCUVGoZJrE/efGME=
 k8s.io/api v0.0.0-20191004120104-195af9ec3521/go.mod h1:/L5qH+AD540e7Cetbui1tuJeXdmNhO8jM6VkXeDdDhQ=
 k8s.io/apiextensions-apiserver v0.0.0-20191204090712-e0e829f17bab h1:pu/YuiYiCpzZuoM+CCbMRg+6y/duiWp5QgD7MmmhtmQ=

@@ -26,7 +26,7 @@ func WasmeCli(args ...string) error {
 }
 
 func RunMake(target string) error {
-	cmd := exec.Command("make", "-C", filepath.Dir(util.GoModPath()), target)
+	cmd := exec.Command("make", "-B", "-C", filepath.Dir(util.GoModPath()), target)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	return cmd.Run()
