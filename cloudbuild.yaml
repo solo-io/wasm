@@ -1,7 +1,7 @@
 steps:
 
   - name: gcr.io/cloud-builders/gcloud
-    args: ['container', 'clusters', 'get-credentials', 'wasme-ci-cluster', '--zone', 'us-central1-a']
+    args: ['container', 'clusters', 'get-credentials', 'wasme-ci-cluster-istio-1-5', '--zone', 'us-central1-a']
     id: 'get-kubeconfig'
 
   - name: gcr.io/cloud-builders/gsutil
