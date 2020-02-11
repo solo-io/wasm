@@ -68,7 +68,7 @@ func main() {
 			},
 		},
 
-		ManifestRoot: "operator/install",
+		ManifestRoot: "operator/install/wasme",
 
 		Builds: []model.Build{
 			{

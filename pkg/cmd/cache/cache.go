@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/solo-io/wasme/pkg/cache"
+
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/defaults"
 	"github.com/spf13/cobra"
@@ -75,4 +77,16 @@ func runCache(ctx context.Context, opts cacheOptions) error {
 		})
 	}
 	return errg.Wait()
+}
+
+func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory string) error {
+	// for each ref in the file, add it to the cache,
+	// and if directory is not empty write it t here
+	fw := cache.NewLocalImagePuller(
+		imageCache,
+		refFile,
+		directory,
+	)
+
+	return fw.WatchFile(ctx)
 }
