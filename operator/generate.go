@@ -43,7 +43,7 @@ func main() {
 				RenderProtos:     true,
 				RenderManifests:  true,
 				RenderTypes:      true,
-				RenderClients:    true,
+				RenderClients:    false,
 				RenderController: true,
 				ApiRoot:          "pkg/operator/api",
 			},
@@ -79,7 +79,7 @@ func main() {
 		},
 		BuildRoot: "operator/build",
 	}
-	log.Printf("generating operator with opts: %v", cmd)
+	log.Printf("generating operator with opts %v and image %+v", cmd, makeImage())
 
 	if err := cmd.Execute(); err != nil {
 		log.Fatal(err)

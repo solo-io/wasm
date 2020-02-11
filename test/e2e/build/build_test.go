@@ -17,7 +17,7 @@ import (
 func getEnv(env string) string {
 	val := strings.TrimSpace(os.Getenv(env))
 	if val == "" {
-		Skip("Skipping build/push test. To enable, set FILTER_IMAGE_TAG to the tag to use for the built/pushed image")
+		Skip("Skipping build/push test. To enable, set " + env + " to the tag to use for the built/pushed image")
 	}
 	return val
 }
