@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/solo-io/wasme/test"
+	"github.com/solo-io/wasme/pkg/consts/test"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"

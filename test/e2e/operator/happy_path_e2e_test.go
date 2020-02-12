@@ -10,6 +10,7 @@ import (
 
 	"github.com/solo-io/autopilot/codegen/util"
 
+	testdefaults "github.com/solo-io/wasme/pkg/consts/test"
 	"github.com/solo-io/wasme/test"
 
 	"github.com/pkg/errors"
@@ -25,7 +26,7 @@ import (
 
 func generateCrdExample(filename, image string) error {
 	if image == "" {
-		image = test.IstioAssemblyScriptImage
+		image = testdefaults.IstioAssemblyScriptImage
 	}
 
 	filterDeployment := &v1.FilterDeployment{

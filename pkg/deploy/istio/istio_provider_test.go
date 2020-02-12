@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/solo-io/wasme/test"
+	"github.com/solo-io/wasme/pkg/consts/test"
 
 	"github.com/solo-io/wasme/pkg/consts"
 
