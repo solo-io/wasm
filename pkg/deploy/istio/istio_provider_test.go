@@ -34,38 +34,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func makeDeployment(workloadName, ns string) *appsv1.Deployment {
-	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      workloadName,
-			Namespace: ns,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": workloadName},
-			},
-			Template: kubev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"app": workloadName},
-				},
-				Spec: kubev1.PodSpec{
-					Containers: []kubev1.Container{{
-						Name:  "http-echo",
-						Image: "hashicorp/http-echo",
-						Args:  []string{fmt.Sprintf("-text=hi")},
-						Ports: []kubev1.ContainerPort{{
-							Name:          "http",
-							ContainerPort: 5678,
-						}},
-					}},
-					// important, otherwise termination lasts 30 seconds!
-					TerminationGracePeriodSeconds: pointerToInt64(0),
-				},
-			},
-		},
-	}
-}
-
 var _ = Describe("IstioProvider", func() {
 	var (
 		kube   kubernetes.Interface
@@ -236,7 +204,7 @@ var _ = Describe("IstioProvider", func() {
 		Expect(ef2.Spec.ConfigPatches).To(HaveLen(1))
 	})
 
-	// note: this test assumes istio 1.4.2 installed to cluster
+	// note: this test assumes istio 1.5.0-alpha.0 installed to cluster
 	It("returns an error when the image abi version does not support the istio version", func() {
 		workload := Workload{
 			Name:      "", //all workloads
@@ -267,12 +235,44 @@ var _ = Describe("IstioProvider", func() {
 
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
-			Image:  consts.HubDomain + "/ilackarms/istio-assemblyscript-test:1.5.0-al",
+			Image:  consts.HubDomain + "/ilackarms/istio-assemblyscript-test:1.5.0-alpha.0",
 			Config: "{}",
 		})
 		Expect(err).NotTo(HaveOccurred())
 	})
 })
+
+func makeDeployment(workloadName, ns string) *appsv1.Deployment {
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      workloadName,
+			Namespace: ns,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": workloadName},
+			},
+			Template: kubev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"app": workloadName},
+				},
+				Spec: kubev1.PodSpec{
+					Containers: []kubev1.Container{{
+						Name:  "http-echo",
+						Image: "hashicorp/http-echo",
+						Args:  []string{fmt.Sprintf("-text=hi")},
+						Ports: []kubev1.ContainerPort{{
+							Name:          "http",
+							ContainerPort: 5678,
+						}},
+					}},
+					// important, otherwise termination lasts 30 seconds!
+					TerminationGracePeriodSeconds: pointerToInt64(0),
+				},
+			},
+		},
+	}
+}
 
 type mockPuller struct {
 	image mockImage
