@@ -18,7 +18,6 @@ type AuthOptions struct {
 	Password         string
 	Insecure         bool
 	PlainHTTP        bool
-
 }
 
 func (opts *AuthOptions) AddToFlags(flags *pflag.FlagSet) {

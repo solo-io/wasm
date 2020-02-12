@@ -45,8 +45,8 @@ func getCallerDirectory(skip ...int) (string, error) {
 // key is the prefix of the variable name
 // value is the directory name
 var examples = map[string]string{
-	"cpp":         "cpp",
-	"cppIstio1_5": "cpp-istio-1.5",
+	"cpp":            "cpp",
+	"cppIstio1_5":    "cpp-istio-1.5",
 	"assemblyscript": "assemblyscript",
 }
 

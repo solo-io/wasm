@@ -13,11 +13,11 @@ In this tutorial we'll use `wasme` to deploy a simple "hello world" filter that 
 
 ### Install Istio
 
-1. First, we'll download the latest Istio release. At time of writing, this is `1.4.2`:
+1. First, we'll download the latest Istio release. At time of writing, this is `1.5.0`:
 
 ```bash
 curl -L https://istio.io/downloadIstio | sh -
-cd istio-1.4.2
+cd istio-1.5.0
 ```
 
 1. To install Istio:
@@ -84,7 +84,7 @@ wasme list
 ```
 NAME                          SHA      UPDATED             SIZE   TAGS
 ...
-ilackarms/istio-example       9d9be851 02 May 85 11:02 EST 1.0 MB 1.4.2
+ilackarms/istio-example       9d9be851 02 May 85 11:02 EST 1.0 MB 1.5.0
 ...
 ```
 

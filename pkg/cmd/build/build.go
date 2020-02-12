@@ -3,13 +3,14 @@ package build
 import (
 	"bytes"
 	"context"
-	"github.com/pkg/errors"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+
+	"github.com/pkg/errors"
 
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 
@@ -92,7 +93,6 @@ func runBuild(ctx context.Context, opts *buildOptions, getFilter func(opts *buil
 			return err
 		}
 		defer os.RemoveAll(tmpDir)
-		opts.tmpDir = tmpDir
 	}
 
 	// use abs dir because docker requires it
@@ -100,6 +100,7 @@ func runBuild(ctx context.Context, opts *buildOptions, getFilter func(opts *buil
 	if err != nil {
 		return err
 	}
+	opts.tmpDir = tmpDir
 
 	filterFile, err := getFilter(opts)
 	if err != nil {

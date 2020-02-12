@@ -24,13 +24,8 @@ wasme tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG] [flags]
 ### Options inherited from parent commands
 
 ```
-  -c, --config stringArray   auth config path
-  -d, --debug                debug mode
-      --insecure             allow connections to SSL registry without certs
-  -p, --password string      registry password
-      --plain-http           use plain http and not https
-  -u, --username string      registry username
-  -v, --verbose              verbose output
+  -d, --debug     debug mode
+  -v, --verbose   verbose output
 ```
 
 ### SEE ALSO

@@ -2,10 +2,11 @@ package build
 
 import (
 	"context"
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 )
 
 type npmOpts struct {
@@ -49,7 +50,7 @@ func runNpmBuild(build buildOptions, npm npmOpts) (string, error) {
 		"-e", "BUILD_TOOL=npm", // required by build-filter.sh in container
 	}
 
-	if npm.username != "" && npm.password != ""  && npm.email != "" {
+	if npm.username != "" && npm.password != "" && npm.email != "" {
 		args = append(args, "-e", "NPM_USERNAME="+npm.username, "-e", "NPM_PASSWORD="+npm.password, "-e", "NPM_EMAIL="+npm.email)
 	}
 
