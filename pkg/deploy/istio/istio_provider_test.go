@@ -88,7 +88,7 @@ var _ = Describe("IstioProvider", func() {
 	AfterEach(func() {
 		cancel()
 		if kube != nil {
-			kubeutils.DeleteNamespacesInParallel(kube, ns)
+			kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		}
 	})
 	It("annotates the workload and creates the EnvoyFilter", func() {
