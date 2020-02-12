@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/solo-io/wasme/pkg/consts"
+	"github.com/solo-io/wasme/test"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
@@ -66,7 +66,7 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 			},
 			Spec: v1.FilterDeploymentSpec{
 				Filter: &v1.FilterSpec{
-					Image:  consts.HubDomain + "/ilackarms/istio-test:1.4.2-0",
+					Image:  test.IstioAssemblyScriptImage,
 					Config: `{"name":"hello","value":"world"}`,
 				},
 				Deployment: &v1.DeploymentSpec{

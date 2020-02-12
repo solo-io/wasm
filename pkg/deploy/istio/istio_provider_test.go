@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/solo-io/wasme/test"
+
 	"github.com/solo-io/wasme/pkg/consts"
 
 	"github.com/golang/mock/gomock"
@@ -16,7 +18,7 @@ import (
 	"github.com/solo-io/wasme/pkg/pull"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
-	"github.com/solo-io/autopilot/test"
+	aptest "github.com/solo-io/autopilot/test"
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/randutils"
 	wasmev1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
@@ -54,14 +56,14 @@ var _ = Describe("IstioProvider", func() {
 		cancel = func() {}
 	)
 	BeforeEach(func() {
-		cfg := test.MustConfig()
+		cfg := aptest.MustConfig()
 		kube = kubernetes.NewForConfigOrDie(cfg)
 
 		ns = "istio-provider-test-" + randutils.RandString(4)
 		err := kubeutils.CreateNamespacesInParallel(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
 
-		mgr, c := test.ManagerWithOpts(cfg, manager.Options{
+		mgr, c := aptest.ManagerWithOpts(cfg, manager.Options{
 			Namespace:               ns,
 			LeaderElection:          true,
 			LeaderElectionNamespace: ns,
@@ -223,19 +225,20 @@ var _ = Describe("IstioProvider", func() {
 			Workload:   workload,
 			Cache:      cache,
 		}
+		glooImage := consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0"
 		err := p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
-			Image:  consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0",
+			Image:  glooImage,
 			Config: "{}",
 		})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("image " + consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0 not supported by istio version 1.5.0-alpha.0"))
+		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " not supported by istio version 1.5.0-alpha.0"))
 
 		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
-			Image:  consts.HubDomain + "/ilackarms/istio-assemblyscript-test:1.5.0-alpha.0",
+			Image:  test.IstioAssemblyScriptImage,
 			Config: "{}",
 		})
 		Expect(err).NotTo(HaveOccurred())
