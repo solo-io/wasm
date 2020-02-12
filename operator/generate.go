@@ -111,6 +111,12 @@ func makeOperator() model.Operator {
 		Name: "wasme-operator",
 		Deployment: model.Deployment{
 			Image: makeImage(),
+			Resources: &v1.ResourceRequirements{
+				Requests: v1.ResourceList{
+					v1.ResourceCPU:    resource.MustParse("125m"),
+					v1.ResourceMemory: resource.MustParse("256Mi"),
+				},
+			},
 		},
 		Rbac: []rbacv1.PolicyRule{
 			// api resource
