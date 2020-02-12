@@ -13,18 +13,21 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/solo-io/wasme/pkg/consts"
+
 	"github.com/pkg/errors"
 
 	"github.com/solo-io/wasme/pkg/util"
 
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/wasme/pkg/consts"
 	"github.com/solo-io/wasme/pkg/store"
 	"github.com/spf13/cobra"
 )
 
 type listOpts struct {
 	published  bool
+	wide       bool
+	server     string
 	storageDir string
 }
 
@@ -40,6 +43,8 @@ func ListCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&opts.published, "published", "", false, "Set to true to list images that have been published to webassemblyhub.io. Defaults to listing image stored in local image cache.")
+	cmd.Flags().BoolVarP(&opts.wide, "wide", "w", false, "Set to true to list images with their full tag length.")
+	cmd.Flags().StringVarP(&opts.server, "server", "s", consts.HubDomain, "If using --published, read images from this remote registry.")
 	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store. Ignored if using --published")
 
 	return cmd
@@ -48,7 +53,7 @@ func ListCmd() *cobra.Command {
 func runList(opts listOpts) error {
 	var images []image
 	if opts.published {
-		i, err := getPublishedImages()
+		i, err := getPublishedImages(opts.server)
 		if err != nil {
 			return err
 		}
@@ -70,7 +75,7 @@ func runList(opts listOpts) error {
 
 	fmt.Fprintf(w, "NAME \tTAG \tSIZE \tSHA \tUPDATED\n")
 	for _, image := range images {
-		image.Write(w)
+		image.Write(w, opts.wide)
 	}
 	w.Flush()
 	return nil
@@ -84,13 +89,13 @@ type image struct {
 	sizeBytes int64
 }
 
-func (i image) Write(w io.Writer) {
+func (i image) Write(w io.Writer, wide bool) {
 	sum := i.sum
 	if len(sum) > 8 {
 		sum = strings.TrimPrefix(sum, "sha256:")[:8]
 	}
 	tag := i.tag
-	if len(tag) > 8 {
+	if !wide && len(tag) > 8 {
 		tag = strings.TrimPrefix(tag, "sha256:")[:8]
 	}
 
@@ -162,15 +167,15 @@ func getLocalImages(storageDir string) ([]image, error) {
 	return images, nil
 }
 
-func getPublishedImages() ([]image, error) {
-	root, err := getTagInfo("")
+func getPublishedImages(serverAddress string) ([]image, error) {
+	root, err := getTagInfo(serverAddress, "")
 	if err != nil {
 		return nil, err
 	}
 	repos := root.Child
 	var images []image
 	for _, repo := range repos {
-		repoInfo, err := getTagInfo(repo)
+		repoInfo, err := getTagInfo(serverAddress, repo)
 		if err != nil {
 			logrus.Warnf("failed to get repo info for %v, skipping", repo)
 			continue
@@ -178,8 +183,8 @@ func getPublishedImages() ([]image, error) {
 		repoImages := repoInfo.Child
 
 		for _, img := range repoImages {
-			imgName := repo + "/" + img
-			imgInfo, err := getTagInfo(imgName)
+			imgName := serverAddress + "/" + repo + "/" + img
+			imgInfo, err := getTagInfo(serverAddress, imgName)
 			if err != nil {
 				logrus.Warnf("failed to get image info for %v, skipping: %v", repo, err)
 				continue
@@ -225,11 +230,11 @@ func parsePublishedImage(name, sha string, manifest manifest) (image, error) {
 	}, nil
 }
 
-func getTagInfo(repo string) (*tagInfo, error) {
+func getTagInfo(serverAddress, repo string) (*tagInfo, error) {
 	if repo != "" {
 		repo = strings.TrimSuffix(repo, "/") + "/"
 	}
-	res, err := http.Get(fmt.Sprintf("https://"+consts.HubDomain+"/v2/%vtags/list", repo))
+	res, err := http.Get(fmt.Sprintf("https://"+serverAddress+"/v2/%vtags/list", repo))
 	if err != nil {
 		return nil, err
 	}
