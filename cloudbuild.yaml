@@ -28,7 +28,12 @@ steps:
       - 'WASME_LOGIN_USERNAME=admin'
     entrypoint: 'make'
     args: ['run-tests']
-    secretEnv: ['GITHUB_TOKEN', 'WASME_LOGIN_PASSWORD']
+    secretEnv:
+    - 'GITHUB_TOKEN'
+    - 'WASME_LOGIN_PASSWORD'
+    - 'NPM_LOGIN_USERNAME'
+    - 'NPM_LOGIN_PASSWORD'
+    - 'NPM_LOGIN_EMAIL'
     id: 'run-tests'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
