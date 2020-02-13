@@ -1,6 +1,7 @@
 package cache_test
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	"os"
 	"time"
 
@@ -42,7 +43,7 @@ var _ = Describe("Deploy", func() {
 	})
 	It("creates the cache namespace, configmap, and daemonset", func() {
 
-		deployer := NewDeployer(kube, cacheNamespace, "", "", "", nil)
+		deployer := NewDeployer(kube, cacheNamespace, "", "", "", nil, corev1.PullAlways)
 
 		err := deployer.EnsureCache()
 		Expect(err).NotTo(HaveOccurred())

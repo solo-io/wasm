@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	corev1 "k8s.io/api/core/v1"
 	"os"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
@@ -98,6 +99,7 @@ type cacheOpts struct {
 	imageRepo  string
 	imageTag   string
 	customArgs []string
+	pullPolicy string
 }
 
 func (opts *cacheOpts) addToFlags(flags *pflag.FlagSet) {
@@ -106,6 +108,7 @@ func (opts *cacheOpts) addToFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&opts.imageRepo, "cache-repo", "", cachedeployment.CacheImageRepository, "name of the image repository to use for the cache server daemonset")
 	flags.StringVarP(&opts.imageTag, "cache-tag", "", cachedeployment.CacheImageTag, "image tag to use for the cache server daemonset")
 	flags.StringSliceVarP(&opts.customArgs, "cache-custom-command", "", nil, "custom command to provide to the cache server image")
+	flags.StringVarP(&opts.pullPolicy, "cache-image-pull-policy", "", string(corev1.PullIfNotPresent), "image pull policy for the cache server daemonset. see https://kubernetes.io/docs/concepts/containers/images/")
 }
 
 type localOpts struct {

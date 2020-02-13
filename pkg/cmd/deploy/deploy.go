@@ -3,6 +3,7 @@ package deploy
 import (
 	"context"
 	"fmt"
+	v1 "k8s.io/api/core/v1"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -117,6 +118,7 @@ Note: currently only Istio 1.4 is supported.
 			opts.cacheOpts.imageRepo,
 			opts.cacheOpts.imageTag,
 			opts.cacheOpts.customArgs,
+			v1.PullPolicy(opts.cacheOpts.pullPolicy),
 		)
 
 		return cacheDeployer.EnsureCache()
