@@ -37,9 +37,9 @@ func Cmd() *cobra.Command {
 		Use:     "wasme [command]",
 		Version: version.Version,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			if general.Debug {
+			if general.Verbose {
 				logrus.SetLevel(logrus.DebugLevel)
-			} else if !general.Verbose {
+			} else {
 				ctx2 := ctxo.WithLoggerDiscarded(*ctx)
 				*ctx = ctx2
 			}

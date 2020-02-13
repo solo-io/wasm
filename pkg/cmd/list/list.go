@@ -27,6 +27,7 @@ import (
 type listOpts struct {
 	published  bool
 	wide       bool
+	showDir    bool
 	server     string
 	storageDir string
 }
@@ -44,6 +45,7 @@ func ListCmd() *cobra.Command {
 
 	cmd.Flags().BoolVarP(&opts.published, "published", "", false, "Set to true to list images that have been published to webassemblyhub.io. Defaults to listing image stored in local image cache.")
 	cmd.Flags().BoolVarP(&opts.wide, "wide", "w", false, "Set to true to list images with their full tag length.")
+	cmd.Flags().BoolVarP(&opts.showDir, "show-dir", "d", false, "Set to true to show the local directories for images. Does not apply to published images.")
 	cmd.Flags().StringVarP(&opts.server, "server", "s", consts.HubDomain, "If using --published, read images from this remote registry.")
 	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store. Ignored if using --published")
 
@@ -66,6 +68,8 @@ func runList(opts listOpts) error {
 		images = i
 	}
 
+	showDir := !opts.published && opts.showDir
+
 	buf := os.Stdout
 
 	// create a new tabwriter
@@ -73,9 +77,13 @@ func runList(opts listOpts) error {
 
 	w.Init(buf, 0, 0, 0, ' ', 0)
 
-	fmt.Fprintf(w, "NAME \tTAG \tSIZE \tSHA \tUPDATED\n")
+	line := "NAME \tTAG \tSIZE \tSHA \tUPDATED\n"
+	if showDir {
+		line = "NAME \tTAG \tSIZE \tSHA \tUPDATED\tDIRECTORY\n"
+	}
+	fmt.Fprintf(w, line)
 	for _, image := range images {
-		image.Write(w, opts.wide)
+		image.Write(w, opts.wide, showDir)
 	}
 	w.Flush()
 	return nil
@@ -87,19 +95,32 @@ type image struct {
 	updated   time.Time
 	tag       string
 	sizeBytes int64
+
+	// only applicable for local images
+	dir string
 }
 
-func (i image) Write(w io.Writer, wide bool) {
+func (i image) Write(w io.Writer, wide, showDir bool) {
 	sum := i.sum
 	if len(sum) > 8 {
 		sum = strings.TrimPrefix(sum, "sha256:")[:8]
 	}
 	tag := i.tag
-	if !wide && len(tag) > 8 {
-		tag = strings.TrimPrefix(tag, "sha256:")[:8]
+	if !wide && len(tag) > 32 {
+		tag = strings.TrimPrefix(tag, "sha256:")[:32] + "..."
 	}
 
-	fmt.Fprintf(w, "%v \t%v \t%v \t%v \t%v\n", i.name, tag, byteCountSI(i.sizeBytes), sum, i.updated.Format(time.RFC822))
+	args := []interface{}{
+		i.name, tag, byteCountSI(i.sizeBytes), sum, i.updated.Format(time.RFC822),
+	}
+	line := "%v \t%v \t%v \t%v \t%v\n"
+
+	if showDir {
+		args = append(args, i.dir)
+		line = "%v \t%v \t%v \t%v \t%v \t%v\n"
+	}
+
+	fmt.Fprintf(w, line, args...)
 }
 
 func byteCountSI(b int64) string {
@@ -154,6 +175,7 @@ func getLocalImages(storageDir string) ([]image, error) {
 			updated:   imageInfo.ModTime(),
 			tag:       tag,
 			sizeBytes: descriptor.Size,
+			dir:       dir,
 		})
 	}
 
