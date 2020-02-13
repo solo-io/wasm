@@ -12,7 +12,7 @@ func UndeployCmd(ctx *context.Context) *cobra.Command {
 		remove: true,
 	}
 	cmd := &cobra.Command{
-		Use:   "undeploy gloo|istio|envoy --id=<unique id>",
+		Use:   "undeploy gloo|istio --id=<unique id>",
 		Short: "Remove a deployed Envoy WASM Filter from the data plane (Envoy proxies).",
 		Long: `Removes a deployed Envoy WASM Filter from Envoy instances.
 
@@ -30,7 +30,6 @@ func UndeployCmd(ctx *context.Context) *cobra.Command {
 	cmd.AddCommand(
 		undeployGlooCmd(ctx, opts),
 		undeployIstioCmd(ctx, opts),
-		undeployLocalCmd(ctx, opts),
 	)
 
 	return cmd
@@ -71,20 +70,5 @@ in the namespace will be targeted.
 		long,
 		0,
 		opts.providerOptions.istioOpts.addToFlags,
-	)
-}
-
-func undeployLocalCmd(ctx *context.Context, opts *options) *cobra.Command {
-	use := "envoy --id=<unique name>"
-	short := "Remove an Envoy WASM Filter from the Envoy listeners."
-	long := `wasme removes the deployed filter matching the given id. 
-`
-	return makeDeployCommand(ctx, opts,
-		Provider_Envoy,
-		use,
-		short,
-		long,
-		0,
-		opts.localOpts.addFilesToFlags,
 	)
 }

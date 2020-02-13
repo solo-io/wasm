@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/solo-io/wasme/pkg/util"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -42,7 +44,6 @@ func runNpmBuild(build buildOptions, npm npmOpts) (string, error) {
 
 	// container paths are currently hard-coded in builder image
 	args := []string{
-		"run",
 		"--rm",
 		"-v", sourceDir + ":/src/workspace",
 		"-v", build.tmpDir + ":/build_output",
@@ -54,13 +55,11 @@ func runNpmBuild(build buildOptions, npm npmOpts) (string, error) {
 		args = append(args, "-e", "NPM_USERNAME="+npm.username, "-e", "NPM_PASSWORD="+npm.password, "-e", "NPM_EMAIL="+npm.email)
 	}
 
-	args = append(args, build.builderImage)
-
 	log.WithFields(logrus.Fields{
 		"args": args,
 	}).Debug("running npm-in-docker build...")
 
-	if err := docker(os.Stdout, os.Stderr, args...); err != nil {
+	if err := util.DockerRun(os.Stdout, os.Stderr, nil, build.builderImage, args, nil); err != nil {
 		return "", err
 	}
 

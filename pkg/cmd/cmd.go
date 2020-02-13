@@ -65,7 +65,7 @@ func Cmd() *cobra.Command {
 		build.BuildCmd(ctx),
 		login.LoginCmd(),
 		list.ListCmd(),
-		deploy.DeployCmd(ctx),
+		deploy.DeployCmd(ctx, cmd.PersistentPreRun),
 		deploy.UndeployCmd(ctx),
 		operator.OperatorCmd(ctx),
 		tag.TagCmd(ctx))

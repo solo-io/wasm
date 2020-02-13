@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"runtime"
 
+	"github.com/solo-io/wasme/pkg/util"
+
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -62,7 +64,6 @@ func runBazelBuild(build buildOptions, bazel bazelOptions) (string, error) {
 
 	// container paths are currently hard-coded in builder image
 	args := []string{
-		"run",
 		"--rm",
 		"-v", sourceDir + ":/src/workspace",
 		"-v", tmpDir + ":/build_output",
@@ -71,14 +72,13 @@ func runBazelBuild(build buildOptions, bazel bazelOptions) (string, error) {
 		"-e", "BAZEL_OUTPUT=" + bazel.bazelOutput,
 		"-e", "TARGET=" + bazel.bazelTarget,
 		"-e", "BUILD_TOOL=bazel", // required by build-filter.sh in container
-		build.builderImage,
 	}
 
 	log.WithFields(logrus.Fields{
 		"args": args,
 	}).Debug("running npm-in-docker build...")
 
-	if err := docker(os.Stdout, os.Stderr, args...); err != nil {
+	if err := util.DockerRun(os.Stdout, os.Stderr, nil, build.builderImage, args, nil); err != nil {
 		return "", err
 	}
 
