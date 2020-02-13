@@ -156,6 +156,9 @@ func getLocalImages(storageDir string) ([]image, error) {
 		if images[i].name < images[j].name {
 			return true
 		}
+		if images[i].name > images[j].name {
+			return false
+		}
 		return images[i].updated.Before(images[j].updated)
 	})
 
