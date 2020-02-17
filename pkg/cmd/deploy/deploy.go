@@ -13,6 +13,8 @@ import (
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/store"
 
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
@@ -131,6 +133,7 @@ Note: currently only Istio 1.5.x is supported.
 			opts.cacheOpts.imageRepo,
 			opts.cacheOpts.imageTag,
 			opts.cacheOpts.customArgs,
+			v1.PullPolicy(opts.cacheOpts.pullPolicy),
 		)
 
 		return cacheDeployer.EnsureCache()

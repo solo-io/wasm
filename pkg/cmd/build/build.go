@@ -27,7 +27,6 @@ var log = logrus.StandardLogger()
 type buildOptions struct {
 	sourceDir    string
 	configFile   string
-	wasmFile     string
 	tag          string
 	storageDir   string
 	builderImage string
@@ -44,7 +43,6 @@ func BuildCmd(ctx *context.Context) *cobra.Command {
 
 	cmd.PersistentFlags().StringVarP(&opts.tag, "tag", "t", "", "The image ref with which to tag this image. Specified in the format <name:tag>. Required")
 	cmd.PersistentFlags().StringVarP(&opts.configFile, "config", "c", "", "The path to the filter configuration file for the image. If not specified, defaults to <SOURCE_DIRECTOR>/runtime-config.json. This file must be present in order to build the image.")
-	cmd.PersistentFlags().StringVarP(&opts.wasmFile, "wasm-file", "", "", "If specified, wasme will use the provided path to a compiled filter wasm to produce the image. The bazel build will be skipped and the wasm-file will be used instead.")
 	cmd.PersistentFlags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store")
 	cmd.PersistentFlags().StringVarP(&opts.builderImage, "image", "i", "quay.io/solo-io/ee-builder:"+version.Version, "Name of the docker image containing the Bazel run instructions. Modify to run a custom builder image")
 	cmd.PersistentFlags().StringVarP(&opts.tmpDir, "tmp-dir", "", "", "Directory for storing temporary files during build. Defaults to /tmp on OSx and Linux. If unset, temporary files will be removed after build")

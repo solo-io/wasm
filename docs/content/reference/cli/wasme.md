@@ -24,7 +24,7 @@ weight: 5
 * [wasme deploy](../wasme_deploy)	 - Deploy an Envoy WASM Filter to the data plane (Envoy proxies).
 * [wasme init](../wasme_init)	 - Initialize a project directory for a new Envoy WASM Filter.
 * [wasme list](../wasme_list)	 - List Envoy WASM Filters stored locally or published to webassemblyhub.io.
-* [wasme login](../wasme_login)	 - Log in in so you can push images to the remote server.
+* [wasme login](../wasme_login)	 - Log in so you can push images to the remote server.
 * [wasme pull](../wasme_pull)	 - Pull wasm filters from remote registry
 * [wasme push](../wasme_push)	 - Push a wasm filter to remote registry
 * [wasme tag](../wasme_tag)	 - Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE

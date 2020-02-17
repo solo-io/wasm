@@ -185,6 +185,16 @@ func getLocalImages(storageDir string) ([]image, error) {
 		})
 	}
 
+	sort.Slice(images, func(i, j int) bool {
+		if images[i].name < images[j].name {
+			return true
+		}
+		if images[i].name > images[j].name {
+			return false
+		}
+		return images[i].updated.Before(images[j].updated)
+	})
+
 	return images, nil
 }
 
