@@ -13,7 +13,7 @@ import (
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/store"
 
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -44,9 +44,6 @@ You must specify --root-id unless a default root id is provided in the image con
 				return fmt.Errorf("invalid number of arguments")
 			}
 			opts.filter.Image = args[0]
-			if opts.filter.Id == "" {
-				return errors.Errorf("--id cannot be empty")
-			}
 			return nil
 		},
 	}
@@ -68,6 +65,9 @@ func makeDeployCommand(ctx *context.Context, opts *options, provider, use, short
 		Long:  long,
 		Args:  cobra.MinimumNArgs(minArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if opts.filter.Id == "" {
+				return errors.Errorf("--id cannot be empty")
+			}
 			opts.providerType = provider
 			return runDeploy(*ctx, opts)
 		},
@@ -133,7 +133,7 @@ Note: currently only Istio 1.5.x is supported.
 			opts.cacheOpts.imageRepo,
 			opts.cacheOpts.imageTag,
 			opts.cacheOpts.customArgs,
-			v1.PullPolicy(opts.cacheOpts.pullPolicy),
+			corev1.PullPolicy(opts.cacheOpts.pullPolicy),
 		)
 
 		return cacheDeployer.EnsureCache()
@@ -161,6 +161,10 @@ The generated bootstrap config can be output to a file with --out. If using this
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.filter.Image = args[0]
+			if opts.filter.Id == "" {
+				// allow filter ID to be empty, as we don't care in local envoy
+				opts.filter.Id = opts.filter.Image
+			}
 			return runLocalEnvoy(*ctx, opts.filter, opts.localOpts)
 		},
 	}
