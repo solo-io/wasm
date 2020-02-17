@@ -23,16 +23,17 @@ wasme deploy istio <image> --id=<unique name> [--config=<inline string>] [--root
 ### Options
 
 ```
-      --cache-custom-command strings   custom command to provide to the cache server image
-      --cache-name string              name of resources for the wasm image cache server (default "wasme-cache")
-      --cache-namespace string         namespace of resources for the wasm image cache server (default "wasme")
-      --cache-repo string              name of the image repository to use for the cache server daemonset (default "quay.io/solo-io/wasme")
-      --cache-tag string               image tag to use for the cache server daemonset (default "dev")
-  -h, --help                           help for istio
-      --istio-namespace string         the namespace where the Istio control plane is installed (default "istio-system")
-      --name string                    name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace
-  -n, --namespace string               namespace of the workload(s) to inject the filter. (default "default")
-  -t, --workload-type string           type of workload into which the filter should be injected. possible values are deployment or daemonset (default "deployment")
+      --cache-custom-command strings     custom command to provide to the cache server image
+      --cache-image-pull-policy string   image pull policy for the cache server daemonset. see https://kubernetes.io/docs/concepts/containers/images/ (default "IfNotPresent")
+      --cache-name string                name of resources for the wasm image cache server (default "wasme-cache")
+      --cache-namespace string           namespace of resources for the wasm image cache server (default "wasme")
+      --cache-repo string                name of the image repository to use for the cache server daemonset (default "quay.io/solo-io/wasme")
+      --cache-tag string                 image tag to use for the cache server daemonset (default "dev")
+  -h, --help                             help for istio
+      --istio-namespace string           the namespace where the Istio control plane is installed (default "istio-system")
+      --name string                      name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace
+  -n, --namespace string                 namespace of the workload(s) to inject the filter. (default "default")
+  -t, --workload-type string             type of workload into which the filter should be injected. possible values are deployment or daemonset (default "deployment")
 ```
 
 ### Options inherited from parent commands

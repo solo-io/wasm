@@ -5,8 +5,9 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
-	corev1 "k8s.io/api/core/v1"
 	"os"
+
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	"k8s.io/client-go/kubernetes"

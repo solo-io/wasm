@@ -4,7 +4,7 @@ weight: 5
 ---
 ## wasme login
 
-Log in in so you can push images to the remote server.
+Log in so you can push images to the remote server.
 
 ### Synopsis
 
