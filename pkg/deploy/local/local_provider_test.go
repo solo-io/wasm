@@ -23,11 +23,11 @@ import (
 var _ = Describe("LocalProvider", func() {
 	var (
 		filter = &v1.FilterSpec{
-		Id:     "my_filter",
-		Image:  "yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0",
-		Config: "wurld",
-	}
-	storeDir string
+			Id:     "my_filter",
+			Image:  "yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0",
+			Config: "wurld",
+		}
+		storeDir string
 
 		imageStore store.Store
 	)
