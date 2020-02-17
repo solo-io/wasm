@@ -3,6 +3,7 @@ package local_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"sync"
 	"time"
@@ -30,12 +31,14 @@ var _ = Describe("LocalProvider", func() {
 		err := test.WasmeCli("pull", filter.Image)
 		Expect(err).NotTo(HaveOccurred())
 
+		store := store.NewStore(defaults.WasmeImageDir)
+
 		buf := &bytes.Buffer{}
 		p := &Runner{
 			Ctx:              context.TODO(),
 			Input:            ioutil.NopCloser(bytes.NewBuffer([]byte(BasicEnvoyConfig))),
 			Output:           buf,
-			Store:            store.NewStore(defaults.WasmeImageDir),
+			Store:            store,
 			DockerRunArgs:    nil,
 			EnvoyArgs:        nil,
 			EnvoyDockerImage: "",
@@ -43,7 +46,10 @@ var _ = Describe("LocalProvider", func() {
 		err = p.RunFilter(filter)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(buf.String()).To(Equal(expectedConfig))
+		filterDir, err :=store.Dir(filter.Image)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(buf.String()).To(Equal(expectedConfig(filterDir)))
 	})
 	AfterEach(func() {
 		util.Docker(nil, nil, nil, "kill", filter.Id)
@@ -94,7 +100,8 @@ var _ = Describe("LocalProvider", func() {
 	})
 })
 
-var expectedConfig = `admin:
+func expectedConfig(dir string) string {
+	return fmt.Sprintf(`admin:
   accessLogPath: /dev/null
   address:
     socketAddress:
@@ -130,7 +137,7 @@ staticResources:
                 vmConfig:
                   code:
                     local:
-                      filename: /Users/ilackarms/.wasme/store/7bda74acb544159ac98f58e85d573d12/filter.wasm
+                      filename: %v/filter.wasm
                   runtime: envoy.wasm.runtime.v8
             name: envoy.filters.http.wasm
           - name: envoy.router
@@ -149,4 +156,5 @@ staticResources:
           statPrefix: ingress_http
         name: envoy.http_connection_manager
     name: listener_0
-`
+`, dir)
+}
