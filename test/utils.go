@@ -2,6 +2,7 @@ package test
 
 import (
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 
 // split the args from a single line by whitespace
 func WasmeCliSplit(argLine string) error {
+	log.Printf("arg) wasme: %v", argLine)
 	args := strings.Split(argLine, " ")
 	return WasmeCli(args...)
 }

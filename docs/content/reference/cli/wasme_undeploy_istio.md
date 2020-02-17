@@ -32,15 +32,10 @@ wasme undeploy istio --id=<unique name> --namespace=<deployment namespace> [--na
 ### Options inherited from parent commands
 
 ```
-  -c, --config stringArray   auth config path
-  -d, --debug                debug mode
-      --dry-run              print output any configuration changes to stdout rather than applying them to the target file / kubernetes cluster
-      --id string            unique id for naming the deployed filter. this is used for logging as well as removing the filter. when running wasme deploy istio, this name must be a valid Kubernetes resource name.
-      --insecure             allow connections to SSL registry without certs
-  -p, --password string      registry password
-      --plain-http           use plain http and not https
-  -u, --username string      registry username
-  -v, --verbose              verbose output
+  -d, --debug       debug mode
+      --dry-run     print output any configuration changes to stdout rather than applying them to the target file / kubernetes cluster
+      --id string   unique id for naming the deployed filter. this is used for logging as well as removing the filter. when running wasme deploy istio, this name must be a valid Kubernetes resource name.
+  -v, --verbose     verbose output
 ```
 
 ### SEE ALSO

@@ -3,6 +3,11 @@ FROM l.gcr.io/google/bazel:1.2.1
 RUN apt update && \
     apt install bzip2 libxml2 -y
 
-COPY bazel-build-filter.sh /bazel-build-filter.sh
+RUN curl -sL https://deb.nodesource.com/setup_13.x | bash - && \
+    apt install -y nodejs
 
-ENTRYPOINT /bazel-build-filter.sh
+RUN apt install expect-dev -y
+
+COPY build-filter.sh /build-filter.sh
+
+ENTRYPOINT /build-filter.sh

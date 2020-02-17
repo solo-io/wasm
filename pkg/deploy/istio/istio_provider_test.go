@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/solo-io/wasme/pkg/consts/test"
+
 	"github.com/solo-io/wasme/pkg/consts"
 
 	"github.com/golang/mock/gomock"
@@ -16,7 +18,7 @@ import (
 	"github.com/solo-io/wasme/pkg/pull"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
-	"github.com/solo-io/autopilot/test"
+	aptest "github.com/solo-io/autopilot/test"
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/randutils"
 	wasmev1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
@@ -33,38 +35,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
-
-func makeDeployment(workloadName, ns string) *appsv1.Deployment {
-	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      workloadName,
-			Namespace: ns,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": workloadName},
-			},
-			Template: kubev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"app": workloadName},
-				},
-				Spec: kubev1.PodSpec{
-					Containers: []kubev1.Container{{
-						Name:  "http-echo",
-						Image: "hashicorp/http-echo",
-						Args:  []string{fmt.Sprintf("-text=hi")},
-						Ports: []kubev1.ContainerPort{{
-							Name:          "http",
-							ContainerPort: 5678,
-						}},
-					}},
-					// important, otherwise termination lasts 30 seconds!
-					TerminationGracePeriodSeconds: pointerToInt64(0),
-				},
-			},
-		},
-	}
-}
 
 var _ = Describe("IstioProvider", func() {
 	var (
@@ -86,14 +56,14 @@ var _ = Describe("IstioProvider", func() {
 		cancel = func() {}
 	)
 	BeforeEach(func() {
-		cfg := test.MustConfig()
+		cfg := aptest.MustConfig()
 		kube = kubernetes.NewForConfigOrDie(cfg)
 
 		ns = "istio-provider-test-" + randutils.RandString(4)
 		err := kubeutils.CreateNamespacesInParallel(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
 
-		mgr, c := test.ManagerWithOpts(cfg, manager.Options{
+		mgr, c := aptest.ManagerWithOpts(cfg, manager.Options{
 			Namespace:               ns,
 			LeaderElection:          true,
 			LeaderElectionNamespace: ns,
@@ -120,7 +90,7 @@ var _ = Describe("IstioProvider", func() {
 	AfterEach(func() {
 		cancel()
 		if kube != nil {
-			kubeutils.DeleteNamespacesInParallel(kube, ns)
+			kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		}
 	})
 	It("annotates the workload and creates the EnvoyFilter", func() {
@@ -236,7 +206,7 @@ var _ = Describe("IstioProvider", func() {
 		Expect(ef2.Spec.ConfigPatches).To(HaveLen(1))
 	})
 
-	// note: this test assumes istio 1.4.2 installed to cluster
+	// note: this test assumes istio 1.5.0-alpha.0 installed to cluster
 	It("returns an error when the image abi version does not support the istio version", func() {
 		workload := Workload{
 			Name:      "", //all workloads
@@ -255,24 +225,57 @@ var _ = Describe("IstioProvider", func() {
 			Workload:   workload,
 			Cache:      cache,
 		}
+		glooImage := consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0"
 		err := p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
-			Image:  consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0",
+			Image:  glooImage,
 			Config: "{}",
 		})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("image " + consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0 not supported by istio version 1.4.2"))
+		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " not supported by istio version 1.5.0-alpha.0"))
 
 		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
-			Image:  consts.HubDomain + "/ilackarms/istio-test:1.4.2-0",
+			Image:  test.IstioAssemblyScriptImage,
 			Config: "{}",
 		})
 		Expect(err).NotTo(HaveOccurred())
 	})
 })
+
+func makeDeployment(workloadName, ns string) *appsv1.Deployment {
+	return &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      workloadName,
+			Namespace: ns,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": workloadName},
+			},
+			Template: kubev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{"app": workloadName},
+				},
+				Spec: kubev1.PodSpec{
+					Containers: []kubev1.Container{{
+						Name:  "http-echo",
+						Image: "hashicorp/http-echo",
+						Args:  []string{fmt.Sprintf("-text=hi")},
+						Ports: []kubev1.ContainerPort{{
+							Name:          "http",
+							ContainerPort: 5678,
+						}},
+					}},
+					// important, otherwise termination lasts 30 seconds!
+					TerminationGracePeriodSeconds: pointerToInt64(0),
+				},
+			},
+		},
+	}
+}
 
 type mockPuller struct {
 	image mockImage

@@ -1,7 +1,7 @@
 steps:
 
   - name: gcr.io/cloud-builders/gcloud
-    args: ['container', 'clusters', 'get-credentials', 'wasme-ci-cluster', '--zone', 'us-central1-a']
+    args: ['container', 'clusters', 'get-credentials', 'wasme-ci-cluster-istio-1-5', '--zone', 'us-central1-a']
     id: 'get-kubeconfig'
 
   - name: gcr.io/cloud-builders/gsutil
@@ -28,7 +28,12 @@ steps:
       - 'WASME_LOGIN_USERNAME=admin'
     entrypoint: 'make'
     args: ['run-tests']
-    secretEnv: ['GITHUB_TOKEN', 'WASME_LOGIN_PASSWORD']
+    secretEnv:
+    - 'GITHUB_TOKEN'
+    - 'WASME_LOGIN_PASSWORD'
+    - 'NPM_LOGIN_USERNAME'
+    - 'NPM_LOGIN_PASSWORD'
+    - 'NPM_LOGIN_EMAIL'
     id: 'run-tests'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
@@ -77,6 +82,9 @@ secrets:
       #  --keyring=build \
       #  --key=build-key | base64
       WASME_LOGIN_PASSWORD: CiQABlzmSfVO+t9/Jqg+puB6xV1HUr0TOahZExsqx6CLxjFr4rISPQCCPGSGDbZrW2pqV/fpb8IlrAuY1eoktnRnbEuSYDl3tN88WrQC6aM28cUZiauTeghkSEEFiy5tKgQxKm0=
+      NPM_LOGIN_USERNAME: CiQABlzmSYGv/5wuCyU0wdpxCGmykRu02wFMuDRelsznJxa/Q4oSMgCCPGSGqBUMvBriqgKv/Spy8rJrjBJoQ9sK0iiC4YWKWqBa4ObrtLxz18hv5B8qxtZj
+      NPM_LOGIN_PASSWORD: CiQABlzmSSKjfyKudwH94HnqkjXpBAOtzwMvk3TNYxD0WML8qk8SNACCPGSG5xLS+sqZlpMTC/V4un0Ttm9jIMzrUvna5NmeU5lJSdNg1uNdgdT1Htt5fs8YDqk=
+      NPM_LOGIN_EMAIL: CiQABlzmSc0aSbA/cKYwpMUo1oqtzTK4SrQ7jUivqL4gbv8knRcSOgCCPGSGl17+bCj5T+H/ebrN/xpzOf92B85LQzDVk1YLpoPvisHW4b3aKhjAAwp2C0SGNL92e6Sgg1A=
 
 timeout: 1200s
 tags: ['wasme']

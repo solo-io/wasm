@@ -114,7 +114,7 @@ const (
 
 func ManifestAnnotations(cfg *config.Runtime) map[string]string {
 	return map[string]string{
-		ManifestAnnotation_AbiVersion: cfg.AbiVersion,
+		ManifestAnnotation_AbiVersion: strings.Join(cfg.AbiVersions, ","),
 		ManifestAnnotation_Type:       cfg.Type,
 	}
 }

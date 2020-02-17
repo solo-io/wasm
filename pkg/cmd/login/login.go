@@ -27,7 +27,7 @@ func LoginCmd() *cobra.Command {
 	var opts loginOptions
 	cmd := &cobra.Command{
 		Use:   "login [-s SERVER_ADDRESS] -u USERNAME -p PASSWORD ",
-		Short: "Log in in so you can push images to the remote server.",
+		Short: "Log in so you can push images to the remote server.",
 		Long: `
 Caches credentials for image pushes in the provided credentials-file (defaults to $HOME/.wasme/credentials.json).
 

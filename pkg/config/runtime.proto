@@ -9,10 +9,10 @@ message Runtime {
   // the type of the runtime
   string type = 1;
 
-  // the version of the ABI of the target runtime
+  // the compatible versions of the ABI of the target runtime
   // this may be different than the version of the runtime itself
   // this is used to ensure compatibility with the runtime
-  string abi_version = 2;
+  repeated string abi_versions = 2;
 
   // the config for running the module
   // currently, wasme only supports Envoy config

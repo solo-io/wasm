@@ -16,20 +16,25 @@ import (
 )
 
 const (
-	languageCpp = "cpp"
+	languageCpp            = "cpp"
+	languageAssemblyScript = "assemblyscript"
 )
 
 // map supported languages and abi versions to the archive for those sources
 var languageVersionArchives = map[string]map[abi.Version][]byte{
 	languageCpp: {
-		abi.Version_6d525c67f39b36cdff9d688697f266c1b55e9cb7: cppIstio1_4TarBytes,
+		abi.Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: cppIstio1_5TarBytes,
 		abi.Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6: cppTarBytes,
+	},
+	languageAssemblyScript: {
+		abi.Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: assemblyscriptTarBytes,
 	},
 }
 
 // map of language name to description
 var supportedLanguages = []string{
 	languageCpp,
+	languageAssemblyScript,
 }
 
 func selectSourceArchive(language string, platform abi.Platform) ([]byte, error) {
@@ -122,7 +127,7 @@ If --language, --platform, or --platform-version are not provided, the CLI will 
 		fmt.Sprintf("The name of the target platform against which to build. Supported platforms are: %v", []string{"gloo", "istio"}))
 
 	cmd.PersistentFlags().StringVar(&opts.platform.Version, "platform-version", "",
-		fmt.Sprintf("The version of the target platform against which to build. Supported Istio versions are: %v. Supported Gloo versions are: %v", []string{abi.Version14x, abi.Version15x}, []string{abi.Version13x}))
+		fmt.Sprintf("The version of the target platform against which to build. Supported Istio versions are: %v. Supported Gloo versions are: %v", []string{abi.Version15x}, []string{abi.Version13x}))
 
 	cmd.PersistentFlags().BoolVar(&opts.disablePrompt, "disable-prompt", false,
 		"Disable the interactive prompt if a required parameter is not passed. If set to true and one of the required flags is not provided, wasme CLI will return an error.")

@@ -4,6 +4,8 @@ import (
 	"os"
 	"time"
 
+	corev1 "k8s.io/api/core/v1"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/go-utils/kubeutils"
@@ -42,7 +44,7 @@ var _ = Describe("Deploy", func() {
 	})
 	It("creates the cache namespace, configmap, and daemonset", func() {
 
-		deployer := NewDeployer(kube, cacheNamespace, "", "", "", nil)
+		deployer := NewDeployer(kube, cacheNamespace, "", "", "", nil, corev1.PullAlways)
 
 		err := deployer.EnsureCache()
 		Expect(err).NotTo(HaveOccurred())

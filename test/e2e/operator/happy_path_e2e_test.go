@@ -8,10 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/solo-io/wasme/pkg/consts"
-
 	"github.com/solo-io/autopilot/codegen/util"
 
+	testdefaults "github.com/solo-io/wasme/pkg/consts/test"
 	"github.com/solo-io/wasme/test"
 
 	"github.com/pkg/errors"
@@ -27,7 +26,7 @@ import (
 
 func generateCrdExample(filename, image string) error {
 	if image == "" {
-		image = consts.HubDomain + "/ilackarms/istio-test:1.4.2-0"
+		image = testdefaults.IstioAssemblyScriptImage
 	}
 
 	filterDeployment := &v1.FilterDeployment{
@@ -42,7 +41,7 @@ func generateCrdExample(filename, image string) error {
 		Spec: v1.FilterDeploymentSpec{
 			Filter: &v1.FilterSpec{
 				Image:  image,
-				Config: `{"name":"hello","value":"world"}`,
+				Config: `world`,
 			},
 			Deployment: &v1.DeploymentSpec{
 				DeploymentType: &v1.DeploymentSpec_Istio{Istio: &v1.IstioDeploymentSpec{

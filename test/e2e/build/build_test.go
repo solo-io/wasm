@@ -27,6 +27,9 @@ var _ = Describe("Build", func() {
 		imageName := getEnv("FILTER_IMAGE_TAG")
 		username := getEnv("WASME_LOGIN_USERNAME")
 		password := getEnv("WASME_LOGIN_PASSWORD")
+		npmUsername := getEnv("NPM_LOGIN_USERNAME")
+		npmPassword := getEnv("NPM_LOGIN_PASSWORD")
+		npmEmail := getEnv("NPM_LOGIN_EMAIL")
 
 		err := test.RunMake("generated-code")
 		Expect(err).NotTo(HaveOccurred())
@@ -34,18 +37,28 @@ var _ = Describe("Build", func() {
 		err = test.WasmeCliSplit("login -u " + username + " -p " + password + " -s " + consts.HubDomain)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = test.WasmeCliSplit("init test-filter --platform istio --platform-version 1.4.x --language cpp")
+		err = test.WasmeCliSplit("init test-filter --platform istio --platform-version 1.5.x --language assemblyscript")
 		Expect(err).NotTo(HaveOccurred())
 
 		if precompiledFilter := os.Getenv("PRECOMPILED_FILTER_PATH"); precompiledFilter != "" {
-			err = test.WasmeCliSplit("build -t " + imageName + " test-filter --wasm-file " + filepath.Dir(util.GoModPath()) + "/" + precompiledFilter)
+			err = test.WasmeCliSplit("build precompiled -t " + imageName + " test-filter " + filepath.Dir(util.GoModPath()) + "/" + precompiledFilter)
 			Expect(err).NotTo(HaveOccurred())
 		} else {
 			err = test.RunMake("builder-image")
 			Expect(err).NotTo(HaveOccurred())
 
-			// need to run with --tmp-dir=. in CI due to docker mount concerns
-			err = test.WasmeCliSplit("build -t " + imageName + " test-filter --tmp-dir=.")
+			err = test.WasmeCli(
+				"build",
+				"assemblyscript",
+				// need to run with --tmp-dir=. in CI due to docker mount concerns
+				"--tmp-dir=.",
+				"-t="+imageName,
+				"test-filter",
+				// TODO: remove login info when NPM repo is published
+				"-u="+npmUsername,
+				"-p="+npmPassword,
+				"-e="+npmEmail,
+			)
 			Expect(err).NotTo(HaveOccurred())
 		}
 

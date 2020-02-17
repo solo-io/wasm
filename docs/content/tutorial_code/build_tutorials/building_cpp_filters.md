@@ -85,7 +85,7 @@ our GitHub username which will be used to authenticate to the registry.
 Build and tag our image like so:
 
 ```shell
-wasme build . -t ilackarms/add-header:v0.1
+wasme build . -t webassemblyhub.io/ilackarms/add-header:v0.1
 ```
 
 The module will take up to a few minutes to build. In the background, `wasme` has launched a Docker container to run the necessary 

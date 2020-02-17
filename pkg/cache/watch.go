@@ -54,7 +54,7 @@ func (f *localImagePuller) watchFileAndGetRefs(ctx context.Context, refFile stri
 			select {
 			case <-ctx.Done():
 				return
-			case <-time.After(time.Second * 10):
+			case <-time.After(time.Second * 2):
 				var err error
 				// read refs from file
 				refs, err = fileToRefs(refFile)

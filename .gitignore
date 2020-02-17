@@ -6,3 +6,5 @@ target
 
 # example output
 _output/
+
+*.wasm

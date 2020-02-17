@@ -36,15 +36,16 @@ var (
 )
 
 type deployer struct {
-	kube      kubernetes.Interface
-	namespace string
-	name      string
-	image     string
-	args      []string
-	logger    *logrus.Entry
+	kube       kubernetes.Interface
+	namespace  string
+	name       string
+	image      string
+	pullPolicy v1.PullPolicy
+	args       []string
+	logger     *logrus.Entry
 }
 
-func NewDeployer(kube kubernetes.Interface, namespace, name string, imageRepo, imageTag string, args []string) *deployer {
+func NewDeployer(kube kubernetes.Interface, namespace, name string, imageRepo, imageTag string, args []string, pullPolicy v1.PullPolicy) *deployer {
 	if namespace == "" {
 		namespace = CacheNamespace
 	}
@@ -61,10 +62,18 @@ func NewDeployer(kube kubernetes.Interface, namespace, name string, imageRepo, i
 		args = DefaultCacheArgs
 	}
 	image := imageRepo + ":" + imageTag
-	return &deployer{kube: kube, namespace: namespace, name: name, image: image, args: args, logger: logrus.WithFields(logrus.Fields{
-		"cache": name + "." + namespace,
-		"image": image,
-	})}
+	return &deployer{
+		kube:       kube,
+		namespace:  namespace,
+		name:       name,
+		image:      image,
+		args:       args,
+		pullPolicy: pullPolicy,
+		logger: logrus.WithFields(logrus.Fields{
+			"cache": name + "." + namespace,
+			"image": image,
+		},
+		)}
 }
 
 func (d *deployer) EnsureCache() error {
@@ -169,9 +178,10 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 						},
 					},
 					Containers: []v1.Container{{
-						Name:  d.name,
-						Image: d.image,
-						Args:  d.args,
+						Name:            d.name,
+						Image:           d.image,
+						ImagePullPolicy: d.pullPolicy,
+						Args:            d.args,
 						VolumeMounts: []v1.VolumeMount{
 							{
 								MountPath: "/var/local/lib/wasme-cache",
