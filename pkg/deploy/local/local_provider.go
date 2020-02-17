@@ -74,6 +74,11 @@ func (p *Runner) RunFilter(filter *v1.FilterSpec) error {
 		filter.RootID = roots[0]
 	}
 
+	// allow filter ID to be empty, as we don't care in local envoy
+	if filter.Id == "" {
+		filter.Id = filter.RootID
+	}
+
 	filterDir, err := p.Store.Dir(filter.Image)
 	if err != nil {
 		return err
@@ -119,7 +124,6 @@ func (p *Runner) RunFilter(filter *v1.FilterSpec) error {
 	}
 
 	envoyArgs := append([]string{
-		"--log-level", "trace",
 		"--disable-hot-restart",
 		"--config-yaml", string(configYaml),
 	}, p.EnvoyArgs...)

@@ -161,10 +161,6 @@ The generated bootstrap config can be output to a file with --out. If using this
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.filter.Image = args[0]
-			if opts.filter.Id == "" {
-				// allow filter ID to be empty, as we don't care in local envoy
-				opts.filter.Id = opts.filter.Image
-			}
 			return runLocalEnvoy(*ctx, opts.filter, opts.localOpts)
 		},
 	}

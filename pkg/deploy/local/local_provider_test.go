@@ -7,6 +7,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/solo-io/wasme/test"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/solo-io/wasme/pkg/defaults"
@@ -24,6 +26,10 @@ var _ = Describe("LocalProvider", func() {
 		Config: "wurld",
 	}
 	It("prints the injected yaml", func() {
+
+		err := test.WasmeCli("pull", filter.Image)
+		Expect(err).NotTo(HaveOccurred())
+
 		buf := &bytes.Buffer{}
 		p := &Runner{
 			Ctx:              context.TODO(),
@@ -34,7 +40,7 @@ var _ = Describe("LocalProvider", func() {
 			EnvoyArgs:        nil,
 			EnvoyDockerImage: "",
 		}
-		err := p.RunFilter(filter)
+		err = p.RunFilter(filter)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(buf.String()).To(Equal(expectedConfig))
