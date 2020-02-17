@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"sync"
 	"time"
 
@@ -12,7 +13,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/wasme/pkg/defaults"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/store"
 	"github.com/solo-io/wasme/pkg/util"
@@ -21,32 +21,46 @@ import (
 )
 
 var _ = Describe("LocalProvider", func() {
-	var filter = &v1.FilterSpec{
+	var (
+		filter = &v1.FilterSpec{
 		Id:     "my_filter",
 		Image:  "yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0",
 		Config: "wurld",
 	}
-	It("prints the injected yaml", func() {
+	storeDir string
 
-		err := test.WasmeCli("pull", filter.Image)
+		imageStore store.Store
+	)
+	BeforeEach(func() {
+		// need to run with storage dir set to . in CI due to docker mount concerns
+		dir, err := ioutil.TempDir(".", "local-wasme-test")
+		Expect(err).NotTo(HaveOccurred())
+		storeDir = dir
+
+		err = test.WasmeCli("pull", filter.Image, "--store="+storeDir)
 		Expect(err).NotTo(HaveOccurred())
 
-		store := store.NewStore(defaults.WasmeImageDir)
+		imageStore = store.NewStore(storeDir)
 
+	})
+	AfterEach(func() {
+		os.RemoveAll(storeDir)
+	})
+	It("runs Envoy locally with the filter mounted", func() {
 		buf := &bytes.Buffer{}
 		p := &Runner{
 			Ctx:              context.TODO(),
 			Input:            ioutil.NopCloser(bytes.NewBuffer([]byte(BasicEnvoyConfig))),
 			Output:           buf,
-			Store:            store,
+			Store:            imageStore,
 			DockerRunArgs:    nil,
 			EnvoyArgs:        nil,
 			EnvoyDockerImage: "",
 		}
-		err = p.RunFilter(filter)
+		err := p.RunFilter(filter)
 		Expect(err).NotTo(HaveOccurred())
 
-		filterDir, err :=store.Dir(filter.Image)
+		filterDir, err := imageStore.Dir(filter.Image)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(buf.String()).To(Equal(expectedConfig(filterDir)))
@@ -55,10 +69,11 @@ var _ = Describe("LocalProvider", func() {
 		util.Docker(nil, nil, nil, "kill", filter.Id)
 	})
 	It("runs envoy locally with the given filter", func() {
+
 		p := &Runner{
 			Ctx:              context.TODO(),
 			Input:            ioutil.NopCloser(bytes.NewBuffer([]byte(BasicEnvoyConfig))),
-			Store:            store.NewStore(defaults.WasmeImageDir),
+			Store:            imageStore,
 			DockerRunArgs:    nil,
 			EnvoyArgs:        nil,
 			EnvoyDockerImage: DefaultEnvoyImage,
@@ -90,9 +105,6 @@ var _ = Describe("LocalProvider", func() {
 			out := b.String()
 
 			return out, err
-
-			//log.Printf("output: %v", out)
-			//log.Printf("err: %v", err)
 		}
 
 		// expect header in response

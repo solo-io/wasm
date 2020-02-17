@@ -97,8 +97,12 @@ func (s *store) Dir(ref string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	absRoot, err := filepath.Abs(s.storageDir)
+	if err != nil {
+		return "", nil
+	}
 	dir := Dirname(ref)
-	return filepath.Join(s.storageDir, dir), nil
+	return filepath.Join(absRoot, dir), nil
 }
 
 func (s *store) readWriter(dir string) imageReadWriter {
