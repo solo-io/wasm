@@ -102,6 +102,7 @@ var _ = Describe("LocalProvider", func() {
 		}
 
 		// test with curl!
+		t := time.Tick(time.Second)
 
 		testRequest := func() (string, error) {
 			errLock.RLock()
@@ -117,8 +118,12 @@ var _ = Describe("LocalProvider", func() {
 				envoyAddr+":8080/")
 
 			out := b.String()
+			select {
+			case <-t:
 			log.Printf("out: %v", out)
 			log.Printf("err: %v", err)
+			default:
+			}
 
 			return out, err
 		}

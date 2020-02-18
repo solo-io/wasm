@@ -17,3 +17,5 @@ jobs:
       - setup_remote_docker
       # specify any bash command here prefixed with `run: `
       - run: make run-tests TEST_PKG=./pkg/deploy/local
+        environment:
+          USE_DOCKER_IP: '1'
