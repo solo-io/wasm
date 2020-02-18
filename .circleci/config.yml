@@ -6,7 +6,8 @@ jobs:
   build:
     machine:
       image: ubuntu-1604:201903-01
-#    environment:
+    environment:
+      GOROOT: ~/goroot
 #      USE_DOCKER_IP: '1'
 #    docker:
 #      - image: ilackarms/e2e-go-mod-ginkgo:wasme
@@ -20,4 +21,6 @@ jobs:
       - checkout
 #      - setup_remote_docker
       # specify any bash command here prefixed with `run: `
-      - run: make run-tests TEST_PKG=./pkg/deploy/local
+      - run: wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz && tar -xvf go1.13.3.linux-amd64.tar.gz && mv go ~/goroot
+      - run: export PATH=$GOPATH/bin:$GOROOT/bin:$PATH && go get -v github.com/onsi/ginkgo/ginkgo
+      - run: export PATH=$GOPATH/bin:$GOROOT/bin:$PATH && make run-tests TEST_PKG=./pkg/deploy/local
