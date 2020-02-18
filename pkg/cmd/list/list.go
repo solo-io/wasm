@@ -71,6 +71,9 @@ func runList(opts listOpts) error {
 		if images[i].name < images[j].name {
 			return true
 		}
+		if images[i].name > images[j].name {
+			return false
+		}
 		return images[i].updated.Before(images[j].updated)
 	})
 
@@ -184,16 +187,6 @@ func getLocalImages(storageDir string) ([]image, error) {
 			dir:       dir,
 		})
 	}
-
-	sort.Slice(images, func(i, j int) bool {
-		if images[i].name < images[j].name {
-			return true
-		}
-		if images[i].name > images[j].name {
-			return false
-		}
-		return images[i].updated.Before(images[j].updated)
-	})
 
 	return images, nil
 }
