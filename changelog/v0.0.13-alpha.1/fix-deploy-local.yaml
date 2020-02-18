@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: 'Fix `wasme deploy envoy` command and update it with a cleaner experience using the local cache.'
+    issueLink: https://github.com/solo-io/wasme/issues/72
