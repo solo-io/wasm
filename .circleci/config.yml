@@ -15,7 +15,7 @@ jobs:
     #### expecting it in the form of
     ####   /go/src/github.com/circleci/go-tool
     ####   /go/src/bitbucket.org/circleci/go-tool
-    working_directory: /go/src/github.com/solo-io/wasme
+    working_directory: ~/go/src/github.com/solo-io/wasme
     steps:
       - checkout
 #      - setup_remote_docker
