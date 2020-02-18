@@ -112,27 +112,12 @@ func (p *Runner) RunFilter(filter *v1.FilterSpec) error {
 		return err
 	}
 
-	if err := wasmeutil.ExecCmd(os.Stdout, os.Stderr, nil, "find", filterDir); err != nil {
-		return err
-	}
-
 	dockerArgs := append([]string{
 		"--rm",
 		"--name", filter.Id,
 		"--entrypoint", "envoy",
 		"-v", filterDir + ":" + filterDir,
 	}, p.DockerRunArgs...)
-
-	if err := wasmeutil.DockerRun(os.Stdout, os.Stderr, nil, p.EnvoyDockerImage, append([]string{
-		"--rm",
-		"--name", filter.Id,
-		"--entrypoint", "find",
-		"-v", filterDir + ":" + filterDir,
-	}, p.DockerRunArgs...), []string{
-		filterDir	,
-	}); err != nil {
-		return err
-	}
 
 	for _, port := range ports {
 		dockerArgs = append(dockerArgs, "-p", fmt.Sprintf("%v:%v", port, port))
