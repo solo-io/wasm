@@ -21,6 +21,9 @@ jobs:
       - checkout
 #      - setup_remote_docker
       # specify any bash command here prefixed with `run: `
-      - run: wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz && tar -xvf go1.13.3.linux-amd64.tar.gz && mv go ~/goroot
-      - run: export PATH=$GOPATH/bin:$GOROOT/bin:$PATH && go get -v github.com/onsi/ginkgo/ginkgo
-      - run: export PATH=$GOPATH/bin:$GOROOT/bin:$PATH && make run-tests TEST_PKG=./pkg/deploy/local
+      - run: |
+          wget https://dl.google.com/go/go1.13.3.linux-amd64.tar.gz && \
+          tar -xvf go1.13.3.linux-amd64.tar.gz && mv go ~/goroot && \
+          export PATH=$GOPATH/bin:$GOROOT/bin:$PATH && \
+          go get -v github.com/onsi/ginkgo/ginkgo && \
+          make run-tests TEST_PKG=./pkg/deploy/local
