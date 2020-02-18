@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
+	"log"
 	"os"
 	"sync"
 	"time"
@@ -32,6 +34,7 @@ var _ = Describe("LocalProvider", func() {
 		imageStore store.Store
 	)
 	BeforeEach(func() {
+		logrus.SetLevel(logrus.DebugLevel)
 		// need to run with storage dir set to . in CI due to docker mount concerns
 		dir, err := ioutil.TempDir(".", "local-wasme-test")
 		Expect(err).NotTo(HaveOccurred())
@@ -87,6 +90,17 @@ var _ = Describe("LocalProvider", func() {
 			errLock.Unlock()
 		}()
 
+		// envoy addr defaults to the localhost port-forward
+		envoyAddr := "localhost"
+		// in CI we need to get the container IP directly
+		if os.Getenv("USE_DOCKER_IP") == "1" {
+			time.Sleep(time.Second * 5)
+			dockerIp, err := util.ExecOutput(nil, "docker", "inspect", "-f", "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}", filter.Id)
+			Expect(err).NotTo(HaveOccurred())
+
+			envoyAddr = dockerIp
+		}
+
 		// test with curl!
 
 		testRequest := func() (string, error) {
@@ -100,9 +114,11 @@ var _ = Describe("LocalProvider", func() {
 				nil,
 				"curl",
 				"-v",
-				"localhost:8080/")
+				envoyAddr+":8080/")
 
 			out := b.String()
+			log.Printf("out: %v", out)
+			log.Printf("err: %v", err)
 
 			return out, err
 		}

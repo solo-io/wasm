@@ -1,8 +1,11 @@
 package util
 
 import (
+	"bytes"
+	"github.com/pkg/errors"
 	"io"
 	"os/exec"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -16,6 +19,16 @@ func DockerRun(stdout, stderr io.Writer, stdin io.Reader, image string, runArgs,
 
 func Docker(stdout, stderr io.Writer, stdin io.Reader, args ...string) error {
 	return ExecCmd(stdout, stderr, stdin, "docker", args...)
+}
+
+func ExecOutput(stdin io.Reader, cmd string, args ...string) (string, error) {
+	buf := &bytes.Buffer{}
+	err := ExecCmd(buf, buf, stdin, cmd, args...)
+	out := strings.TrimSpace(buf.String())
+	if err != nil {
+		return "", errors.Wrap(err, out)
+	}
+	return out, nil
 }
 
 func ExecCmd(stdout, stderr io.Writer, stdin io.Reader, cmd string, args ...string) error {
