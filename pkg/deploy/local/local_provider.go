@@ -49,7 +49,7 @@ type Runner struct {
 	EnvoyDockerImage string
 }
 
-// applies the filter to all selected workloads in selected namespaces
+// applies the filter to all static listeners in the bootstrap config
 func (p *Runner) RunFilter(filter *v1.FilterSpec) error {
 	cfg, err := p.getConfig()
 	if err != nil {

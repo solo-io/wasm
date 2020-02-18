@@ -200,7 +200,8 @@ func runLocalEnvoy(ctx context.Context, filter v1.FilterSpec, opts localOpts) er
 	if err != nil {
 		return err
 	}
-	out, err := func() (io.Writer, error) {
+	defer in.Close()
+	out, err := func() (io.WriteCloser, error) {
 		switch opts.infile {
 		case "-":
 			// use stdout
@@ -215,6 +216,9 @@ func runLocalEnvoy(ctx context.Context, filter v1.FilterSpec, opts localOpts) er
 	}()
 	if err != nil {
 		return err
+	}
+	if out != nil {
+		defer out.Close()
 	}
 
 	parseArgs := func(argStr string) []string {
