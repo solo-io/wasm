@@ -24,7 +24,6 @@ Options for the build are specific to the target language.
 ### Options inherited from parent commands
 
 ```
-  -d, --debug     debug mode
   -v, --verbose   verbose output
 ```
 

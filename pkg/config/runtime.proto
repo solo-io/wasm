@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package solo.extendenvoy.config;
+package module.wasm.config;
 
 option go_package = "config";
 

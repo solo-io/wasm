@@ -27,7 +27,6 @@ wasme build assemblyscript SOURCE_DIRECTORY [-b <bazel target>] -t <name:tag> [f
 
 ```
   -c, --config string    The path to the filter configuration file for the image. If not specified, defaults to <SOURCE_DIRECTOR>/runtime-config.json. This file must be present in order to build the image.
-  -d, --debug            debug mode
   -i, --image string     Name of the docker image containing the Bazel run instructions. Modify to run a custom builder image (default "quay.io/solo-io/ee-builder:dev")
       --store string     Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store
   -t, --tag string       The image ref with which to tag this image. Specified in the format <name:tag>. Required

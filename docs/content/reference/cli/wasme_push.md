@@ -32,7 +32,6 @@ wasme push name[:tag|@digest] [flags]
 ### Options inherited from parent commands
 
 ```
-  -d, --debug     debug mode
   -v, --verbose   verbose output
 ```
 

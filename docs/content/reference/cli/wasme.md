@@ -13,7 +13,6 @@ weight: 5
 ### Options
 
 ```
-  -d, --debug     debug mode
   -h, --help      help for wasme
   -v, --verbose   verbose output
 ```

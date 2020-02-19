@@ -22,17 +22,18 @@ wasme undeploy istio --id=<unique name> --namespace=<deployment namespace> [--na
 ### Options
 
 ```
+      --config string            optional config that will be passed to the filter. accepts an inline string.
   -h, --help                     help for istio
       --istio-namespace string   the namespace where the Istio control plane is installed (default "istio-system")
       --name string              name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace
   -n, --namespace string         namespace of the workload(s) to inject the filter. (default "default")
+      --root-id string           optional root ID used to bind the filter at the Envoy level. this value is normally read from the filter image directly.
   -t, --workload-type string     type of workload into which the filter should be injected. possible values are deployment or daemonset (default "deployment")
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -d, --debug       debug mode
       --dry-run     print output any configuration changes to stdout rather than applying them to the target file / kubernetes cluster
       --id string   unique id for naming the deployed filter. this is used for logging as well as removing the filter. when running wasme deploy istio, this name must be a valid Kubernetes resource name.
   -v, --verbose     verbose output
