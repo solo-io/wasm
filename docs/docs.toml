@@ -45,6 +45,7 @@ highlightClientSide = false # set true to use highlight.pack.js instead of the d
 menushortcutsnewtab = false # set true to open shortcuts links to a new tab/window
 enableGitInfo = true
 logoPath="/img/logo.png"
+version="dev"
 
 [[menu.shortcuts]]
 name = "<i class='fa fa-github'></i> Github Repo"
