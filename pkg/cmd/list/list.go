@@ -41,11 +41,11 @@ func ListCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().BoolVarP(&opts.published, "published", "", false, "Set to true to list images that have been published to webassemblyhub.io. Defaults to listing image stored in local image cache.")
+	cmd.Flags().BoolVarP(&opts.published, "published", "", false, "Set to true to list images that have been published to a remote registry. If unset, lists images stored in local image cache.")
 	cmd.Flags().BoolVarP(&opts.wide, "wide", "w", false, "Set to true to list images with their full tag length.")
 	cmd.Flags().BoolVarP(&opts.showDir, "show-dir", "d", false, "Set to true to show the local directories for images. Does not apply to published images.")
 	cmd.Flags().StringVarP(&opts.server, "server", "s", consts.HubDomain, "If using --published, read images from this remote registry.")
-	cmd.Flags().StringVarP(&opts.search, "search", "", "", "If using --published, search images from the remote registry. If unset, `wasme list --published` will return the top repositories which are accessed the most.")
+	cmd.Flags().StringVarP(&opts.search, "search", "", "", "Search images from the remote registry. If unset, `wasme list --published` will return the top repositories which are accessed the most.")
 	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store. Ignored if using --published")
 
 	return cmd
@@ -53,7 +53,7 @@ func ListCmd() *cobra.Command {
 
 func runList(opts listOpts) error {
 	var images []image
-	if opts.published {
+	if opts.published || opts.search != "" {
 		i, err := getPublishedImages(opts.server, opts.search)
 		if err != nil {
 			return err
