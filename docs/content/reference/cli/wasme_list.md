@@ -34,5 +34,5 @@ wasme list [flags]
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
 

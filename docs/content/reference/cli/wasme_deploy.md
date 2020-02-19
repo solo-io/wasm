@@ -33,7 +33,7 @@ You must specify --root-id unless a default root id is provided in the image con
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
 * [wasme deploy envoy](../wasme_deploy_envoy)	 - Run Envoy locally in Docker and attach a WASM Filter.
 * [wasme deploy gloo](../wasme_deploy_gloo)	 - Deploy an Envoy WASM Filter to the Gloo Gateway Proxies (Envoy).
 * [wasme deploy istio](../wasme_deploy_istio)	 - Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).

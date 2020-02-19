@@ -28,7 +28,7 @@ Removes a deployed Envoy WASM Filter from Envoy instances.
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
 * [wasme undeploy gloo](../wasme_undeploy_gloo)	 - Remove an Envoy WASM Filter from the Gloo Gateway Proxies (Envoy).
 * [wasme undeploy istio](../wasme_undeploy_istio)	 - Remove an Envoy WASM Filter from the Istio Sidecar Proxies (Envoy).
 

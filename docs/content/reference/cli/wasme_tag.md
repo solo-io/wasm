@@ -29,5 +29,5 @@ wasme tag SOURCE_IMAGE[:TAG] TARGET_IMAGE[:TAG] [flags]
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
 

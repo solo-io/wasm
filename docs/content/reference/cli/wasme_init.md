@@ -41,5 +41,5 @@ wasme init DEST_DIRECTORY [--language=FILTER_LANGUAGE] [--platform=TARGET_PLATFO
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
 

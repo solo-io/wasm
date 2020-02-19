@@ -3,6 +3,13 @@ package main
 //go:generate go run generate_reference_docs.go
 
 import (
+	"html/template"
+	"io/ioutil"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/gogo/protobuf/proto"
 	plugin_gogo "github.com/gogo/protobuf/protoc-gen-gogo/plugin"
 	plugin_go "github.com/golang/protobuf/protoc-gen-go/plugin"
@@ -11,12 +18,6 @@ import (
 	"github.com/pseudomuto/protoc-gen-doc/parser"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/solo-kit/pkg/code-generator/collector"
-	"html/template"
-	"io/ioutil"
-	"log"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/solo-io/wasme/pkg/cmd"
 

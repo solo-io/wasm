@@ -37,5 +37,5 @@ wasme push name[:tag|@digest] [flags]
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
 

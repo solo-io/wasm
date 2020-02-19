@@ -15,7 +15,7 @@ wasme supports building deployable images from a precompiled .wasm file. The use
 
 The specification for this flag can be found here: [{{< versioned_link_path fromRoot="/reference/image_config">}}]({{< versioned_link_path fromRoot="/reference/image_config">}})
 `,
-		Args:  cobra.ExactArgs(1),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runBuild(*ctx, opts, func(build *buildOptions) (s string, err error) {
 				return args[0], nil

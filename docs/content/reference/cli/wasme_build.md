@@ -29,7 +29,7 @@ Options for the build are specific to the target language.
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
 * [wasme build assemblyscript](../wasme_build_assemblyscript)	 - Build a wasm image from an AssemblyScript filter using NPM-in-Docker
 * [wasme build cpp](../wasme_build_cpp)	 - Build a wasm image from a CPP filter using Bazel-in-Docker
 * [wasme build precompiled](../wasme_build_precompiled)	 - Build a wasm image from a Precompiled filter.
