@@ -1,180 +1,110 @@
 ---
 title: "Deploying Filters to Local Envoy"
 weight: 3
-description: Deploy a wasm filter using Gloo as the control plane.
+description: Run Envoy locally to test a WASM filter attached.
 ---
 
-In this tutorial we'll deploy an existing WebAssembly (WASM) module from [the WebAssembly Hub](https://webassemblyhub.io) directly to Envoy running locally in `docker`.
+In this tutorial we'll deploy an existin    g WebAssembly (WASM) module from [the WebAssembly Hub](https://webassemblyhub.io) directly to Envoy running locally in `docker`.
 
-## Prepare Envoy to run Locally
+Deploying filters locally with Envoy is a great way to develop and test custom filters. `wasme deploy envoy` runs a single instance of Envoy in a Docker container on the local machine. Envoy is started with a static configuration, which which defaults to a single route to `jsonplaceholder.typicode.com` unless supplied by the user.
 
-Let's create a configuration for running Envoy locally. Paste the following into an `envoy.yaml` file:
+# Tutorial
 
-```bash
-admin:
-  access_log_path: /dev/null
-  address:
-    socket_address:
-      address: 0.0.0.0
-      port_value: 19000
-static_resources:
-  listeners:
-  - name: listener_0
-    address:
-      socket_address: { address: 0.0.0.0, port_value: 8080 }
-    filter_chains:
-    - filters:
-      - name: envoy.http_connection_manager
-        config:
-          codec_type: AUTO
-          stat_prefix: ingress_http
-          route_config:
-            name: test
-            virtual_hosts:
-            - name: jsonplaceholder
-              domains: ["*"]
-              routes:
-              - match: { prefix: "/" }
-                route:
-                  cluster: static-cluster
-                  auto_host_rewrite: true
-          http_filters:
-          - name: envoy.router
-  clusters:
-  - name: static-cluster
-    connect_timeout: 0.25s
-    type: LOGICAL_DNS
-    lb_policy: ROUND_ROBIN
-    dns_lookup_family: V4_ONLY
-    tls_context:
-      sni: jsonplaceholder.typicode.com
-    hosts: [{ socket_address: { address: jsonplaceholder.typicode.com, port_value: 443, ipv4_compat: true } }]
-```
-
-Now let's run Envoy using docker:
-
-```bash
-
-docker run --rm --name e2e_envoy -p 8080:8080 -p 8443:8443 -p 19001:19001 \
-    --entrypoint=envoy \
-    quay.io/solo-io/gloo-envoy-wasm-wrapper:1.2.12 \
-    --disable-hot-restart --log-level debug --config-yaml "$(cat envoy.yaml)"
-
-```
-
-In another terminal, test that you can query the proxied service:
-
-```bash
-curl localhost:8080/posts/1 -v
-```
-
-```
-< HTTP/1.1 200 OK
-< date: Mon, 23 Dec 2019 14:51:18 GMT
-< content-type: application/json; charset=utf-8
-< content-length: 292
-< set-cookie: __cfduid=d4c04bb71af3e2c5340fe137a162315d21577112678; expires=Wed, 22-Jan-20 14:51:18 GMT; path=/; domain=.typicode.com; HttpOnly; SameSite=Lax
-< x-powered-by: Express
-< vary: Origin, Accept-Encoding
-< access-control-allow-credentials: true
-< cache-control: max-age=14400
-< pragma: no-cache
-< expires: -1
-< x-content-type-options: nosniff
-< etag: W/"124-yiKdLzqO5gfBrJFrcdJ8Yq0LGnU"
-< via: 1.1 vegur
-< cf-cache-status: HIT
-< age: 7189
-< accept-ranges: bytes
-< expect-ct: max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
-< server: envoy
-< cf-ray: 549b2721ea21c5c4-EWR
-< x-envoy-upstream-service-time: 78
-<
-{
-  "userId": 1,
-  "id": 1,
-  "title": "sunt aut facere repellat provident occaecati excepturi optio reprehenderit",
-  "body": "quia et suscipit\nsuscipit recusandae consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto"
-* Connection #0 to host localhost left intact
-}
-```
-
-This is the standard response if all of our setup steps worked correctly. Let's now add the `hello` filter to our Envoy.
+In this example, we'll be working with a filter pulled from the registry at [`webassemblyhub.io`](https://webassemblyhub.io). 
+ 
+ If you are working with a filter you've built yourself, you can skip to [Run the Filter](#Run the Filter).
 
 ## Pull the filter
 
-Next we'll pull the filter with `wasme`. For this example we'll use the `webassemblyhub.io/ilackarms/gloo-test:1.3.3-0` filter,
-which appends a `hello: World!` header to response requests. 
+First we'll pull the filter with `wasme`. For this example we'll use the `yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0` filter,
+which appends a header to HTTP responses. 
+
+{{% notice note %}}
+The `yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0` filter image is compatible with the versions of Envoy packaged with Gloo `1.3.x` and Istio `1.5.x`. 
+{{% /notice %}}
+
 
 To pull the filter:
 
 ```shell
-wasme pull webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 -o hello.wasm
+wasme pull yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
 ```
 
 ```
-webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:c6c060cce61aedc5b04c92f62b0b3238897958e448e4c2498f8302dd3af03b55 Size:39 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:d23cdeb8e7096cc5b2b2f7959a9be9412f840bd0a5ff56f364005efd5fc41c66 Size:1042994 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:d64b8187e3f71922dbbb332d4f8136519e0768ae9ecf150b15150b5a02eb4d63 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
-INFO[0000] Pulled filter image webassemblyhub.io/ilackarms/gloo-test:1.3.3-0
+INFO[0000] Pulling image yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
+INFO[0000] Image: yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
+INFO[0000] Digest: sha256:8b74e9b0bbc5ff674c49cde904669a775a939b4d8f7f72aba88c184d527dfc30
 ```
 
-We should see the filter `hello.wasm` has been downloaded to our current directory:
+We should see image `yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0` has been downloaded to local cache:
 
 ```
-ls -l
+wasme list
 ```
 
 ```
--rw-r--r--   1 ilackarms  staff   1.0M Dec 20 16:09 hello.wasm
+NAME                                            TAG                 SIZE    SHA      UPDATED
+yuvaltest.solo.io/ilackarms/assemblyscript-test istio-1.5.0-alpha.0 12.5 kB 8b74e9b0 13 Feb 20 13:59 EST
 ```
 
-# Update the Config
+## Run the Filter
 
-Now we'll need to update Envoy's configuration. 
+Running the filter with a local instance of Envoy is as done with a single command:
 
-For the purposes of this tutorial we are configuring Envoy statically, which means we'll need to restart Envoy in order to pick up the new WASM filter. 
+```bash
+wasme deploy envoy yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
+```
 
 {{% notice note %}}
-In production environments, it's better to use dynamic configuration when possible.
+The `wasme deploy envoy` command runs the filter with an Envoy image built for Gloo `1.3.5`. You can override this with the `--envoy-image` flag. 
 {{% /notice %}}
 
-To add our wasm filter to the config, simply run:
-
-```bash
-wasme deploy envoy webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 \
-  --id=myfilter \
-  --in=envoy.yaml \
-  --out=envoy.yaml \
-  --filter=/etc/hello.wasm
-```
-
-# Run and Test
-
-Now we'll run Envoy again, this time mounting `hello.wasm` to `/etc` in the container:
-
-```bash
-
-docker run --rm --name e2e_envoy -p 8080:8080 -p 8443:8443 -p 19001:19001 \
-    -v $(pwd)/hello.wasm:/etc/hello.wasm --entrypoint=envoy \
-    quay.io/solo-io/gloo-envoy-wasm-wrapper:1.2.12 \
-    --disable-hot-restart --log-level debug --config-yaml "$(cat envoy.yaml)"
+This will start Envoy in a docker container. We should see logs printed in the current terminal:
 
 ```
+INFO[0000] mounting filter file at /Users/ilackarms/.wasme/store/7bda74acb544159ac98f58e85d573d12/filter.wasm
+INFO[0000] running envoy-in-docker                       container_name=add_header envoy_image="quay.io/solo-io/gloo-envoy-wasm-wrapper:1.3.5" filter_image="yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0"
+[2020-02-17 17:50:52.050][1][info][main] [external/envoy/source/server/server.cc:252] initializing epoch 0 (hot restart version=disabled)
+[2020-02-17 17:50:52.050][1][info][main] [external/envoy/source/server/server.cc:254] statically linked extensions:
+[2020-02-17 17:50:52.050][1][info][main] [external/envoy/source/server/server.cc:256]   access_loggers: envoy.file_access_log, envoy.http_grpc_access_log, envoy.tcp_grpc_access_log, envoy.wasm_access_log
+[2020-02-17 17:50:52.050][1][info][main] [external/envoy/source/server/server.cc:256]   clusters: envoy.cluster.eds, envoy.cluster.logical_dns, envoy.cluster.original_dst, envoy.cluster.static, envoy.cluster.strict_dns, envoy.clusters.aggregate, envoy.clusters.dynamic_forward_proxy, envoy.clusters.redis
+```
 
-In another terminal, test with another `curl`:
+`Ctrl+C` can be used at any time to terminate the container.
+
+We can see the running container in another terminal session:
+
+```bash
+docker ps
+```
+
+```
+CONTAINER ID        IMAGE                                           COMMAND                  CREATED              STATUS              PORTS                                              NAMES
+ca6ee2f57522        quay.io/solo-io/gloo-envoy-wasm-wrapper:1.3.5   "envoy --disable-hot…"   About a minute ago   Up About a minute   0.0.0.0:8080->8080/tcp, 0.0.0.0:19000->19000/tcp   add_header
+```
+
+Docker is port-forwarding port `8080` of the container to our local machine. 
+
+Let's try hitting the container with a request:
 
 ```bash
 curl localhost:8080/posts/1 -v
 ```
 
-We should see the `hello: World!` header in the response:
-
-{{< highlight bash "hl_lines=22" >}}
+{{< highlight yaml "hl_lines=30" >}}
+*   Trying ::1...
+* TCP_NODELAY set
+* Connected to localhost (::1) port 8080 (#0)
+> GET /posts/1 HTTP/1.1
+> Host: localhost:8080
+> User-Agent: curl/7.54.0
+> Accept: */*
+>
 < HTTP/1.1 200 OK
-< date: Mon, 23 Dec 2019 15:46:42 GMT
+< date: Mon, 17 Feb 2020 17:54:57 GMT
 < content-type: application/json; charset=utf-8
 < content-length: 292
-< set-cookie: __cfduid=d5b623b10179315552ba69f38674bb4351577116002; expires=Wed, 22-Jan-20 15:46:42 GMT; path=/; domain=.typicode.com; HttpOnly; SameSite=Lax
+< set-cookie: __cfduid=de818e5f1056f5e426c15afc6c73380d21581962097; expires=Wed, 18-Mar-20 17:54:57 GMT; path=/; domain=.typicode.com; HttpOnly; SameSite=Lax
 < x-powered-by: Express
 < vary: Origin, Accept-Encoding
 < access-control-allow-credentials: true
@@ -185,14 +115,13 @@ We should see the `hello: World!` header in the response:
 < etag: W/"124-yiKdLzqO5gfBrJFrcdJ8Yq0LGnU"
 < via: 1.1 vegur
 < cf-cache-status: HIT
-< age: 2477
+< age: 2717
 < accept-ranges: bytes
 < expect-ct: max-age=604800, report-uri="https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct"
 < server: envoy
-< cf-ray: 549b78488804e76c-EWR
-< x-envoy-upstream-service-time: 84
-< hello: World!
-< location: envoy-wasm
+< cf-ray: 5669a1240ab7ff90-BOS
+< x-envoy-upstream-service-time: 76
+< hello: world!
 <
 {
   "userId": 1,
@@ -203,56 +132,11 @@ We should see the `hello: World!` header in the response:
 }
 {{< /highlight >}}
 
-Great! If everything worked correctly, we should see the 
-above response. If you encountered an issue anywhere along the way, please report it to the `wasme` authors at https://github.com/solo-io/wasme/issues/new.
+If everything worked correctly, we should see the `hello: world!` header appended in the `curl` response.
 
-## Cleaning up
+# Summary
 
-We can remove our filter from the static config with the `wasme undeploy` command:
-
-```bash
-wasme undeploy envoy \
-    --id=myfilter \
-    --in envoy.yaml \
-    --out envoy.yaml
-```
-
-Restart Envoy:
-
-```bash
-docker run --rm --name e2e_envoy -p 8080:8080 -p 8443:8443 -p 19001:19001 \
-    --entrypoint=envoy \
-    quay.io/solo-io/gloo-envoy-wasm-wrapper:1.2.12 \
-    --disable-hot-restart --log-level debug --config-yaml "$(cat envoy.yaml)"
-```
-
-Then re-try the `curl`:
-
-```shell
-curl -v $URL/posts/1
-```
-
-```
-*   Trying 34.73.225.160...
-* TCP_NODELAY set
-* Connected to 34.73.225.160 (34.73.225.160) port 80 (#0)
-> GET /api/pets HTTP/1.1
-> Host: 34.73.225.160
-> User-Agent: curl/7.54.0
-> Accept: */*
->
-< HTTP/1.1 200 OK
-< content-type: application/xml
-< date: Fri, 20 Dec 2019 19:19:13 GMT
-< content-length: 86
-< x-envoy-upstream-service-time: 1
-< server: envoy
-<
-[{"id":1,"name":"Dog","status":"available"},{"id":2,"name":"Cat","status":"pending"}]
-* Connection #0 to host 34.73.225.160 left intact
-```
-
-Cool! We've just seen how easy it is to dynamically add and remove filters from Envoy using `wasme`.
+Using `wasme deploy envoy`, we can locally test filters against Envoy. See [the CLI documentation]({{< versioned_link_path fromRoot="/reference/cli/wasme_deploy_envoy">}}) for all the supported options for this command. 
 
 For more information and support using `wasme` and the Web Assembly Hub, visit the Solo.io slack channel at
 https://slack.solo.io.

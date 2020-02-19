@@ -1,10 +1,12 @@
 ---
-title: "Building WASM Filters in C++"
+title: "Building WASM Filters in AssemblyScript"
 weight: 1
-description: "Build a simple WebAssembly filter in C++."
+description: "Build a simple WebAssembly filter in AssemblyScript."
 ---
 
-In this tutorial we will create an Envoy filter in C++ and build it using WASME. We'll optionally push
+In this tutorial we will write an Envoy filter in [AssemblyScript](https://docs.assemblyscript.org/) and build it using `wasme`.
+ 
+ We'll optionally push
 the image to the public WASM registry at https://webassemblyhub.io/.
 
 ## Creating a new WASM module
@@ -14,23 +16,21 @@ Refer to the [installation guide]({{< versioned_link_path fromRoot="/installatio
 Let's create a new project called `new-filter`:
 
 ```shell
-$  wasme init ./cpp-filter
+$  wasme init ./assemblyscript-filter
 ```
 
-You'll be asked with an interactive prompt which language platform you are building for. Choose the 
-appropriate option below:
+You'll be asked with an interactive prompt which language platform you are building for. Choose the appropriate option below:
 
 {{< tabs >}}
 {{< tab name="istio" codelang="shell">}}
 ? What language do you wish to use for the filter:
-  ▸ cpp
+  ▸ assemblyscript
 ? With which platform do you wish to use the filter?:
   ▸ istio 1.5.x
-  ▸ gloo 1.3.x
 {{< /tab >}}
 {{< tab name="gloo" codelang="shell" >}}
 ? What language do you wish to use for the filter:
-  ▸ cpp
+  ▸ assemblyscript
 ? With which platform do you wish to use the filter?:
   ▸ gloo 1.3.x
 {{< /tab >}}
@@ -102,57 +102,6 @@ NAME                                     SHA      UPDATED             SIZE   TAG
 webassemblyhub.io/ilackarms/add-header  bbfdf674 26 Jan 20 10:45 EST 1.0 MB v0.1
 ```
 
-## Optional: Push the filter
+## Next Steps
 
-In order to make our image available for use with Gloo or Istio, we need to publish it to a public registry. The default 
-registry used by `wasme` is `webassemblyhub.io`.
-
-Now that we've built the WASM module, let's publish it into a registry so we can deploy it to our Envoy proxy running in Kubernetes.
-
-To do that, let's login to the `webassemblyhub.io` using GitHub as the OAuth provider. From the CLI:
-
-```shell
-$  wasme login
-
-Using port: 60632
-Opening browser for login. If the browser did not open for you, please go to:  https://webassemblyhub.io/authorize?port=60632
-```
-
-You should see a GitHub OAuth screen:
-
-![](../../img/wasme_login.png)
-
-Click the "Authorize" button at the bottom and continue.
-
-After successful auth, you should see this in the terminal:
-
-```shell
-success ! you are now authenticated
-```
-
-Now let's push to the webassemblyhub.io registry. 
-
-```shell
-$  wasme push webassemblyhub.io/ilackarms/add-header:v0.1
-INFO[0000] Pushing image webassemblyhub.io/ilackarms/add-header:v0.1
-INFO[0001] Pushed webassemblyhub.io/ilackarms/add-header:v0.1
-INFO[0001] Digest: sha256:22f2d81f9b61ebbf1aaeb00aa7bde20a90b90ec8bb5f492cc18a140de205dc32
-```
-
-{{% notice note %}}
-The tag name to use is
-`webassemblyhub.io/<your-git-username>/<some-name>:<some-version>`
-{{% /notice %}}
-
-When you've pushed, you should be able to see your new module in the registry:
-
-```shell
-$  wasme list --published  
-
-NAME                        SHA      UPDATED             SIZE   TAGS
-ilackarms/add-header        6aef37f3 13 Jan 10 12:54 MST 1.0 MB v0.1
-```
-
-## Deploying our new module
-
-For instructions on deploying wasm filters, see [the deployment documentation](../deploy_tutorials)
+Now that we've successfully built our image, we can try [running it locally]({{< versioned_link_path fromRoot="/tutorial_code/deploy_tutorials/deploying_with_local_envoy">}}) or [pushing it to a remote registry]({{< versioned_link_path fromRoot="/tutorial_code/push_tutorials">}}) so it can be pulled and deployed in a Kubernetes environment.

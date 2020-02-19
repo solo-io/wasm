@@ -1,8 +1,12 @@
 ---
-title: "Building WASM Filters in C++"
+title: "Pushing your first WASM filter"
 weight: 1
-description: "Build a simple WebAssembly filter in C++."
+description: "Pull, tag, and push a WASM image."
 ---
+
+In this tutorial, we will:
+1 - Create a user on [`https://webassemblyhub.io`](https://webassemblyhub.io) push a WASM image to `yuvaltest.solo.io`. 
+1 - Pushing to an org. 
 
 In this tutorial we will create an Envoy filter in C++ and build it using WASME. We'll optionally push
 the image to the public WASM registry at https://webassemblyhub.io/.
