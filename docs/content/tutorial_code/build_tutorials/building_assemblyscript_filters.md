@@ -5,36 +5,26 @@ description: "Build a simple WebAssembly filter in AssemblyScript."
 ---
 
 In this tutorial we will write an Envoy filter in [AssemblyScript](https://docs.assemblyscript.org/) and build it using `wasme`.
- 
- We'll optionally push
-the image to the public WASM registry at https://webassemblyhub.io/.
 
-## Creating a new WASM module
+## Creating an AssemblyScript WASM module
 
 Refer to the [installation guide]({{< versioned_link_path fromRoot="/installation">}}) for installing `wasme`, the WebAssembly Hub CLI.
 
-Let's create a new project called `new-filter`:
+Let's create a new filter called `assemblyscript-filter`:
 
 ```shell
-$  wasme init ./assemblyscript-filter
+wasme init assemblyscript-filter
 ```
 
-You'll be asked with an interactive prompt which language platform you are building for. Choose the appropriate option below:
+You'll be asked with an interactive prompt which language platform you are building for. At time of writing, the AssemblyScript Filter base is compatible with both Istio 1.5.x and Gloo 1.3.x:
 
-{{< tabs >}}
-{{< tab name="istio" codelang="shell">}}
+```shell script
 ? What language do you wish to use for the filter:
-  ▸ assemblyscript
-? With which platform do you wish to use the filter?:
-  ▸ istio 1.5.x
-{{< /tab >}}
-{{< tab name="gloo" codelang="shell" >}}
-? What language do you wish to use for the filter:
+    cpp
   ▸ assemblyscript
 ? With which platform do you wish to use the filter?:
   ▸ gloo 1.3.x
-{{< /tab >}}
-{{< /tabs >}}
+```
 
 We should now have a new folder with our new project:
 

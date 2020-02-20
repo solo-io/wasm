@@ -4,7 +4,7 @@ weight: 3
 description: Run Envoy locally to test a WASM filter attached.
 ---
 
-In this tutorial we'll deploy an existin    g WebAssembly (WASM) module from [the WebAssembly Hub](https://webassemblyhub.io) directly to Envoy running locally in `docker`.
+In this tutorial we'll deploy an existing WebAssembly (WASM) module from [the WebAssembly Hub](https://webassemblyhub.io) directly to Envoy running locally in `docker`.
 
 Deploying filters locally with Envoy is a great way to develop and test custom filters. `wasme deploy envoy` runs a single instance of Envoy in a Docker container on the local machine. Envoy is started with a static configuration, which which defaults to a single route to `jsonplaceholder.typicode.com` unless supplied by the user.
 
