@@ -27,6 +27,7 @@ var languageVersionArchives = map[string]map[abi.Version][]byte{
 		abi.Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6: cppTarBytes,
 	},
 	languageAssemblyScript: {
+		abi.Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6: assemblyscriptTarBytes,
 		abi.Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: assemblyscriptTarBytes,
 	},
 }
