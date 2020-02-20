@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/onsi/ginkgo"
+
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/wasme/pkg/cmd"
@@ -54,4 +56,16 @@ func WithManifest(file, ns string, do func(manifest []byte, extraArgs ...string)
 		extraArgs = []string{"-n", ns}
 	}
 	return do(b, extraArgs...)
+}
+
+func GetImageTag() string {
+	return GetEnv("FILTER_IMAGE_TAG")
+}
+
+func GetEnv(env string) string {
+	val := strings.TrimSpace(os.Getenv(env))
+	if val == "" {
+		ginkgo.Skip("Skipping build/push test. To enable, set " + env + " to the tag to use for the built/pushed image")
+	}
+	return val
 }

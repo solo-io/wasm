@@ -3,14 +3,12 @@ package operator_test
 import (
 	"io/ioutil"
 	"log"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/solo-io/autopilot/codegen/util"
 
-	testdefaults "github.com/solo-io/wasme/pkg/consts/test"
 	"github.com/solo-io/wasme/test"
 
 	"github.com/pkg/errors"
@@ -24,11 +22,7 @@ import (
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 )
 
-func generateCrdExample(filename, image string) error {
-	if image == "" {
-		image = testdefaults.IstioAssemblyScriptImage
-	}
-
+func generateCrdExample(filename, image, ns string) error {
 	filterDeployment := &v1.FilterDeployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "FilterDeployment",
@@ -36,7 +30,7 @@ func generateCrdExample(filename, image string) error {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "myfilter",
-			Namespace: "bookinfo",
+			Namespace: ns,
 		},
 		Spec: v1.FilterDeploymentSpec{
 			Filter: &v1.FilterSpec{
@@ -95,7 +89,7 @@ var _ = BeforeSuite(func() {
 	err = test.ApplyFile("test/e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = waitDeploymentReady("productpage", "bookinfo", time.Minute*2)
+	err = waitDeploymentReady("productpage", ns, time.Minute*2)
 	Expect(err).NotTo(HaveOccurred())
 })
 
@@ -117,7 +111,7 @@ var _ = Describe("AutopilotGenerate", func() {
 	It("runs the wasme operator", func() {
 		filterFile := "test/e2e/operator/test_filter.yaml"
 
-		err := generateCrdExample(filterFile, os.Getenv("FILTER_IMAGE_TAG"))
+		err := generateCrdExample(filterFile, test.GetImageTag(), ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		err = test.ApplyFile(filterFile, ns)
