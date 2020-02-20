@@ -117,9 +117,15 @@ builder-image-push:
 #----------------------------------------------------------------------------------
 # Test
 #----------------------------------------------------------------------------------
+
+# run all tests
+# set TEST_PKG to run a specific test package
 .PHONY: run-tests
 run-tests:
-	ginkgo -r -failFast -trace -progress -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS)
+	ginkgo -r -failFast -trace -progress \
+		-ldflags=$(LDFLAGS) \
+		-gcflags=$(GCFLAGS) \
+		-skipPackage=$(SKIP_PACKAGES) $(TEST_PKG)
 
 #----------------------------------------------------------------------------------
 # Release

@@ -1,10 +1,19 @@
 package deploy
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"strings"
 
-	v1 "k8s.io/api/core/v1"
+	"github.com/solo-io/wasme/pkg/deploy/local"
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
+	"github.com/solo-io/wasme/pkg/store"
+
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -16,7 +25,7 @@ import (
 
 var log = logrus.StandardLogger()
 
-func DeployCmd(ctx *context.Context) *cobra.Command {
+func DeployCmd(ctx *context.Context, parentPreRun func(cmd *cobra.Command, args []string)) *cobra.Command {
 	opts := &options{}
 	cmd := &cobra.Command{
 		Use:   "deploy gloo|istio|envoy <image> --id=<unique id> [--config=<inline string>] [--root-id=<root id>]",
@@ -30,13 +39,11 @@ You must specify --root-id unless a default root id is provided in the image con
 `,
 		Args: cobra.MinimumNArgs(1),
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			parentPreRun(cmd, args)
 			if len(args) == 0 {
 				return fmt.Errorf("invalid number of arguments")
 			}
 			opts.filter.Image = args[0]
-			if opts.filter.Id == "" {
-				return errors.Errorf("--id cannot be empty")
-			}
 			return nil
 		},
 	}
@@ -58,10 +65,15 @@ func makeDeployCommand(ctx *context.Context, opts *options, provider, use, short
 		Long:  long,
 		Args:  cobra.MinimumNArgs(minArgs),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if opts.filter.Id == "" {
+				return errors.Errorf("--id cannot be empty")
+			}
 			opts.providerType = provider
 			return runDeploy(*ctx, opts)
 		},
 	}
+
+	opts.addToFlags(cmd.PersistentFlags())
 
 	for _, f := range addFlags {
 		f(cmd.PersistentFlags())
@@ -92,14 +104,16 @@ Use --labels to use a match Gateway CRs by label.
 }
 
 func deployIstioCmd(ctx *context.Context, opts *options) *cobra.Command {
-	use := "istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels <key1=val1,key2=val2>]"
+	use := "istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--name deployment-name]"
 	short := "Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy)."
 	long := `Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).
 
 wasme uses the EnvoyFilter Istio Custom Resource to pull and run wasm filters.
 wasme deploys a server-side cache component which runs in cluster and pulls filter images.
 
-Note: currently only Istio 1.4 is supported.
+If --name is not provided, all deployments in the targeted namespace will attach the filter.
+
+Note: currently only Istio 1.5.x is supported.
 `
 	cmd := makeDeployCommand(ctx, opts,
 		Provider_Istio,
@@ -119,7 +133,7 @@ Note: currently only Istio 1.4 is supported.
 			opts.cacheOpts.imageRepo,
 			opts.cacheOpts.imageTag,
 			opts.cacheOpts.customArgs,
-			v1.PullPolicy(opts.cacheOpts.pullPolicy),
+			corev1.PullPolicy(opts.cacheOpts.pullPolicy),
 		)
 
 		return cacheDeployer.EnsureCache()
@@ -129,21 +143,31 @@ Note: currently only Istio 1.4 is supported.
 }
 
 func deployLocalCmd(ctx *context.Context, opts *options) *cobra.Command {
-	use := "envoy <image> --id=<unique id> [--config=<inline string>] [--root-id=<root id>] --in=<input config file> --out=<output config file> --filter <path to filter wasm> [--use-json]"
-	short := "Configure a local instance of Envoy to run a WASM Filter."
+	use := "envoy <image> [--config=<filter config>] [--bootstrap=<custom envoy bootstrap file>] [--envoy-image=<custom envoy image>]"
+	short := "Run Envoy locally in Docker and attach a WASM Filter."
 	long := `
-Unlike ` + "`" + `wasme deploy gloo` + "`" + ` and ` + "`" + `wasme deploy istio` + "`" + `, ` + "`" + `wasme deploy envoy` + "`" + ` only outputs the Envoy configuration required to run the filter with Envoy.
+This command runs Envoy locally in docker using a static bootstrap configuration which includes 
+the specified WASM filter image. 
 
-Launch Envoy using the output configuration to run the wasm filter.
+The bootstrap can be generated from an internal default or a modified config provided by the user with --bootstrap.
+
+The generated bootstrap config can be output to a file with --out. If using this option, Envoy will not be started locally.
 `
-	return makeDeployCommand(ctx, opts,
-		Provider_Envoy,
-		use,
-		short,
-		long,
-		1,
-		opts.localOpts.addToFlags,
-	)
+
+	cmd := &cobra.Command{
+		Use:   use,
+		Short: short,
+		Long:  long,
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.filter.Image = args[0]
+			return runLocalEnvoy(*ctx, opts.filter, opts.localOpts)
+		},
+	}
+
+	opts.localOpts.addToFlags(cmd.Flags())
+
+	return cmd
 }
 
 func runDeploy(ctx context.Context, opts *options) error {
@@ -157,4 +181,62 @@ func runDeploy(ctx context.Context, opts *options) error {
 	}
 
 	return deployer.ApplyFilter(&opts.filter)
+}
+
+func runLocalEnvoy(ctx context.Context, filter v1.FilterSpec, opts localOpts) error {
+	in, err := func() (io.ReadCloser, error) {
+		switch opts.infile {
+		case "-":
+			// use stdin
+			return os.Stdin, nil
+		case "":
+			// use default config
+			return ioutil.NopCloser(bytes.NewBuffer([]byte(local.BasicEnvoyConfig))), nil
+		default:
+			// read file
+			return os.Open(opts.infile)
+		}
+	}()
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+	out, err := func() (io.WriteCloser, error) {
+		switch opts.infile {
+		case "-":
+			// use stdout
+			return os.Stdout, nil
+		case "":
+			// use default config
+			return nil, nil
+		default:
+			// write file
+			return os.Create(opts.infile)
+		}
+	}()
+	if err != nil {
+		return err
+	}
+	if out != nil {
+		defer out.Close()
+	}
+
+	parseArgs := func(argStr string) []string {
+		if argStr == "" {
+			return nil
+		}
+		return strings.Split(argStr, " ")
+	}
+
+	runner := &local.Runner{
+		Ctx:              ctx,
+		Input:            in,
+		Output:           out,
+		Store:            store.NewStore(opts.storageDir),
+		DockerRunArgs:    parseArgs(opts.dockerRunArgs),
+		EnvoyArgs:        parseArgs(opts.envoyArgs),
+		EnvoyDockerImage: opts.envoyDockerImage,
+	}
+
+	return runner.RunFilter(&filter)
 }

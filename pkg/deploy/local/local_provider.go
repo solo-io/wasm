@@ -2,9 +2,15 @@ package local
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+
+	"github.com/sirupsen/logrus"
+	"github.com/solo-io/wasme/pkg/model"
+	"github.com/solo-io/wasme/pkg/store"
 
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 
@@ -20,23 +26,122 @@ import (
 	wasmeutil "github.com/solo-io/wasme/pkg/util"
 )
 
-type Provider struct {
+type Runner struct {
 	Ctx context.Context
 
-	// input config
+	// input bootstrap config
 	Input io.ReadCloser
 
-	// path to output file
-	OutFile string
+	// output config YAML only (DryRun), rather than invoking docker run
+	Output io.Writer
 
-	// the destination for storing the filter on the local filesystem
-	FilterPath string
+	// path to root storage dir
+	// default is ~/.wasme/store
+	Store store.Store
 
-	// Use JSON instead of YAML for config (defaults to false)
-	UseJsonConfig bool
+	// additional args passed to the `docker run` command when running Envoy. Ignored if using DryRyn
+	DockerRunArgs []string
+
+	// additional args passed to the `envoy` command when running Envoy in Docker. Ignored if using DryRyn
+	EnvoyArgs []string
+
+	// the image ref for Envoy to run with docker. Ignored if using DryRyn
+	EnvoyDockerImage string
 }
 
-func (p *Provider) getConfig() (*envoy_config_bootstrap_v2.Bootstrap, error) {
+// applies the filter to all static listeners in the bootstrap config
+func (p *Runner) RunFilter(filter *v1.FilterSpec) error {
+	cfg, err := p.getConfig()
+	if err != nil {
+		return err
+	}
+
+	image, err := p.Store.Get(filter.Image)
+	if err != nil {
+		return errors.Wrapf(err, "failed to retrieve image. make sure to run `wasme pull %v` to pull the image to your local storage.", filter.Image)
+	}
+	if filter.RootID == "" {
+		imageCfg, err := image.FetchConfig(p.Ctx)
+		if err != nil {
+			return err
+		}
+		roots := imageCfg.GetConfig().GetRootIds()
+		if len(roots) == 0 {
+			return errors.Errorf("found no root_id on image or in params")
+		}
+
+		// default to first root
+		filter.RootID = roots[0]
+	}
+
+	// allow filter ID to be empty, as we don't care in local envoy
+	if filter.Id == "" {
+		filter.Id = filter.RootID
+	}
+
+	filterDir, err := p.Store.Dir(filter.Image)
+	if err != nil {
+		return err
+	}
+	filterDir, err = filepath.Abs(filterDir)
+	if err != nil {
+		return err
+	}
+	filterFile := filepath.Join(filterDir, model.CodeFilename)
+
+	if err := addFilterToListeners(filter, cfg.GetStaticResources().GetListeners(), filterFile); err != nil {
+		return err
+	}
+
+	configYaml, err := marshalConfig(cfg)
+	if err != nil {
+		return err
+	}
+
+	if p.Output != nil {
+		_, err = p.Output.Write(configYaml)
+		return err
+	}
+
+	logrus.Infof("mounting filter file at %v", filterFile)
+
+	logrus.Debugf("using bootstrap config: \n%s", string(configYaml))
+
+	ports, err := getListenerPorts(cfg)
+	if err != nil {
+		return err
+	}
+
+	dockerArgs := append([]string{
+		"--rm",
+		"--name", filter.Id,
+		"--entrypoint", "envoy",
+		"-v", filterDir + ":" + filterDir,
+	}, p.DockerRunArgs...)
+
+	for _, port := range ports {
+		dockerArgs = append(dockerArgs, "-p", fmt.Sprintf("%v:%v", port, port))
+	}
+
+	envoyArgs := append([]string{
+		"--disable-hot-restart",
+		"--config-yaml", string(configYaml),
+	}, p.EnvoyArgs...)
+
+	logrus.WithFields(logrus.Fields{
+		"container_name": filter.Id,
+		"envoy_image":    p.EnvoyDockerImage,
+		"filter_image":   filter.Image,
+	}).Infof("running envoy-in-docker")
+
+	if err := wasmeutil.DockerRun(os.Stdout, os.Stderr, nil, p.EnvoyDockerImage, dockerArgs, envoyArgs); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *Runner) getConfig() (*envoy_config_bootstrap_v2.Bootstrap, error) {
 	b, err := ioutil.ReadAll(p.Input)
 	if err != nil {
 		return nil, err
@@ -46,72 +151,41 @@ func (p *Provider) getConfig() (*envoy_config_bootstrap_v2.Bootstrap, error) {
 		return nil, err
 	}
 
-	if !p.UseJsonConfig {
-		var err error
-		b, err = yaml.YAMLToJSON(b)
-		if err != nil {
-			return nil, err
-		}
+	b, err = yaml.YAMLToJSON(b)
+	if err != nil {
+		return nil, err
 	}
 
 	var bootstrap envoy_config_bootstrap_v2.Bootstrap
 	return &bootstrap, wasmeutil.UnmarshalBytes(b, &bootstrap)
 }
 
-func (p *Provider) writeConfig(bootstrap *envoy_config_bootstrap_v2.Bootstrap) error {
+func marshalConfig(bootstrap *envoy_config_bootstrap_v2.Bootstrap) ([]byte, error) {
 	b, err := wasmeutil.MarshalBytes(bootstrap)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if !p.UseJsonConfig {
-		b, err = yaml.JSONToYAML(b)
-		if err != nil {
-			return err
-		}
+	b, err = yaml.JSONToYAML(b)
+	if err != nil {
+		return nil, err
 	}
 
-	var out io.Writer
-	if p.OutFile == "-" {
-		// use stdout
-		out = os.Stdout
-	} else {
-		f, err := os.Create(p.OutFile)
-		if err != nil {
-			return err
-		}
-		out = f
-	}
-	_, err = out.Write(b)
-	return err
+	return b, nil
 }
 
-// applies the filter to all selected workloads in selected namespaces
-func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
-	cfg, err := p.getConfig()
-	if err != nil {
-		return err
+func getListenerPorts(bootstrap *envoy_config_bootstrap_v2.Bootstrap) ([]uint32, error) {
+	var ports []uint32
+	for _, listener := range bootstrap.GetStaticResources().GetListeners() {
+		port := listener.GetAddress().GetSocketAddress().GetPortValue()
+		if port != 0 {
+			ports = append(ports, port)
+		}
 	}
-
-	if err := addFilterToListeners(filter, cfg.GetStaticResources().GetListeners(), p.FilterPath); err != nil {
-		return err
+	if port := bootstrap.GetAdmin().GetAddress().GetSocketAddress().GetPortValue(); port != 0 {
+		ports = append(ports, port)
 	}
-
-	return p.writeConfig(cfg)
-}
-
-// removes the filter from all selected workloads in selected namespaces
-func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
-	cfg, err := p.getConfig()
-	if err != nil {
-		return err
-	}
-
-	if err := removeFilterFromListeners(filter, cfg.GetStaticResources().GetListeners()); err != nil {
-		return err
-	}
-
-	return p.writeConfig(cfg)
+	return ports, nil
 }
 
 // for each hcm in each filter (where it exists)
@@ -175,38 +249,7 @@ func addFilterToListeners(filter *v1.FilterSpec, listeners []*envoy_api_v2.Liste
 	})
 }
 
-func removeFilterFromListeners(filter *v1.FilterSpec, listeners []*envoy_api_v2.Listener) error {
-	return forEachHcm(listeners, func(networkFilter *envoy_api_v2_listener.Filter, cfg *envoy_config_filter_network_hcm_v2.HttpConnectionManager) error {
-		for i, httpFilter := range cfg.GetHttpFilters() {
-			if httpFilter.GetName() == wasmeutil.WasmFilterName {
-				// if a wasm filter with the given id exists, return error
-				var wasmFilterConfig config.WasmService
-				err := wasmeutil.UnmarshalStruct(httpFilter.GetConfig(), &wasmFilterConfig)
-				if err != nil {
-					return err
-				}
-
-				if wasmFilterConfig.GetConfig().GetName() == filter.Id {
-					cfg.HttpFilters = append(cfg.HttpFilters[:i], cfg.HttpFilters[i+1:]...)
-
-					// update the HCM minus the filter
-					cfgStruct, err := wasmeutil.MarshalStruct(cfg)
-					if err != nil {
-						return err
-					}
-
-					networkFilter.ConfigType = &envoy_api_v2_listener.Filter_Config{
-						Config: cfgStruct,
-					}
-
-					break
-				}
-
-			}
-		}
-		return nil
-	})
-}
+const DefaultEnvoyImage = "quay.io/solo-io/gloo-envoy-wasm-wrapper:1.3.5"
 
 const BasicEnvoyConfig = `
 admin:

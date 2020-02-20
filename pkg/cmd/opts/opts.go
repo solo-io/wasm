@@ -4,12 +4,10 @@ import "github.com/spf13/pflag"
 
 type GeneralOptions struct {
 	Verbose bool
-	Debug   bool
 }
 
 func (opts *GeneralOptions) AddToFlags(flags *pflag.FlagSet) {
 	flags.BoolVarP(&opts.Verbose, "verbose", "v", false, "verbose output")
-	flags.BoolVarP(&opts.Debug, "debug", "d", false, "debug mode")
 }
 
 type AuthOptions struct {

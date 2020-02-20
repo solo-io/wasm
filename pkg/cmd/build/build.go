@@ -3,10 +3,8 @@ package build
 import (
 	"bytes"
 	"context"
-	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 
@@ -136,17 +134,6 @@ func runBuild(ctx context.Context, opts *buildOptions, getFilter func(opts *buil
 	}).Info("tagged image")
 
 	return nil
-}
-
-func docker(stdout, stderr io.Writer, args ...string) error {
-	return execCmd(stdout, stderr, "docker", args...)
-}
-
-func execCmd(stdout, stderr io.Writer, cmd string, args ...string) error {
-	command := exec.Command(cmd, args...)
-	command.Stderr = stderr
-	command.Stdout = stdout
-	return command.Run()
 }
 
 func getDescriptor(filterBytes []byte) (ocispec.Descriptor, error) {

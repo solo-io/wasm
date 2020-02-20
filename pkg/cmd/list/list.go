@@ -8,23 +8,25 @@ import (
 	"net/http"
 	"os"
 	"sort"
-	"strconv"
 	"strings"
 	"text/tabwriter"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/solo-io/wasme/pkg/consts"
 
 	"github.com/solo-io/wasme/pkg/util"
 
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/wasme/pkg/consts"
 	"github.com/solo-io/wasme/pkg/store"
 	"github.com/spf13/cobra"
 )
 
 type listOpts struct {
 	published  bool
+	wide       bool
+	showDir    bool
+	server     string
+	search     string
 	storageDir string
 }
 
@@ -40,6 +42,10 @@ func ListCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolVarP(&opts.published, "published", "", false, "Set to true to list images that have been published to webassemblyhub.io. Defaults to listing image stored in local image cache.")
+	cmd.Flags().BoolVarP(&opts.wide, "wide", "w", false, "Set to true to list images with their full tag length.")
+	cmd.Flags().BoolVarP(&opts.showDir, "show-dir", "d", false, "Set to true to show the local directories for images. Does not apply to published images.")
+	cmd.Flags().StringVarP(&opts.server, "server", "s", consts.HubDomain, "If using --published, read images from this remote registry.")
+	cmd.Flags().StringVarP(&opts.search, "search", "", "", "If using --published, search images from the remote registry. If unset, `wasme list --published` will return the top repositories which are accessed the most.")
 	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store. Ignored if using --published")
 
 	return cmd
@@ -48,7 +54,7 @@ func ListCmd() *cobra.Command {
 func runList(opts listOpts) error {
 	var images []image
 	if opts.published {
-		i, err := getPublishedImages()
+		i, err := getPublishedImages(opts.server, opts.search)
 		if err != nil {
 			return err
 		}
@@ -61,6 +67,18 @@ func runList(opts listOpts) error {
 		images = i
 	}
 
+	sort.Slice(images, func(i, j int) bool {
+		if images[i].name < images[j].name {
+			return true
+		}
+		if images[i].name > images[j].name {
+			return false
+		}
+		return images[i].updated.Before(images[j].updated)
+	})
+
+	showDir := !opts.published && opts.showDir
+
 	buf := os.Stdout
 
 	// create a new tabwriter
@@ -68,9 +86,13 @@ func runList(opts listOpts) error {
 
 	w.Init(buf, 0, 0, 0, ' ', 0)
 
-	fmt.Fprintf(w, "NAME \tTAG \tSIZE \tSHA \tUPDATED\n")
+	line := "NAME \tTAG \tSIZE \tSHA \tUPDATED\n"
+	if showDir {
+		line = "NAME \tTAG \tSIZE \tSHA \tUPDATED\tDIRECTORY\n"
+	}
+	fmt.Fprintf(w, line)
 	for _, image := range images {
-		image.Write(w)
+		image.Write(w, opts.wide, showDir)
 	}
 	w.Flush()
 	return nil
@@ -82,19 +104,32 @@ type image struct {
 	updated   time.Time
 	tag       string
 	sizeBytes int64
+
+	// only applicable for local images
+	dir string
 }
 
-func (i image) Write(w io.Writer) {
+func (i image) Write(w io.Writer, wide, showDir bool) {
 	sum := i.sum
 	if len(sum) > 8 {
 		sum = strings.TrimPrefix(sum, "sha256:")[:8]
 	}
 	tag := i.tag
-	if len(tag) > 8 {
-		tag = strings.TrimPrefix(tag, "sha256:")[:8]
+	if !wide && len(tag) > 32 {
+		tag = strings.TrimPrefix(tag, "sha256:")[:32] + "..."
 	}
 
-	fmt.Fprintf(w, "%v \t%v \t%v \t%v \t%v\n", i.name, tag, byteCountSI(i.sizeBytes), sum, i.updated.Format(time.RFC822))
+	args := []interface{}{
+		i.name, tag, byteCountSI(i.sizeBytes), sum, i.updated.Format(time.RFC822),
+	}
+	line := "%v \t%v \t%v \t%v \t%v\n"
+
+	if showDir {
+		args = append(args, i.dir)
+		line = "%v \t%v \t%v \t%v \t%v \t%v\n"
+	}
+
+	fmt.Fprintf(w, line, args...)
 }
 
 func byteCountSI(b int64) string {
@@ -149,117 +184,120 @@ func getLocalImages(storageDir string) ([]image, error) {
 			updated:   imageInfo.ModTime(),
 			tag:       tag,
 			sizeBytes: descriptor.Size,
+			dir:       dir,
 		})
 	}
 
-	sort.Slice(images, func(i, j int) bool {
-		if images[i].name < images[j].name {
-			return true
-		}
-		if images[i].name > images[j].name {
-			return false
-		}
-		return images[i].updated.Before(images[j].updated)
-	})
-
 	return images, nil
 }
 
-func getPublishedImages() ([]image, error) {
-	root, err := getTagInfo("")
-	if err != nil {
-		return nil, err
+func getPublishedImages(serverAddress, searchQuery string) ([]image, error) {
+	var repos []repository
+	if searchQuery != "" {
+		r, err := searchRepos(serverAddress, searchQuery)
+		if err != nil {
+			return nil, err
+		}
+		repos = r
+	} else {
+		r, err := getTopRepos(serverAddress)
+		if err != nil {
+			return nil, err
+		}
+		repos = r
 	}
-	repos := root.Child
 	var images []image
 	for _, repo := range repos {
-		repoInfo, err := getTagInfo(repo)
+		tags, err := getTags(serverAddress, repo.Name)
 		if err != nil {
-			logrus.Warnf("failed to get repo info for %v, skipping", repo)
-			continue
+			return nil, err
 		}
-		repoImages := repoInfo.Child
-
-		for _, img := range repoImages {
-			imgName := repo + "/" + img
-			imgInfo, err := getTagInfo(imgName)
-			if err != nil {
-				logrus.Warnf("failed to get image info for %v, skipping: %v", repo, err)
-				continue
-			}
-			for sha, manifest := range imgInfo.Manifest {
-				image, err := parsePublishedImage(imgName, sha, manifest)
-				if err != nil {
-					// this is a debug line as old images didn't require a tag
-					logrus.Debugf("failed to parse info for %v, skipping: %v", imgName, err)
-					continue
-				}
-				images = append(images, image)
-			}
+		for _, tag := range tags {
+			images = append(images, image{
+				name:      serverAddress + "/" + repo.Name,
+				sum:       tag.Digest,
+				updated:   tag.PushTime,
+				tag:       tag.Name,
+				sizeBytes: tag.Size,
+			})
 		}
 	}
-
-	sort.Slice(images, func(i, j int) bool {
-		return images[i].name < images[j].name
-	})
-
 	return images, nil
 }
 
-func parsePublishedImage(name, sha string, manifest manifest) (image, error) {
-	size, err := strconv.Atoi(manifest.ImageSizeBytes)
-	if err != nil {
-		return image{}, err
-	}
-	if len(manifest.Tag) < 1 {
-		return image{}, errors.Errorf("invalid manifest, missing tag")
-	}
-	tag := manifest.Tag[0]
-	updated, err := strconv.Atoi(manifest.TimeUploadedMs)
-	if err != nil {
-		return image{}, err
-	}
-	return image{
-		name:      name,
-		sum:       sha,
-		updated:   time.Unix(int64(updated/1000), 0),
-		tag:       tag,
-		sizeBytes: int64(size),
-	}, nil
+func getTopRepos(serverAddress string) ([]repository, error) {
+	var repos []repository
+	err := getJson(serverAddress, fmt.Sprintf("/api/repositories/top"), &repos)
+	return repos, err
 }
 
-func getTagInfo(repo string) (*tagInfo, error) {
-	if repo != "" {
-		repo = strings.TrimSuffix(repo, "/") + "/"
+func searchRepos(serverAddress, query string) ([]repository, error) {
+	var searchRes searchResult
+	err := getJson(serverAddress, fmt.Sprintf("/api/search?q=%v", query), &searchRes)
+
+	var repos []repository
+	for _, repo := range searchRes.Repository {
+		repos = append(repos, repository{Name: repo.RepositoryName})
 	}
-	res, err := http.Get(fmt.Sprintf("https://"+consts.HubDomain+"/v2/%vtags/list", repo))
+
+	return repos, err
+}
+
+func getTags(serverAddress, repo string) ([]tag, error) {
+	var tags []tag
+	err := getJson(serverAddress, fmt.Sprintf("/api/repositories/%v/tags?detail=true", repo), &tags)
+	return tags, err
+}
+
+func getJson(serverAddress, path string, into interface{}) error {
+	res, err := http.Get(fmt.Sprintf("https://" + serverAddress + path))
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer res.Body.Close()
 	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var info tagInfo
-	if err := json.Unmarshal(b, &info); err != nil {
-		return nil, err
+	if err := json.Unmarshal(b, &into); err != nil {
+		return err
 	}
-	return &info, nil
+	return nil
 }
 
-type tagInfo struct {
-	Child    []string            `json:"child"`
-	Manifest map[string]manifest `json:"manifest"`
-	Name     string              `json:"name"`
-	Tags     []string            `json:"tags"`
+type repository struct {
+	Name string `json:"name"`
 }
 
-type manifest struct {
-	ImageSizeBytes string   `json:"imageSizeBytes"`
-	LayerID        string   `json:"layerId"`
-	MediaType      string   `json:"mediaType"`
-	Tag            []string `json:"tag"`
-	TimeCreatedMs  string   `json:"timeCreatedMs"`
-	TimeUploadedMs string   `json:"timeUploadedMs"`
+type tag struct {
+	Digest        string      `json:"digest"`
+	Name          string      `json:"name"`
+	Size          int64       `json:"size"`
+	Architecture  string      `json:"architecture"`
+	Os            string      `json:"os"`
+	OsVersion     string      `json:"os.version"`
+	DockerVersion string      `json:"docker_version"`
+	Author        string      `json:"author"`
+	Created       time.Time   `json:"created"`
+	Config        interface{} `json:"config"`
+	Immutable     bool        `json:"immutable"`
+	Annotations   struct {
+		ModuleWasmRuntimeAbiVersion string `json:"module.wasm.runtime/abi_version"`
+		ModuleWasmRuntimeType       string `json:"module.wasm.runtime/type"`
+	} `json:"annotations"`
+	Signature interface{}   `json:"signature"`
+	Labels    []interface{} `json:"labels"`
+	PushTime  time.Time     `json:"push_time"`
+	PullTime  time.Time     `json:"pull_time"`
+}
+
+type searchResult struct {
+	Repository []struct {
+		ProjectID      int    `json:"project_id"`
+		ProjectName    string `json:"project_name"`
+		ProjectPublic  bool   `json:"project_public"`
+		PullCount      int    `json:"pull_count"`
+		RepositoryName string `json:"repository_name"`
+		TagsCount      int    `json:"tags_count"`
+	} `json:"repository"`
 }

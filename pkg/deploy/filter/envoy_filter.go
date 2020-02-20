@@ -39,14 +39,6 @@ func MakeLocalDatasource(path string) *core.AsyncDataSource {
 	}
 }
 
-func MakeFilenameDatasource(path string) *core.DataSource {
-	return &core.DataSource{
-		Specifier: &core.DataSource_Filename{
-			Filename: path,
-		},
-	}
-}
-
 func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSource) *envoyhttp.HttpFilter {
 	filterCfg := &config.WasmService{
 		Config: &config.PluginConfig{

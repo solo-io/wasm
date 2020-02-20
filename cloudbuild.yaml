@@ -26,6 +26,7 @@ steps:
       - 'FILTER_IMAGE_TAG=yuvaltest.solo.io/ilackarms/test-image:$BUILD_ID'
       - 'IMAGE_PUSH=1'
       - 'WASME_LOGIN_USERNAME=admin'
+      - 'SKIP_PACKAGES=pkg/deploy/local' # this test runs in circleci
     entrypoint: 'make'
     args: ['run-tests']
     secretEnv:

@@ -1,12 +1,10 @@
 package deploy
 
 import (
-	"bytes"
 	"context"
-	"io"
-	"io/ioutil"
 	"os"
 
+	"github.com/solo-io/wasme/pkg/deploy/local"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
@@ -22,7 +20,6 @@ import (
 	"github.com/solo-io/wasme/pkg/deploy"
 	"github.com/solo-io/wasme/pkg/deploy/gloo"
 	"github.com/solo-io/wasme/pkg/deploy/istio"
-	"github.com/solo-io/wasme/pkg/deploy/local"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/pull"
 	"github.com/solo-io/wasme/pkg/resolver"
@@ -50,7 +47,6 @@ func (opts *options) addToFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&opts.filter.Config, "config", "", "", "optional config that will be passed to the filter. accepts an inline string.")
 	flags.StringVarP(&opts.filter.RootID, "root-id", "", "", "optional root ID used to bind the filter at the Envoy level. this value is normally read from the filter image directly.")
 	opts.addIdToFlags(flags)
-	opts.addDryRunToFlags(flags)
 }
 
 func (opts *options) addDryRunToFlags(flags *pflag.FlagSet) {
@@ -113,21 +109,21 @@ func (opts *cacheOpts) addToFlags(flags *pflag.FlagSet) {
 }
 
 type localOpts struct {
-	infile        string
-	outfile       string
-	filterPath    string
-	useJsonConfig bool
+	infile           string
+	outfile          string
+	storageDir       string
+	dockerRunArgs    string
+	envoyArgs        string
+	envoyDockerImage string
 }
 
 func (opts *localOpts) addToFlags(flags *pflag.FlagSet) {
-	flags.StringVarP(&opts.filterPath, "filter", "f", "filter.wasm", "the path to the compiled filter wasm file.")
-	opts.addFilesToFlags(flags)
-}
-
-func (opts *localOpts) addFilesToFlags(flags *pflag.FlagSet) {
-	flags.StringVarP(&opts.infile, "in", "", "envoy.yaml", "the input configuration file. the filter config will be added to each listener found in the file. Set -in=- to use stdin. If empty, will use a default configuration template.")
-	flags.StringVarP(&opts.outfile, "out", "", "envoy.yaml", "the output configuration file. the resulting config will be written to the file. Set -out=- to use stdout.")
-	flags.BoolVarP(&opts.useJsonConfig, "use-json", "", false, "parse the input file as JSON instead of YAML")
+	flags.StringVarP(&opts.envoyDockerImage, "envoy-image", "e", local.DefaultEnvoyImage, "Name of the Docker image containing the Envoy binary")
+	flags.StringVarP(&opts.infile, "bootstrap", "b", "", "Path to an Envoy bootstrap config. If set, `wasme deploy envoy` will run Envoy locally using the provided configuration file. Set -in=- to use stdin. If empty, will use a default configuration template with a single route to `jsonplaceholder.typicode.com`.")
+	flags.StringVarP(&opts.outfile, "out", "", "", "If set, write the modified Envoy configuration to this file instead of launching Envoy. Set -out=- to use stdout.")
+	flags.StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store")
+	flags.StringVar(&opts.dockerRunArgs, "docker-run-args", "", "Set to provide additional args to the `docker run` command used to launch Envoy. Ignored if --out is set.")
+	flags.StringVar(&opts.envoyArgs, "envoy-run-args", "", "Set to provide additional args to the `envoy` command used to launch Envoy. Ignored if --out is set.")
 }
 
 const (
@@ -198,31 +194,6 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			nil, // no callback when using CLI
 			opts.istioOpts.istioNamespace,
 		)
-	case Provider_Envoy:
-		var in io.ReadCloser
-		switch opts.localOpts.infile {
-		case "-":
-			// use stdin
-			in = os.Stdin
-		case "":
-			// use default config
-			in = ioutil.NopCloser(bytes.NewBuffer([]byte(local.BasicEnvoyConfig)))
-			opts.localOpts.useJsonConfig = false
-		default:
-			f, err := os.Open(opts.localOpts.infile)
-			if err != nil {
-				return nil, err
-			}
-			in = f
-		}
-
-		return &local.Provider{
-			Ctx:           ctx,
-			Input:         in,
-			OutFile:       opts.localOpts.outfile,
-			FilterPath:    opts.localOpts.filterPath,
-			UseJsonConfig: opts.localOpts.useJsonConfig,
-		}, nil
 	}
 
 	return nil, nil
