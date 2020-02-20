@@ -22,60 +22,93 @@ You'll be asked with an interactive prompt which language platform you are build
 ? What language do you wish to use for the filter:
     cpp
   ▸ assemblyscript
-? With which platform do you wish to use the filter?:
-  ▸ gloo 1.3.x
+? With which platforms do you wish to use the filter?:
+  ▸ gloo:1.3.x, istio:1.5.x
 ```
 
-We should now have a new folder with our new project:
+```
+INFO[0014] extracting 1973 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasme/assemblyscript-filter
+```
+
+The `init` command will place our *base* filter into the `assemblyscript-filter` directory:
 
 ```shell
-$  cd new-filter
-$  ls -l 
--rw-r--r--  1 ceposta  staff    572 Dec 10 09:06 BUILD
--rw-r--r--  1 ceposta  staff    505 Dec 10 09:06 README.md
--rw-r--r--  1 ceposta  staff   2782 Dec 10 09:06 WORKSPACE
-drwxr-xr-x  3 ceposta  staff     96 Dec 10 09:06 bazel
-drwxr-xr-x  3 ceposta  staff     34 Dec 10 09:06 filter-config.json
--rw-r--r--  1 ceposta  staff   2797 Dec 10 09:06 filter.cc
--rw-r--r--  1 ceposta  staff     60 Dec 10 09:06 filter.proto
-drwxr-xr-x  7 ceposta  staff    224 Dec 10 09:06 toolchain
+cd assemblyscript-filter
+tree .
 ```
 
-Open this project in your favorite IDE. The source code is C++ and we'll make some changes to create a new filter.
-
-## Making changes to the sample filter
-
-Feel free to explore the project that was created. This is a Bazel project that sets up the correct emscripten toolchain to build C++ into WASM. Let's open ./new-filter/filter.cc in our favorite IDE.
-
-Navigate to the `FilterHeadersStatus AddHeaderContext::onResponseHeaders` member method. Let's add a new header that we can use to verify our module was executed correctly (later down in the tutorial). Let's add a new response header named `doc-header`:
-
-```code
-addResponseHeader("doc-header", "it-worked");
 ```
+.
+├── assembly
+│   ├── index.ts
+│   └── tsconfig.json
+├── package-lock.json
+├── package.json
+└── runtime-config.json
+```
+
+{{% notice note %}}
+The `runtime-config.json` file present in WASM filter modules is required by `wasme` to build the filter.
+
+At least must one valid [`root_id`](https://github.com/envoyproxy/envoy-wasm/blob/master/api/envoy/config/wasm/v2/wasm.proto#L47)
+matching the WASM Filter must be present in the `rootIds` field.
+{{% /notice %}}
+
+## Making changes to the base filter
+
+The new directory contains all files necessary to build and deploy a WASM filter with `wasme`. A brief description of each file is found below:
+
+| File | Description |
+| ----- | ---- |
+| `assembly/index.ts`        | The source code for the filter, written in AssemblyScript. |         
+| `assembly/tsconfig.json`   | Typescript config file (AssemblyScript is a subset of Typescript). |              
+| `package.json`             | Used by to import npm modules during build time. |    
+| `package-lock.json`        | Locked npm modules.  |    
+| `runtime-config.json`      | Config stored with the filter image used to load the filter at runtime. |
+
+Open `assembly/index.ts` project in your favorite text editor. The source code is AssemblyScript and we'll make some changes to customize our new filter.
+
+Navigate to the `onResponseHeaders` method defined near the top of the file. Let's add a new header that we can use to verify our module was executed correctly (later down in the tutorial). Let's add a new response header `hello: world!`:
+
+```typescript
+      stream_context.headers.response.add("hello", "world!");
+```
+
 Your method should look like this:
 
-```go
-FilterHeadersStatus AddHeaderContext::onResponseHeaders(uint32_t) {
-  LOG_DEBUG(std::string("onResponseHeaders ") + std::to_string(id()));
-  addResponseHeader("newheader", root_->header_value_);
-  addResponseHeader("doc-header", "it-worked");
-  replaceResponseHeader("location", "envoy-wasm");
-  return FilterHeadersStatus::Continue;
-}
+```typescript
+  onResponseHeaders(a: u32): FilterHeadersStatusValues {
+    // add the hello: world! response header
+    stream_context.headers.response.add("hello", "world!");
+    // continue execution of the filter chain
+    return FilterHeadersStatusValues.Continue;
+  }
 ```
 
 ## Building the filter
 
-Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored
-in a local registry, similar to how [Docker](https://www.docker.com/) stores images. 
+Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored in a local registry, similar to how [Docker](https://www.docker.com/) stores images. 
 
-In this example we'll include the registry address `webassemblyhub.io` as well as 
-our GitHub username which will be used to authenticate to the registry.
+Images tagged with `wasme` have the following format:
+
+```
+<registry address>/<registry username|org>/<image name>:<version tag>
+```
+
+* `<registry address>` specifies the address of the remote OCI registry where the image will be pushed by the `wasme push` command. The project authors maintain a free public registry at `webassemblyhub.io`.
+ 
+* `<registry username|org>` either your username for the remote OCI registry, or a valid org name with which you are registered.
+
+
+*See the [`wasme push`]({{< versioned_link_path fromRoot="/tutorial_code/push_tutorials">}}) documentation for instructions on *
+
+
+In this example we'll include the registry address `webassemblyhub.io` so our image can be pushed to the remote registry, along with GitHub username which will be used to authenticate to the registry.
 
 Build and tag our image like so:
 
 ```shell
-wasme build . -t webassemblyhub.io/ilackarms/add-header:v0.1
+wasme build . -t webassemblyhub.io/<USERNAME>/add-header:v0.1
 ```
 
 The module will take up to a few minutes to build. In the background, `wasme` has launched a Docker container to run the necessary 
