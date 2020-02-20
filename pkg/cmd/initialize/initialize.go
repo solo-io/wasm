@@ -1,16 +1,26 @@
 package initialize
 
+/*
+TODO (ilackarms): Devise a better strategy for adding support for new abi versions, platforms, languages and filter bases.
+The current steps required to add a new language:
+1. Add it to the examples dir
+2. Make sure the runtime-config.json is present and contains necessary fields.
+3. run `make generated-code` to regen the 2gobytes archives with the new example
+4. Add the new example as a new filterBase to the availableBases map below
+  - it may be required to add additional ABI Versions to the Registry in abi.DefaultRegistry
+*/
+
 import (
 	"bytes"
 	"fmt"
 	"path/filepath"
-	"sort"
+	"strings"
 
 	"github.com/manifoldco/promptui"
+	"github.com/solo-io/wasme/pkg/abi"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/wasme/pkg/abi"
 	"github.com/solo-io/wasme/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -20,15 +30,69 @@ const (
 	languageAssemblyScript = "assemblyscript"
 )
 
+// a filterBase is a starter filter we generate from the example filters
+type filterBase struct {
+	// the set of versions compatible with a given filter base
+	compatiblePlatforms compatiblePlatforms
+
+	// baked-in  bytes, generated with 2-go-array
+	archiveBytes []byte
+}
+
+// set of compatible abi versions for a single base
+type compatiblePlatforms []abi.Platform
+
+// return a sorted list of each name+version of the platforms
+func (c compatiblePlatforms) Keys() []string {
+	var platformNames []string
+	for _, platform := range c {
+		platformNames = append(platformNames, platform.Name+":"+platform.Version)
+	}
+	return platformNames
+}
+
+// returns true if c is a superset of c2
+func (c compatiblePlatforms) IsSupersetOf(theirs compatiblePlatforms) bool {
+	for _, theirPlatform := range theirs {
+		var weContainTheirPlatform bool
+		for _, ourPlatform := range c {
+			if ourPlatform == theirPlatform {
+				weContainTheirPlatform = true
+				break
+			}
+		}
+		if !weContainTheirPlatform {
+			return false
+		}
+	}
+	return true
+}
+
 // map supported languages and abi versions to the archive for those sources
-var languageVersionArchives = map[string]map[abi.Version][]byte{
+var availableBases = map[string][]filterBase{
 	languageCpp: {
-		abi.Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: cppIstio1_5TarBytes,
-		abi.Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6: cppTarBytes,
+		{
+			// cpp for istio 1.5
+			compatiblePlatforms: compatiblePlatforms{
+				abi.Istio15,
+			},
+			archiveBytes: cppIstio1_5TarBytes,
+		},
+		{
+			compatiblePlatforms: compatiblePlatforms{
+				abi.Gloo13,
+			},
+			archiveBytes: cppTarBytes,
+		},
 	},
 	languageAssemblyScript: {
-		abi.Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6: assemblyscriptTarBytes,
-		abi.Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: assemblyscriptTarBytes,
+		{
+			compatiblePlatforms: compatiblePlatforms{
+				abi.Gloo13,
+				abi.Istio15,
+			},
+			archiveBytes: assemblyscriptTarBytes,
+		},
 	},
 }
 
@@ -38,39 +102,6 @@ var supportedLanguages = []string{
 	languageAssemblyScript,
 }
 
-func selectSourceArchive(language string, platform abi.Platform) ([]byte, error) {
-	version, ok := abi.DefaultRegistry.SelectVersion(platform)
-	if !ok {
-		return nil, errors.Errorf("no version available for platform %+v", platform)
-	}
-
-	languageArchives, ok := languageVersionArchives[language]
-	if !ok {
-		return nil, errors.Errorf("%v is not a supported language. available: %v", language, supportedLanguages)
-	}
-
-	versionedArchive, ok := languageArchives[version]
-	if !ok {
-		return nil, errors.Errorf("%v is not a supported platform for %v. available: %v", platform, language, supportedPlatforms(language))
-	}
-
-	return versionedArchive, nil
-}
-
-// list the platforms supported by the language
-func supportedPlatforms(language string) []abi.Platform {
-	var platforms []abi.Platform
-	for version := range languageVersionArchives[language] {
-		for _, platform := range abi.DefaultRegistry[version] {
-			platforms = append(platforms, platform)
-		}
-	}
-	sort.SliceStable(platforms, func(i, j int) bool {
-		return platforms[i].Name < platforms[j].Name && platforms[i].Version < platforms[j].Version
-	})
-	return platforms
-}
-
 var log = logrus.StandardLogger()
 
 type initOptions struct {
@@ -78,6 +109,9 @@ type initOptions struct {
 	language      string
 	platform      abi.Platform
 	disablePrompt bool
+
+	// set by PreRun
+	compatiblePlatforms compatiblePlatforms
 }
 
 func InitCmd() *cobra.Command {
@@ -97,17 +131,21 @@ If --language, --platform, or --platform-version are not provided, the CLI will 
 `,
 		Args: cobra.MinimumNArgs(1),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			var err error
-			if opts.language == "" {
-				opts.language, err = getLanguageInteractive()
-				if err != nil {
-					return err
+			if !opts.disablePrompt {
+				var err error
+				if opts.language == "" {
+					opts.language, err = selectLanguageInteractive()
+					if err != nil {
+						return err
+					}
 				}
-			}
-			if opts.platform.Name == "" || opts.platform.Version == "" {
-				opts.platform, err = getPlatformInteractive(opts.language)
-				if err != nil {
-					return err
+				if opts.platform.Name == "" || opts.platform.Version == "" {
+					opts.compatiblePlatforms, err = selectCompatiblePlatformsInteractive(opts.language)
+					if err != nil {
+						return err
+					}
+				} else {
+					opts.compatiblePlatforms = compatiblePlatforms{opts.platform}
 				}
 			}
 			return nil
@@ -142,19 +180,52 @@ func runInit(opts initOptions) error {
 		return err
 	}
 
-	archive, err := selectSourceArchive(opts.language, opts.platform)
+	base, err := getFilterBase(opts.language, opts.compatiblePlatforms)
 	if err != nil {
 		return err
 	}
 
-	reader := bytes.NewBuffer(archive)
+	reader := bytes.NewBuffer(base.archiveBytes)
 
-	log.Infof("extracting %v bytes to %v", len(archive), destDir)
+	log.Infof("extracting %v bytes to %v", len(base.archiveBytes), destDir)
 
 	return util.Untar(destDir, reader)
 }
 
-func getValueInteractive(message string, options interface{}) (string, error) {
+func selectLanguageInteractive() (string, error) {
+	return selectValueInteractive(
+		"What language do you wish to use for the filter",
+		supportedLanguages,
+	)
+}
+
+// the user selects a set of supported platforms from a filter base
+func selectCompatiblePlatformsInteractive(language string) (compatiblePlatforms, error) {
+	bases, ok := availableBases[language]
+	if !ok {
+		return nil, errors.Errorf("%v is not a supported language. available: %v", language, supportedLanguages)
+	}
+
+	var baseOptions []string
+	selectableBases := map[string]*filterBase{}
+
+	for _, base := range bases {
+		key := strings.Join(base.compatiblePlatforms.Keys(), ", ")
+		selectableBases[key] = &base
+		baseOptions = append(baseOptions, key)
+	}
+
+	baseKey, err := selectValueInteractive(
+		"With which platforms do you wish to use the filter?",
+		baseOptions,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return selectableBases[baseKey].compatiblePlatforms, nil
+}
+
+func selectValueInteractive(message string, options interface{}) (string, error) {
 	prompt := promptui.Select{
 		Label: message,
 		Items: options,
@@ -166,29 +237,17 @@ func getValueInteractive(message string, options interface{}) (string, error) {
 	return result, nil
 }
 
-func getLanguageInteractive() (string, error) {
-	return getValueInteractive(
-		"What language do you wish to use for the filter",
-		supportedLanguages,
-	)
-}
-
-func getPlatformInteractive(language string) (abi.Platform, error) {
-	var platformOptions []string
-	selectablePlatforms := map[string]abi.Platform{}
-
-	for _, platform := range supportedPlatforms(language) {
-		key := platform.Name + " " + platform.Version
-		selectablePlatforms[key] = platform
-		platformOptions = append(platformOptions, key)
+func getFilterBase(language string, platforms compatiblePlatforms) (*filterBase, error) {
+	bases, ok := availableBases[language]
+	if !ok {
+		return nil, errors.Errorf("%v is not a supported language. available: %v", language, supportedLanguages)
 	}
 
-	platformKey, err := getValueInteractive(
-		"With which platform do you wish to use the filter?",
-		platformOptions,
-	)
-	if err != nil {
-		return abi.Platform{}, err
+	for _, base := range bases {
+		if base.compatiblePlatforms.IsSupersetOf(platforms) {
+			return &base, nil
+		}
 	}
-	return selectablePlatforms[platformKey], nil
+
+	return nil, errors.Errorf("no filter base found for language %v is not a supported language. available: %v", language, supportedLanguages)
 }
