@@ -134,14 +134,14 @@ wasme list --published
 ```
 NAME                                   TAG                                 SIZE    SHA      UPDATED
 ...
-yuvaltest.solo.io/ilackarms/gloo-test  1.3.3-0                             1.0 MB  8c001279 12 Feb 20 19:10 UTC
+webassemblyhub.io/ilackarms/gloo-test  1.3.3-0                             1.0 MB  8c001279 12 Feb 20 19:10 UTC
 ...
 ```
 
 Let's try deploying one of these to Gloo:
 
 ```bash
-wasme deploy gloo yuvaltest.solo.io/ilackarms/gloo-test:1.3.3-0 --id=myfilter --config 'world'
+wasme deploy gloo webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 --id=myfilter --config 'world'
 ```
 
 This filter adds the header `hello: <value>` to responses, where `<value>` is the value of the `--config` string.
@@ -153,7 +153,7 @@ kubectl get gateway -n gloo-system '-ojsonpath={.items[0].spec.httpGateway.optio
 ```
 
 ```
-map[config:world image:yuvaltest.solo.io/ilackarms/gloo-test:1.3.3-0 name:myfilter rootId:add_header_root_id]
+map[config:world image:webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 name:myfilter rootId:add_header_root_id]
 ```
 
 If we try our request again, we should see the `hello: world` header was added by our filter:

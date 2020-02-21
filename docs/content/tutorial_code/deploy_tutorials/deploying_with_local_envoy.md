@@ -16,27 +16,27 @@ In this example, we'll be working with a filter pulled from the registry at [`we
 
 ## Pull the filter
 
-First we'll pull the filter with `wasme`. For this example we'll use the `yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0` filter,
+First we'll pull the filter with `wasme`. For this example we'll use the `webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0` filter,
 which appends a header to HTTP responses. 
 
 {{% notice note %}}
-The `yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0` filter image is compatible with the versions of Envoy packaged with Gloo `1.3.x` and Istio `1.5.x`. 
+The `webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0` filter image is compatible with the versions of Envoy packaged with Gloo `1.3.x` and Istio `1.5.x`. 
 {{% /notice %}}
 
 
 To pull the filter:
 
 ```shell
-wasme pull yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
+wasme pull webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
 ```
 
 ```
-INFO[0000] Pulling image yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
-INFO[0000] Image: yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
+INFO[0000] Pulling image webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
+INFO[0000] Image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
 INFO[0000] Digest: sha256:8b74e9b0bbc5ff674c49cde904669a775a939b4d8f7f72aba88c184d527dfc30
 ```
 
-We should see image `yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0` has been downloaded to local cache:
+We should see image `webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0` has been downloaded to local cache:
 
 ```
 wasme list
@@ -44,7 +44,7 @@ wasme list
 
 ```
 NAME                                            TAG                 SIZE    SHA      UPDATED
-yuvaltest.solo.io/ilackarms/assemblyscript-test istio-1.5.0-alpha.0 12.5 kB 8b74e9b0 13 Feb 20 13:59 EST
+webassemblyhub.io/ilackarms/assemblyscript-test istio-1.5.0-alpha.0 12.5 kB 8b74e9b0 13 Feb 20 13:59 EST
 ```
 
 ## Run the Filter
@@ -52,7 +52,7 @@ yuvaltest.solo.io/ilackarms/assemblyscript-test istio-1.5.0-alpha.0 12.5 kB 8b74
 Running the filter with a local instance of Envoy is as done with a single command:
 
 ```bash
-wasme deploy envoy yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
+wasme deploy envoy webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
 ```
 
 {{% notice note %}}
@@ -63,7 +63,7 @@ This will start Envoy in a docker container. We should see logs printed in the c
 
 ```
 INFO[0000] mounting filter file at /Users/ilackarms/.wasme/store/7bda74acb544159ac98f58e85d573d12/filter.wasm
-INFO[0000] running envoy-in-docker                       container_name=add_header envoy_image="quay.io/solo-io/gloo-envoy-wasm-wrapper:1.3.5" filter_image="yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0"
+INFO[0000] running envoy-in-docker                       container_name=add_header envoy_image="quay.io/solo-io/gloo-envoy-wasm-wrapper:1.3.5" filter_image="webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0"
 [2020-02-17 17:50:52.050][1][info][main] [external/envoy/source/server/server.cc:252] initializing epoch 0 (hot restart version=disabled)
 [2020-02-17 17:50:52.050][1][info][main] [external/envoy/source/server/server.cc:254] statically linked extensions:
 [2020-02-17 17:50:52.050][1][info][main] [external/envoy/source/server/server.cc:256]   access_loggers: envoy.file_access_log, envoy.http_grpc_access_log, envoy.tcp_grpc_access_log, envoy.wasm_access_log

@@ -66,7 +66,7 @@ The new directory contains all files necessary to build and deploy a WASM filter
 | `package-lock.json`        | Locked npm modules.  |    
 | `runtime-config.json`      | Config stored with the filter image used to load the filter at runtime. |
 
-Open `assembly/index.ts` project in your favorite text editor. The source code is AssemblyScript and we'll make some changes to customize our new filter.
+Open `assembly/index.ts` in your favorite text editor. The source code is AssemblyScript and we'll make some changes to customize our new filter.
 
 Navigate to the `onResponseHeaders` method defined near the top of the file. Let's add a new header that we can use to verify our module was executed correctly (later down in the tutorial). Let's add a new response header `hello: world!`:
 
@@ -100,7 +100,7 @@ Images tagged with `wasme` have the following format:
 * `<registry username|org>` either your username for the remote OCI registry, or a valid org name with which you are registered.
 
 
-*See the [`wasme push`]({{< versioned_link_path fromRoot="/tutorial_code/push_tutorials">}}) documentation for instructions on *
+*See the [`wasme push`]({{< versioned_link_path fromRoot="/tutorial_code/push_tutorials">}}) documentation for instructions on pushing filters built with `wasme`.*
 
 
 In this example we'll include the registry address `webassemblyhub.io` so our image can be pushed to the remote registry, along with GitHub username which will be used to authenticate to the registry.

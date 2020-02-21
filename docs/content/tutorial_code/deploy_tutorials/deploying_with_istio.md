@@ -84,21 +84,21 @@ wasme list
 ```
 NAME                                            TAG                 SIZE    SHA      UPDATED
 ...                 
-yuvaltest.solo.io/ilackarms/assemblyscript-test istio-1.5.0-alpha.0 12.5 kB 8b74e9b0 13 Feb 20 13:59 EST
+webassemblyhub.io/ilackarms/assemblyscript-test istio-1.5.0-alpha.0 12.5 kB 8b74e9b0 13 Feb 20 13:59 EST
 ...
 ```
 
 Deploying the filter is done with a single `wasme` command:
 
 ```bash
-wasme deploy istio yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0 \
+wasme deploy istio webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0 \
     --id=myfilter \
     --namespace bookinfo \
     --config 'world'
 ```
 
 {{% notice note %}}
-The `config` for the `yuvaltest.solo.io/ilackarms/assemblyscript-test` filter specifies the value of 
+The `config` for the `webassemblyhub.io/ilackarms/assemblyscript-test` filter specifies the value of 
 a "`hello`" header which will be appended by the filter to HTTP responses. The value of `config` is specific to the 
 filter deployed via `wasme`.
 {{% /notice %}}
@@ -107,11 +107,25 @@ filter deployed via `wasme`.
 Wasme will output the following logs as it deploys the filter to each `deployment` that composes the bookinfo app:
 
 ```
-
+INFO[0001] cache namespace already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:dev"
+INFO[0001] cache configmap already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:dev"
+INFO[0002] cache daemonset updated                       cache=wasme-cache.wasme image="quay.io/solo-io/wasme:dev"
+INFO[0005] added image to cache                          cache="{wasme-cache wasme}"
+INFO[0015] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=details-v1
+INFO[0015] created Istio EnvoyFilter resource            envoy_filter_resource=details-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=details-v1
+INFO[0015] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=productpage-v1
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=productpage-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=productpage-v1
+INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=ratings-v1
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=ratings-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=ratings-v1
+INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v1
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v1
+INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v2
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v2-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v2
+INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v3
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v3-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v3
 ```
 
 If the above command finished without error, we should be ready to test the filter:
-
 
 ```bash
 # execute a request from the productpage component to the details component: 
