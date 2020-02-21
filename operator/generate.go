@@ -4,15 +4,15 @@ import (
 	"log"
 	"os"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/solo-io/autopilot/codegen"
+	"github.com/solo-io/autopilot/codegen/model"
 	"github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/version"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/solo-io/autopilot/codegen"
-	"github.com/solo-io/autopilot/codegen/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -59,7 +59,7 @@ func main() {
 				ApiVersion:  "v1",
 				Description: "",
 				Name:        "Wasme Operator",
-				Version:     "v0.0.1",
+				Version:     "v" + version.Version,
 				Home:        "https://docs.solo.io/web-assembly-hub/latest",
 				Icon:        "https://raw.githubusercontent.com/solo-io/wasme/master/docs/content/img/logo.png",
 				Sources: []string{

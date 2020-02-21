@@ -165,7 +165,7 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 	return nil
 }
 
-func DesiredDaemonSet(name, namespace, image string, labels map[string]string, args []string, pullPolicy v1.PullPolicy)  *appsv1.DaemonSet{
+func DesiredDaemonSet(name, namespace, image string, labels map[string]string, args []string, pullPolicy v1.PullPolicy) *appsv1.DaemonSet {
 	hostPathType := v1.HostPathDirectoryOrCreate
 	return &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{

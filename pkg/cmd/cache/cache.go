@@ -15,10 +15,10 @@ import (
 
 type cacheOptions struct {
 	targetRefs []string
-	debug     bool
-	port      int
-	directory string
-	refFile   string
+	debug      bool
+	port       int
+	directory  string
+	refFile    string
 
 	*opts.AuthOptions
 }
