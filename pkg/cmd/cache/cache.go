@@ -15,10 +15,6 @@ import (
 
 type cacheOptions struct {
 	targetRefs []string
-	code       string
-	config     string
-	verbose    bool
-
 	debug     bool
 	port      int
 	directory string
@@ -45,8 +41,6 @@ func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Comma
 		Hidden: true,
 	}
 
-	cmd.Flags().BoolVarP(&opts.verbose, "verbose", "v", false, "verbose output")
-	cmd.Flags().BoolVarP(&opts.debug, "debug", "d", false, "debug mode")
 	cmd.Flags().IntVarP(&opts.port, "port", "", 9979, "port")
 	cmd.Flags().StringVarP(&opts.directory, "directory", "", "", "directory to write the refs we need to cache")
 	cmd.Flags().StringVarP(&opts.refFile, "ref-file", "", "", "file to watch for images we need to cache.")
