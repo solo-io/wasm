@@ -163,66 +163,20 @@ func makeOperator() model.Operator {
 }
 
 func makeCache() model.Operator {
-	// need to take a pointer
-	hostPathType := v1.HostPathDirectoryOrCreate
-	hostPathTypePtr := &hostPathType
+	defaultDaemonSet := cache.DesiredDaemonSet("", "", "", nil, nil, "")
+	cacheVolumes := defaultDaemonSet.Spec.Template.Spec.Volumes
+	cacheContainer := defaultDaemonSet.Spec.Template.Spec.Containers[0]
 
 	return model.Operator{
 		Name: "wasme-cache",
 		Deployment: model.Deployment{
-			Image: makeImage(),
-			Resources: &v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse("125m"),
-					v1.ResourceMemory: resource.MustParse("256Mi"),
-				},
-			},
+			Image:        makeImage(),
+			Resources:    &cacheContainer.Resources,
 			UseDaemonSet: true,
 		},
-		Args: []string{
-			"cache",
-			"--directory",
-			"/var/local/lib/wasme-cache",
-			"--ref-file",
-			"/etc/wasme-cache/images.txt",
-		},
-		Volumes: []v1.Volume{
-			{
-				Name: "cache-dir",
-				VolumeSource: v1.VolumeSource{
-					HostPath: &v1.HostPathVolumeSource{
-						Path: "/var/local/lib/wasme-cache",
-						Type: hostPathTypePtr,
-					},
-				},
-			},
-			{
-				Name: "config",
-				VolumeSource: v1.VolumeSource{
-					ConfigMap: &v1.ConfigMapVolumeSource{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: cache.CacheName,
-						},
-						Items: []v1.KeyToPath{
-							{
-								Key:  "images",
-								Path: "images.txt",
-							},
-						},
-					},
-				},
-			},
-		},
-		VolumeMounts: []v1.VolumeMount{
-			{
-				MountPath: "/var/local/lib/wasme-cache",
-				Name:      "cache-dir",
-			},
-			{
-				MountPath: "/etc/wasme-cache",
-				Name:      "config",
-			},
-		},
+		Args:         cache.DefaultCacheArgs,
+		Volumes:      cacheVolumes,
+		VolumeMounts: cacheContainer.VolumeMounts,
 		ConfigMaps: []v1.ConfigMap{
 			{
 				ObjectMeta: metav1.ObjectMeta{
