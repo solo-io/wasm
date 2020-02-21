@@ -43,7 +43,7 @@ func main() {
 				RenderProtos:     true,
 				RenderManifests:  true,
 				RenderTypes:      true,
-				RenderClients:    false,
+				RenderClients:    true,
 				RenderController: true,
 				ApiRoot:          "pkg/operator/api",
 			},

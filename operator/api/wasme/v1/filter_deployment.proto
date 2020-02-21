@@ -78,10 +78,10 @@ message IstioDeploymentSpec {
     // can either be Deployment or DaemonSet
     string kind = 1;
 
-    // the name of the workload to deploy the filter to
+    // deploy the filter to workloads with these labels
     // the workload must live in the same namespace as the FilterDeployment
     // if empty, the filter will be deployed to all workloads in the namespace
-    string name = 2;
+    map<string, string> labels = 2;
 
     // the namespace where the Istio control plane is installed.
     // defaults to `istio-system`.
