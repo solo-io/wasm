@@ -43,7 +43,7 @@ func main() {
 				RenderProtos:     true,
 				RenderManifests:  true,
 				RenderTypes:      true,
-				RenderClients:    true,
+				RenderClients:    false,
 				RenderController: true,
 				ApiRoot:          "pkg/operator/api",
 			},
@@ -163,12 +163,13 @@ func makeOperator() model.Operator {
 }
 
 func makeCache() model.Operator {
-	defaultDaemonSet := cache.DesiredDaemonSet("", "", "", nil, nil, "")
+	name := "wasme-cache"
+	defaultDaemonSet := cache.MakeDaemonSet(name, "", "", nil, nil, "")
 	cacheVolumes := defaultDaemonSet.Spec.Template.Spec.Volumes
 	cacheContainer := defaultDaemonSet.Spec.Template.Spec.Containers[0]
 
 	return model.Operator{
-		Name: "wasme-cache",
+		Name: name,
 		Deployment: model.Deployment{
 			Image:        makeImage(),
 			Resources:    &cacheContainer.Resources,

@@ -134,7 +134,7 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 		"app": d.name,
 	}
 
-	desiredDaemonSet := DesiredDaemonSet(d.name, d.namespace, d.image, labels, d.args, d.pullPolicy)
+	desiredDaemonSet := MakeDaemonSet(d.name, d.namespace, d.image, labels, d.args, d.pullPolicy)
 
 	_, err := d.kube.AppsV1().DaemonSets(d.namespace).Create(desiredDaemonSet)
 	// update on already exists err
@@ -165,7 +165,7 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 	return nil
 }
 
-func DesiredDaemonSet(name, namespace, image string, labels map[string]string, args []string, pullPolicy v1.PullPolicy) *appsv1.DaemonSet {
+func MakeDaemonSet(name, namespace, image string, labels map[string]string, args []string, pullPolicy v1.PullPolicy) *appsv1.DaemonSet {
 	hostPathType := v1.HostPathDirectoryOrCreate
 	return &appsv1.DaemonSet{
 		ObjectMeta: metav1.ObjectMeta{

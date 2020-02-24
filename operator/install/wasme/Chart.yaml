@@ -4,4 +4,4 @@ icon: https://raw.githubusercontent.com/solo-io/wasme/master/docs/content/img/lo
 name: Wasme Operator
 sources:
 - https://github.com/solo-io/wasme
-version: v0.0.1
+version: vdev
