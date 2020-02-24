@@ -2,10 +2,11 @@ package util
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
 	"io"
 	"os/exec"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	"github.com/sirupsen/logrus"
 )

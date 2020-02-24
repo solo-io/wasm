@@ -23,14 +23,12 @@ Removes a deployed Envoy WASM Filter from Envoy instances.
 ### Options inherited from parent commands
 
 ```
-  -d, --debug     debug mode
   -v, --verbose   verbose output
 ```
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
-* [wasme undeploy envoy](../wasme_undeploy_envoy)	 - Remove an Envoy WASM Filter from the Envoy listeners.
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
 * [wasme undeploy gloo](../wasme_undeploy_gloo)	 - Remove an Envoy WASM Filter from the Gloo Gateway Proxies (Envoy).
 * [wasme undeploy istio](../wasme_undeploy_istio)	 - Remove an Envoy WASM Filter from the Istio Sidecar Proxies (Envoy).
 

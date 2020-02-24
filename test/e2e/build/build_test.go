@@ -3,7 +3,6 @@ package build_test
 import (
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/solo-io/wasme/pkg/consts"
 
@@ -14,22 +13,14 @@ import (
 	"github.com/solo-io/wasme/test"
 )
 
-func getEnv(env string) string {
-	val := strings.TrimSpace(os.Getenv(env))
-	if val == "" {
-		Skip("Skipping build/push test. To enable, set " + env + " to the tag to use for the built/pushed image")
-	}
-	return val
-}
-
 var _ = Describe("Build", func() {
 	It("builds and pushes the image", func() {
-		imageName := getEnv("FILTER_IMAGE_TAG")
-		username := getEnv("WASME_LOGIN_USERNAME")
-		password := getEnv("WASME_LOGIN_PASSWORD")
-		npmUsername := getEnv("NPM_LOGIN_USERNAME")
-		npmPassword := getEnv("NPM_LOGIN_PASSWORD")
-		npmEmail := getEnv("NPM_LOGIN_EMAIL")
+		imageName := test.GetImageTag()
+		username := test.GetEnv("WASME_LOGIN_USERNAME")
+		password := test.GetEnv("WASME_LOGIN_PASSWORD")
+		npmUsername := test.GetEnv("NPM_LOGIN_USERNAME")
+		npmPassword := test.GetEnv("NPM_LOGIN_PASSWORD")
+		npmEmail := test.GetEnv("NPM_LOGIN_EMAIL")
 
 		err := test.RunMake("generated-code")
 		Expect(err).NotTo(HaveOccurred())

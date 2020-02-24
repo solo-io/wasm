@@ -125,6 +125,8 @@ run-tests:
 	ginkgo -r -failFast -trace -progress \
 		-ldflags=$(LDFLAGS) \
 		-gcflags=$(GCFLAGS) \
+		-progress \
+		-compilers=4 \
 		-skipPackage=$(SKIP_PACKAGES) $(TEST_PKG)
 
 #----------------------------------------------------------------------------------

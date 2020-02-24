@@ -134,79 +134,7 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 		"app": d.name,
 	}
 
-	hostPathType := v1.HostPathDirectoryOrCreate
-
-	desiredDaemonSet := &appsv1.DaemonSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      d.name,
-			Namespace: d.namespace,
-		},
-		Spec: appsv1.DaemonSetSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: v1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
-				},
-				Spec: v1.PodSpec{
-					Volumes: []v1.Volume{
-						{
-							Name: "cache-dir",
-							VolumeSource: v1.VolumeSource{
-								HostPath: &v1.HostPathVolumeSource{
-									Path: "/var/local/lib/wasme-cache",
-									Type: &hostPathType,
-								},
-							},
-						},
-						{
-							Name: "config",
-							VolumeSource: v1.VolumeSource{
-								ConfigMap: &v1.ConfigMapVolumeSource{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: d.name,
-									},
-									Items: []v1.KeyToPath{
-										{
-											Key:  "images",
-											Path: "images.txt",
-										},
-									},
-								},
-							},
-						},
-					},
-					Containers: []v1.Container{{
-						Name:            d.name,
-						Image:           d.image,
-						ImagePullPolicy: d.pullPolicy,
-						Args:            d.args,
-						VolumeMounts: []v1.VolumeMount{
-							{
-								MountPath: "/var/local/lib/wasme-cache",
-								Name:      "cache-dir",
-							},
-							{
-								MountPath: "/etc/wasme-cache",
-								Name:      "config",
-							},
-						},
-						Resources: v1.ResourceRequirements{
-							Limits: v1.ResourceList{
-								v1.ResourceMemory: resource.MustParse("256Mi"),
-								v1.ResourceCPU:    resource.MustParse("500m"),
-							},
-							Requests: v1.ResourceList{
-								v1.ResourceMemory: resource.MustParse("128Mi"),
-								v1.ResourceCPU:    resource.MustParse("50m"),
-							},
-						},
-					}},
-				},
-			},
-		},
-	}
+	desiredDaemonSet := MakeDaemonSet(d.name, d.namespace, d.image, labels, d.args, d.pullPolicy)
 
 	_, err := d.kube.AppsV1().DaemonSets(d.namespace).Create(desiredDaemonSet)
 	// update on already exists err
@@ -235,4 +163,79 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 	d.logger.Info("cache daemonset created")
 
 	return nil
+}
+
+func MakeDaemonSet(name, namespace, image string, labels map[string]string, args []string, pullPolicy v1.PullPolicy) *appsv1.DaemonSet {
+	hostPathType := v1.HostPathDirectoryOrCreate
+	return &appsv1.DaemonSet{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Spec: appsv1.DaemonSetSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labels,
+				},
+				Spec: v1.PodSpec{
+					Volumes: []v1.Volume{
+						{
+							Name: "cache-dir",
+							VolumeSource: v1.VolumeSource{
+								HostPath: &v1.HostPathVolumeSource{
+									Path: "/var/local/lib/wasme-cache",
+									Type: &hostPathType,
+								},
+							},
+						},
+						{
+							Name: "config",
+							VolumeSource: v1.VolumeSource{
+								ConfigMap: &v1.ConfigMapVolumeSource{
+									LocalObjectReference: v1.LocalObjectReference{
+										Name: name,
+									},
+									Items: []v1.KeyToPath{
+										{
+											Key:  "images",
+											Path: "images.txt",
+										},
+									},
+								},
+							},
+						},
+					},
+					Containers: []v1.Container{{
+						Name:            name,
+						Image:           image,
+						ImagePullPolicy: pullPolicy,
+						Args:            args,
+						VolumeMounts: []v1.VolumeMount{
+							{
+								MountPath: "/var/local/lib/wasme-cache",
+								Name:      "cache-dir",
+							},
+							{
+								MountPath: "/etc/wasme-cache",
+								Name:      "config",
+							},
+						},
+						Resources: v1.ResourceRequirements{
+							Limits: v1.ResourceList{
+								v1.ResourceMemory: resource.MustParse("256Mi"),
+								v1.ResourceCPU:    resource.MustParse("500m"),
+							},
+							Requests: v1.ResourceList{
+								v1.ResourceMemory: resource.MustParse("128Mi"),
+								v1.ResourceCPU:    resource.MustParse("50m"),
+							},
+						},
+					}},
+				},
+			},
+		},
+	}
 }

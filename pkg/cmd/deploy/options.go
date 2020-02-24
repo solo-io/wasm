@@ -84,7 +84,7 @@ type istioOpts struct {
 }
 
 func (opts *istioOpts) addToFlags(flags *pflag.FlagSet) {
-	flags.StringVarP(&opts.workload.Name, "name", "", "", "name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace")
+	flags.StringToStringVarP(&opts.workload.Labels, "labels", "l", nil, "labels of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace")
 	flags.StringVarP(&opts.workload.Namespace, "namespace", "n", "default", "namespace of the workload(s) to inject the filter.")
 	flags.StringVarP(&opts.workload.Kind, "workload-type", "t", istio.WorkloadTypeDeployment, "type of workload into which the filter should be injected. possible values are "+istio.WorkloadTypeDeployment+" or "+istio.WorkloadTypeDaemonSet)
 	flags.StringVarP(&opts.istioNamespace, "istio-namespace", "", "istio-system", "the namespace where the Istio control plane is installed")

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"k8s.io/apimachinery/pkg/labels"
+
 	"github.com/solo-io/wasme/pkg/abi"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
@@ -35,7 +37,7 @@ const (
 // can select all workloads in a namespace
 type Workload struct {
 	// leave name empty to select ALL workloads in the namespace
-	Name      string
+	Labels    map[string]string
 	Namespace string
 	Kind      string
 }
@@ -238,63 +240,36 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 // runs a function on the workload pod template spec
 // selects all workloads in a namespace if workload.Name == ""
 func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error) error {
-
 	switch strings.ToLower(p.Workload.Kind) {
 	case WorkloadTypeDeployment:
-		if p.Workload.Name == "" {
-			workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(metav1.ListOptions{})
-			if err != nil {
-				return err
-			}
-			for _, workload := range workloads.Items {
-				if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
-					return err
-				}
-
-				if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
-					return err
-				}
-			}
-		} else {
-			workload, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).Get(p.Workload.Name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-
+		workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(metav1.ListOptions{
+			LabelSelector: labels.SelectorFromSet(p.Workload.Labels).String(),
+		})
+		if err != nil {
+			return err
+		}
+		for _, workload := range workloads.Items {
 			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
 
-			if err = p.Client.Ensure(p.Ctx, nil, workload); err != nil {
+			if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
 				return err
 			}
 		}
 	case WorkloadTypeDaemonSet:
-		if p.Workload.Name == "" {
-			workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{})
-			if err != nil {
-				return err
-			}
-			for _, workload := range workloads.Items {
-				if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
-					return err
-				}
-
-				if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
-					return err
-				}
-			}
-		} else {
-			workload, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).Get(p.Workload.Name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-
+		workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{
+			LabelSelector: labels.SelectorFromSet(p.Workload.Labels).String(),
+		})
+		if err != nil {
+			return err
+		}
+		for _, workload := range workloads.Items {
 			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
 
-			if err = p.Client.Ensure(p.Ctx, nil, workload); err != nil {
+			if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
 				return err
 			}
 		}

@@ -4,15 +4,15 @@ import (
 	"log"
 	"os"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/solo-io/autopilot/codegen"
+	"github.com/solo-io/autopilot/codegen/model"
 	"github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/version"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/solo-io/autopilot/codegen"
-	"github.com/solo-io/autopilot/codegen/model"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -59,7 +59,7 @@ func main() {
 				ApiVersion:  "v1",
 				Description: "",
 				Name:        "Wasme Operator",
-				Version:     "v0.0.1",
+				Version:     "v" + version.Version,
 				Home:        "https://docs.solo.io/web-assembly-hub/latest",
 				Icon:        "https://raw.githubusercontent.com/solo-io/wasme/master/docs/content/img/logo.png",
 				Sources: []string{
@@ -163,66 +163,21 @@ func makeOperator() model.Operator {
 }
 
 func makeCache() model.Operator {
-	// need to take a pointer
-	hostPathType := v1.HostPathDirectoryOrCreate
-	hostPathTypePtr := &hostPathType
+	name := "wasme-cache"
+	defaultDaemonSet := cache.MakeDaemonSet(name, "", "", nil, nil, "")
+	cacheVolumes := defaultDaemonSet.Spec.Template.Spec.Volumes
+	cacheContainer := defaultDaemonSet.Spec.Template.Spec.Containers[0]
 
 	return model.Operator{
-		Name: "wasme-cache",
+		Name: name,
 		Deployment: model.Deployment{
-			Image: makeImage(),
-			Resources: &v1.ResourceRequirements{
-				Requests: v1.ResourceList{
-					v1.ResourceCPU:    resource.MustParse("125m"),
-					v1.ResourceMemory: resource.MustParse("256Mi"),
-				},
-			},
+			Image:        makeImage(),
+			Resources:    &cacheContainer.Resources,
 			UseDaemonSet: true,
 		},
-		Args: []string{
-			"cache",
-			"--directory",
-			"/var/local/lib/wasme-cache",
-			"--ref-file",
-			"/etc/wasme-cache/images.txt",
-		},
-		Volumes: []v1.Volume{
-			{
-				Name: "cache-dir",
-				VolumeSource: v1.VolumeSource{
-					HostPath: &v1.HostPathVolumeSource{
-						Path: "/var/local/lib/wasme-cache",
-						Type: hostPathTypePtr,
-					},
-				},
-			},
-			{
-				Name: "config",
-				VolumeSource: v1.VolumeSource{
-					ConfigMap: &v1.ConfigMapVolumeSource{
-						LocalObjectReference: v1.LocalObjectReference{
-							Name: cache.CacheName,
-						},
-						Items: []v1.KeyToPath{
-							{
-								Key:  "images",
-								Path: "images.txt",
-							},
-						},
-					},
-				},
-			},
-		},
-		VolumeMounts: []v1.VolumeMount{
-			{
-				MountPath: "/var/local/lib/wasme-cache",
-				Name:      "cache-dir",
-			},
-			{
-				MountPath: "/etc/wasme-cache",
-				Name:      "config",
-			},
-		},
+		Args:         cache.DefaultCacheArgs,
+		Volumes:      cacheVolumes,
+		VolumeMounts: cacheContainer.VolumeMounts,
 		ConfigMaps: []v1.ConfigMap{
 			{
 				ObjectMeta: metav1.ObjectMeta{

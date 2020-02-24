@@ -36,30 +36,12 @@ site-common: clean
 
 .PHONY: site-test
 site-test: site-common
-### skip, to host locally
-	# go run cmd/generate_changelog_doc.go gen-version-scope-data --no-scope
-## added this as an alternative to the build script:
-	cp data/Solo.testlocal.yaml data/Solo.yaml
 	hugo --config docs.toml
-	# ensure that valid json is generated. Common cause: using yaml ">" multiline string symbols in Hugo's toml headers
-	cat site/index.json | jq "." > /dev/null
 
 .PHONY: site-release
 site-release: site-common
-### This generates docs/data/Solo.yaml which indicates the docs (whether "latest" or x.y.z) and code version (x.y.z)
-### For simplicity, I have hard coded that file here - just set the product/version as you like, keep the docs version at /<product>/latest
-	# go run cmd/generate_changelog_doc.go gen-version-scope-data --product gloo --version $(VERSION) --call-latest
-## added this as an alternative to the build script:
-	cp data/Solo.publish.yaml data/Solo.yaml
-	hugo --config docs.toml
-	# ensure that valid json is generated. Common cause: using yaml ">" multiline string symbols in Hugo's toml headers
-	# (if it passes here, it will pass on the subsequent generation so no need to check both hugo calls)
-	cat site/index.json | jq "." > /dev/null
+	HUGO_PARAMS_Version=$(VERSION) hugo --config docs.toml
 	mv site site-latest
-### Skip versioned release
-	# go run cmd/generate_changelog_doc.go gen-version-scope-data --product gloo --version $(VERSION)
-	# hugo --config docs.toml
-	# mv site site-versioned
 
 ## Old way of deploying site. TODO: remove when old hosting setup is disabled
 # .PHONY: deploy-site
@@ -68,7 +50,7 @@ site-release: site-common
 
 .PHONY: serve-site
 serve-site: site-test
-	hugo --config docs.toml --themesDir themes server -D
+	HUGO_PARAMS_Version=$(VERSION) hugo --config docs.toml --themesDir themes server -D
 
 .PHONY: clean
 clean:

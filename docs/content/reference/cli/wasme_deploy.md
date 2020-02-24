@@ -20,7 +20,6 @@ You must specify --root-id unless a default root id is provided in the image con
 
 ```
       --config string    optional config that will be passed to the filter. accepts an inline string.
-      --dry-run          print output any configuration changes to stdout rather than applying them to the target file / kubernetes cluster
   -h, --help             help for deploy
       --id string        unique id for naming the deployed filter. this is used for logging as well as removing the filter. when running wasme deploy istio, this name must be a valid Kubernetes resource name.
       --root-id string   optional root ID used to bind the filter at the Envoy level. this value is normally read from the filter image directly.
@@ -29,14 +28,13 @@ You must specify --root-id unless a default root id is provided in the image con
 ### Options inherited from parent commands
 
 ```
-  -d, --debug     debug mode
   -v, --verbose   verbose output
 ```
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
-* [wasme deploy envoy](../wasme_deploy_envoy)	 - Configure a local instance of Envoy to run a WASM Filter.
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
+* [wasme deploy envoy](../wasme_deploy_envoy)	 - Run Envoy locally in Docker and attach a WASM Filter.
 * [wasme deploy gloo](../wasme_deploy_gloo)	 - Deploy an Envoy WASM Filter to the Gloo Gateway Proxies (Envoy).
 * [wasme deploy istio](../wasme_deploy_istio)	 - Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).
 

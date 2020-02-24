@@ -16,6 +16,9 @@ wasmeCache:
     repository: wasme
     tag: dev
   resources:
-    requests:
-      cpu: 125m
+    limits:
+      cpu: 500m
       memory: 256Mi
+    requests:
+      cpu: 50m
+      memory: 128Mi

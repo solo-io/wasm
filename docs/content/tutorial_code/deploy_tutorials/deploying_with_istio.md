@@ -13,11 +13,11 @@ In this tutorial we'll use `wasme` to deploy a simple "hello world" filter that 
 
 ### Install Istio
 
-1. First, we'll download the latest Istio release. At time of writing, this is `1.5.0`:
+1. First, we'll download the latest Istio release. At time of writing, this is `1.5.0-beta.2`:
 
 ```bash
-curl -L https://istio.io/downloadIstio | sh -
-cd istio-1.5.0
+curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.5.0-beta.2 sh -
+cd istio-1.5.0-beta.2
 ```
 
 1. To install Istio:
@@ -82,58 +82,50 @@ wasme list
 ```
 
 ```
-NAME                          SHA      UPDATED             SIZE   TAGS
-...
-ilackarms/istio-example       9d9be851 02 May 85 11:02 EST 1.0 MB 1.5.0
+NAME                                            TAG                 SIZE    SHA      UPDATED
+...                 
+webassemblyhub.io/ilackarms/assemblyscript-test istio-1.5.0-alpha.0 12.5 kB 8b74e9b0 13 Feb 20 13:59 EST
 ...
 ```
 
 Deploying the filter is done with a single `wasme` command:
 
 ```bash
-wasme deploy istio webassemblyhub.io/ilackarms/istio-test:1.4.2-0 \
+wasme deploy istio webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0 \
     --id=myfilter \
     --namespace bookinfo \
-    --config '{"name":"hello","value":"world"}'
+    --config 'world'
 ```
 
 {{% notice note %}}
-The `config` for the `webassemblyhub.io/ilackarms/istio-example` filter specifies the `name` and `value` of 
-a header which will be appended by the filter to HTTP responses. The value of `config` is specific to the 
-filter deployed via `wasme`. 
+The `config` for the `webassemblyhub.io/ilackarms/assemblyscript-test` filter specifies the value of 
+a "`hello`" header which will be appended by the filter to HTTP responses. The value of `config` is specific to the 
+filter deployed via `wasme`.
 {{% /notice %}}
 
 
 Wasme will output the following logs as it deploys the filter to each `deployment` that composes the bookinfo app:
 
 ```
-INFO[0000] cache namespace already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:0.0.1"
-INFO[0000] cache configmap already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:0.0.1"
-INFO[0000] cache daemonset updated                       cache=wasme-cache.wasme image="quay.io/solo-io/wasme:0.0.1"
-webassemblyhub.io/ilackarms/istio-test:1.4.2-0 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:eec1bcf3c5fdf1d5e4e69d923ebbc7c5e06f409d6f3f914aac3b386895e45eac Size:14 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:e6e9b6296a2cb633fb7c8206ebfb2771752684180065de03a86aaa591ebeee1f Size:1039813 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:9d9be851b8c937583ffa78cceb902541b039e5c2138c8d391d426394a18f61b0 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
-INFO[0001] added image to cache                          cache="{wasme-cache wasme}"
-INFO[0002] updated workload sidecar annotations          filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-webassemblyhub.io/ilackarms/istio-test:1.4.2-0 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:eec1bcf3c5fdf1d5e4e69d923ebbc7c5e06f409d6f3f914aac3b386895e45eac Size:14 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:e6e9b6296a2cb633fb7c8206ebfb2771752684180065de03a86aaa591ebeee1f Size:1039813 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:9d9be851b8c937583ffa78cceb902541b039e5c2138c8d391d426394a18f61b0 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
-INFO[0002] updated Istio EnvoyFilter resource            envoy_filter_resource=details-v1-myfilter.bookinfo filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-INFO[0002] updated workload sidecar annotations          filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-webassemblyhub.io/ilackarms/istio-test:1.4.2-0 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:eec1bcf3c5fdf1d5e4e69d923ebbc7c5e06f409d6f3f914aac3b386895e45eac Size:14 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:e6e9b6296a2cb633fb7c8206ebfb2771752684180065de03a86aaa591ebeee1f Size:1039813 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:9d9be851b8c937583ffa78cceb902541b039e5c2138c8d391d426394a18f61b0 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
-INFO[0003] updated Istio EnvoyFilter resource            envoy_filter_resource=productpage-v1-myfilter.bookinfo filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-INFO[0003] updated workload sidecar annotations          filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-webassemblyhub.io/ilackarms/istio-test:1.4.2-0 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:eec1bcf3c5fdf1d5e4e69d923ebbc7c5e06f409d6f3f914aac3b386895e45eac Size:14 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:e6e9b6296a2cb633fb7c8206ebfb2771752684180065de03a86aaa591ebeee1f Size:1039813 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:9d9be851b8c937583ffa78cceb902541b039e5c2138c8d391d426394a18f61b0 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
-INFO[0003] updated Istio EnvoyFilter resource            envoy_filter_resource=ratings-v1-myfilter.bookinfo filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-INFO[0003] updated workload sidecar annotations          filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-webassemblyhub.io/ilackarms/istio-test:1.4.2-0 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:eec1bcf3c5fdf1d5e4e69d923ebbc7c5e06f409d6f3f914aac3b386895e45eac Size:14 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:e6e9b6296a2cb633fb7c8206ebfb2771752684180065de03a86aaa591ebeee1f Size:1039813 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:9d9be851b8c937583ffa78cceb902541b039e5c2138c8d391d426394a18f61b0 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
-INFO[0004] updated Istio EnvoyFilter resource            envoy_filter_resource=reviews-v1-myfilter.bookinfo filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-INFO[0004] updated workload sidecar annotations          filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-webassemblyhub.io/ilackarms/istio-test:1.4.2-0 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:eec1bcf3c5fdf1d5e4e69d923ebbc7c5e06f409d6f3f914aac3b386895e45eac Size:14 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:e6e9b6296a2cb633fb7c8206ebfb2771752684180065de03a86aaa591ebeee1f Size:1039813 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:9d9be851b8c937583ffa78cceb902541b039e5c2138c8d391d426394a18f61b0 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
-INFO[0004] updated Istio EnvoyFilter resource            envoy_filter_resource=reviews-v2-myfilter.bookinfo filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-INFO[0004] updated workload sidecar annotations          filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
-webassemblyhub.io/ilackarms/istio-test:1.4.2-0 [{MediaType:application/vnd.io.solo.wasm.config.v1+json Digest:sha256:eec1bcf3c5fdf1d5e4e69d923ebbc7c5e06f409d6f3f914aac3b386895e45eac Size:14 URLs:[] Annotations:map[] Platform:<nil>} {MediaType:application/vnd.io.solo.wasm.code.v1+wasm Digest:sha256:e6e9b6296a2cb633fb7c8206ebfb2771752684180065de03a86aaa591ebeee1f Size:1039813 URLs:[] Annotations:map[org.opencontainers.image.title:code.wasm] Platform:<nil>}] {MediaType:application/vnd.oci.image.manifest.v1+json Digest:sha256:9d9be851b8c937583ffa78cceb902541b039e5c2138c8d391d426394a18f61b0 Size:409 URLs:[] Annotations:map[] Platform:<nil>} <nil>
-INFO[0005] updated Istio EnvoyFilter resource            envoy_filter_resource=reviews-v3-myfilter.bookinfo filter="&{myfilter webassemblyhub.io/ilackarms/istio-test:1.4.2-0 {\"name\":\"hello\",\"value\":\"world\"} }" ports="[9080]" workload="{ bookinfo deployment}"
+INFO[0001] cache namespace already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:dev"
+INFO[0001] cache configmap already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:dev"
+INFO[0002] cache daemonset updated                       cache=wasme-cache.wasme image="quay.io/solo-io/wasme:dev"
+INFO[0005] added image to cache                          cache="{wasme-cache wasme}"
+INFO[0015] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=details-v1
+INFO[0015] created Istio EnvoyFilter resource            envoy_filter_resource=details-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=details-v1
+INFO[0015] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=productpage-v1
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=productpage-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=productpage-v1
+INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=ratings-v1
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=ratings-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=ratings-v1
+INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v1
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v1
+INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v2
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v2-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v2
+INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v3
+INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v3-myfilter.bookinfo filter="id:\"myfilter\" image:\"yuvaltest.solo.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0\" config:\"world\" rootID:\"add_header\" " workload=reviews-v3
 ```
 
 If the above command finished without error, we should be ready to test the filter:
-
 
 ```bash
 # execute a request from the productpage component to the details component: 

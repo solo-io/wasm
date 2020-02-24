@@ -202,7 +202,7 @@ func runLocalEnvoy(ctx context.Context, filter v1.FilterSpec, opts localOpts) er
 	}
 	defer in.Close()
 	out, err := func() (io.WriteCloser, error) {
-		switch opts.infile {
+		switch opts.outfile {
 		case "-":
 			// use stdout
 			return os.Stdout, nil
@@ -211,7 +211,7 @@ func runLocalEnvoy(ctx context.Context, filter v1.FilterSpec, opts localOpts) er
 			return nil, nil
 		default:
 			// write file
-			return os.Create(opts.infile)
+			return os.Create(opts.outfile)
 		}
 	}()
 	if err != nil {

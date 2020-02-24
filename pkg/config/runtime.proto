@@ -1,10 +1,25 @@
 syntax = "proto3";
 
-package solo.extendenvoy.config;
+package module.wasm.config;
 
 option go_package = "config";
 
-// Runtime Configuration for a WASM OCI Image
+// Runtime Configuration for a WASM OCI Image. This configuration is bundled
+// with the WASM image at build time.
+//
+// Example:
+//
+// ```json
+// {
+//   "type": "envoy_proxy",
+//   "abiVersions": ["v0-541b2c1155fffb15ccde92b8324f3e38f7339ba6"],
+//   "config": {
+//     "rootIds": [
+//       "add_header_root_id"
+//     ]
+//   }
+// }
+// ```
 message Runtime {
   // the type of the runtime
   string type = 1;

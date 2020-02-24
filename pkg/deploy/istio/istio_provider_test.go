@@ -53,7 +53,8 @@ var _ = Describe("IstioProvider", func() {
 		puller = &mockPuller{
 			image: mockImage{ref: filter.Image, digest: "sha256:e454cab754cf9234e8b41d7c5e30f53a4c125d7d9443cb3ef2b2eb1c4bd1ec14"},
 		}
-		cancel = func() {}
+		cancel     = func() {}
+		deployment *appsv1.Deployment
 	)
 	BeforeEach(func() {
 		cfg := aptest.MustConfig()
@@ -84,7 +85,7 @@ var _ = Describe("IstioProvider", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		_, err = kube.AppsV1().Deployments(ns).Create(makeDeployment(workloadName, ns))
+		deployment, err = kube.AppsV1().Deployments(ns).Create(makeDeployment(workloadName, ns))
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
@@ -95,7 +96,7 @@ var _ = Describe("IstioProvider", func() {
 	})
 	It("annotates the workload and creates the EnvoyFilter", func() {
 		workload := Workload{
-			Name:      workloadName,
+			Labels:    deployment.Labels,
 			Namespace: ns,
 			Kind:      WorkloadTypeDeployment,
 		}
@@ -121,7 +122,7 @@ var _ = Describe("IstioProvider", func() {
 		err = p.ApplyFilter(filter)
 		Expect(err).NotTo(HaveOccurred())
 
-		dep, err := kube.AppsV1().Deployments(workload.Namespace).Get(workload.Name, metav1.GetOptions{})
+		dep, err := kube.AppsV1().Deployments(workload.Namespace).Get(deployment.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(dep.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations()))
@@ -134,7 +135,7 @@ var _ = Describe("IstioProvider", func() {
 		ef := &istiov1alpha3.EnvoyFilter{
 			ObjectMeta: metav1.ObjectMeta{
 				Namespace: workload.Namespace,
-				Name:      istioEnvoyFilterName(workload.Name, filter.Id),
+				Name:      istioEnvoyFilterName(deployment.Name, filter.Id),
 			},
 		}
 		err = client.Get(context.TODO(), ef)
@@ -147,9 +148,9 @@ var _ = Describe("IstioProvider", func() {
 
 		Expect(callbackCalled).To(BeTrue())
 	})
-	It("given an empty workload name, annotates all workloads in the namespace and creates a generic EnvoyFilter", func() {
+	It("given empty workload labels, annotates all workloads in the namespace and creates a generic EnvoyFilter", func() {
 		workload := Workload{
-			Name:      "", //all workloads
+			//all workloads
 			Namespace: ns,
 			Kind:      WorkloadTypeDeployment,
 		}
@@ -209,7 +210,7 @@ var _ = Describe("IstioProvider", func() {
 	// note: this test assumes istio 1.5.0-alpha.0 installed to cluster
 	It("returns an error when the image abi version does not support the istio version", func() {
 		workload := Workload{
-			Name:      "", //all workloads
+			//all workloads
 			Namespace: ns,
 			Kind:      WorkloadTypeDeployment,
 		}

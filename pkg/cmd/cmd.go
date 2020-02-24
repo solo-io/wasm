@@ -35,6 +35,7 @@ func Cmd() *cobra.Command {
 	ctx := &ctx2
 	cmd := &cobra.Command{
 		Use:     "wasme [command]",
+		Short:   "The tool for building, pushing, and deploying Envoy WebAssembly Filters",
 		Version: version.Version,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			if general.Verbose {

@@ -30,11 +30,10 @@ wasme pull <name:tag|name@digest> [flags]
 ### Options inherited from parent commands
 
 ```
-  -d, --debug     debug mode
   -v, --verbose   verbose output
 ```
 
 ### SEE ALSO
 
-* [wasme](../wasme)	 - 
+* [wasme](../wasme)	 - The tool for building, pushing, and deploying Envoy WebAssembly Filters
 

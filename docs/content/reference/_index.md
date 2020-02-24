@@ -1,9 +1,9 @@
 ---
 title: "Reference"
-description: "Reference for the Wasme CLI"
+description: "Reference for working with Wasme"
 weight: 5
 ---
 
-Reference documentation for `wasme`, used to build and push WebAssembly filters to with https://webassemblyhub.io/. This documentation is generated from the `wasme` source code.
+This section contains reference documentation for the specific APIs and commands used to work with `wasme`.
 
 {{% children description="true" %}}

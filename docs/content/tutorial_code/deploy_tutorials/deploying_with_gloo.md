@@ -1,7 +1,7 @@
 ---
 title: "Deploying Filters to Gloo"
 weight: 2
-description: Deploy a wasm filter using Gloo as the control plane.
+description: Deploy a wasm filter to Envoy using Gloo as the control plane.
 ---
 
 In this tutorial we'll deploy an existing WebAssembly (WASM) module from [the WebAssembly Hub](https://webassemblyhub.io) directly to Envoy via [Gloo](https://docs.solo.io/gloo/latest) installed to our kubernetes cluster.
@@ -42,9 +42,13 @@ helm install gloo-gateway gloo/gloo --namespace gloo-system \
 
 Gloo will be installed to the `gloo-system` namespace.
 
-### Verify set up
+{{% notice note %}}
+Gloo version `1.3.6` or greater required. Check your installed version of Gloo with `glooctl version`
+{{% /notice %}}
 
-Lastly, we'll set up our routing rules to be able to call our `petstore` service. Let's add a route to the routing table:
+### Create a Route
+
+Lastly, we'll create a route to be able to call our `petstore` service. Let's add a route using a Gloo `VirtualService`:
 
 Apply the [virtual service manifest](https://docs.solo.io/gloo/latest/gloo_routing/virtual_services/)
 ```shell
@@ -69,12 +73,20 @@ spec:
 EOF
 ```
 
-To get Gloo's external IP, run the following:
+Next, we'll get the Gloo Gateway's external IP by running the following:
 
 ```shell
-URL=$(kubectl get svc -n gloo-system gateway-proxy \
- -o jsonpath='{.status.loadBalancer.ingress[*].ip}')
+URL=$(kubectl get svc -n gloo-system gateway-proxy \ -o jsonpath='{.status.loadBalancer.ingress[*].ip}')
 ```
+
+{{< tabs >}}
+{{< tab name="Cloud Provider" codelang="shell">}}
+URL=$(kubectl get svc -n gloo-system gateway-proxy \ -o jsonpath='{.status.loadBalancer.ingress[*].ip}')
+{{< /tab >}}
+{{< tab name="Minikube" codelang="shell" >}}
+URL=$(minikube ip):$(kubectl get svc -n gloo-system gateway-proxy -o jsonpath='{.spec.ports[?(@.name == "http")].nodePort}')`
+{{< /tab >}}
+{{< /tabs >}}
 
 Now let's curl that URL:
 
@@ -102,32 +114,37 @@ curl -v $URL/api/pets
 [{"id":1,"name":"Dog","status":"available"},{"id":2,"name":"Cat","status":"pending"}]
 ```
 
-If you're able to get to this point, we have a working Envoy proxy and we're able to call it externally. 
+If you're able to get to this point, we are able to call to our petstore app through Gloo.
 
 ## Deploying a WASM module from the Hub
 
-Refer to the [installation guide]({{< versioned_link_path fromRoot="/installation">}}) for getting the WebAssembly Hub CLI `wasme`.
+If you don't have `wasme` installed, try the following or refer to the [installation guide]({{< versioned_link_path fromRoot="/installation">}}) for getting the WebAssembly Hub CLI `wasme`:
+
+```bash
+curl -sL https://run.solo.io/wasme/install | sh
+export PATH=$HOME/.wasme/bin:$PATH
+```
 
 Let's run `wasme list` to see what's available on the hub:
 
 ```shell
-wasme list
+wasme list --published
 ```
 
 ```
-NAME                 SHA      UPDATED             SIZE   TAGS
+NAME                                   TAG                                 SIZE    SHA      UPDATED
 ...
-ilackarms/hello:v0.1 3753eeaf 15 Sep 19 23:41 EST 1.0 MB v0.1
+webassemblyhub.io/ilackarms/gloo-test  1.3.3-0                             1.0 MB  8c001279 12 Feb 20 19:10 UTC
 ...
 ```
 
 Let's try deploying one of these to Gloo:
 
 ```bash
-wasme deploy gloo webassemblyhub.io/ilackarms/gloo-hello:1.3.4 --id=myfilter --config '{"value":"something"}'
+wasme deploy gloo webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 --id=myfilter --config 'world'
 ```
 
-This filter adds the header `newheader: something` to responses.
+This filter adds the header `hello: <value>` to responses, where `<value>` is the value of the `--config` string.
 
 The deployment should have added our filter to the Gloo Gateway. Let's check this with `kubectl`:
 
@@ -136,10 +153,10 @@ kubectl get gateway -n gloo-system '-ojsonpath={.items[0].spec.httpGateway.optio
 ```
 
 ```
-map[image:webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 name:myfilter rootId:add_header_root_id]
+map[config:world image:webassemblyhub.io/ilackarms/gloo-test:1.3.3-0 name:myfilter rootId:add_header_root_id]
 ```
 
-If we try our request again, we should see the `hello: World` header was added by our filter:
+If we try our request again, we should see the `hello: world` header was added by our filter:
 
 
 ```shell
@@ -160,7 +177,7 @@ curl -v $URL/api/pets
 < date: Fri, 20 Dec 2019 19:17:13 GMT
 < content-length: 86
 < x-envoy-upstream-service-time: 0
-< newheader: something
+< hello: world
 < location: envoy-wasm
 < server: envoy
 <

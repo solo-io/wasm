@@ -17,6 +17,7 @@ require (
 	github.com/golang/mock v1.4.0
 	github.com/golang/protobuf v1.3.3
 	github.com/hashicorp/go-multierror v1.0.0
+	github.com/ilackarms/protokit v0.0.0-20181231193355-ee2393f3bbf0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.11.0
@@ -24,6 +25,8 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.8.1
+	github.com/pseudomuto/protoc-gen-doc v1.0.0
+	github.com/pseudomuto/protokit v0.2.0 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/solo-io/autopilot v0.1.1-0.20200211163026-f295a102fd94
 	github.com/solo-io/gloo v1.3.1

@@ -167,7 +167,7 @@ func (f *filterDeploymentHandler) makeProvider(obj *v1.FilterDeployment, puller 
 	case *v1.DeploymentSpec_Istio:
 		workload := istio.Workload{
 			Kind:      dep.Istio.GetKind(),
-			Name:      dep.Istio.GetName(),
+			Labels:    dep.Istio.GetLabels(),
 			Namespace: obj.Namespace,
 		}
 

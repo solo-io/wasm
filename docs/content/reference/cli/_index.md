@@ -1,6 +1,8 @@
 
 ---
 title: "Command-Line Reference"
+description: | 
+  Detailed descriptions and options for working with the wasme CLI, which is used to build, manage, and deploy WASM Filters. 
 weight: 2
 ---
 
