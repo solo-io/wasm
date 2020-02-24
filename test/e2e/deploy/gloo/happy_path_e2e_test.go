@@ -16,10 +16,10 @@ import (
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 )
 
-var ns = "petstore"
+// use a namespace as a "cluster lock"
+var ns = "gloo-e2e-happy-path-test-lock"
 
 var _ = BeforeSuite(func() {
-	return
 	// ensure no collision between tests
 	err := waitNamespaceTerminated(ns, time.Minute)
 	Expect(err).NotTo(HaveOccurred())
