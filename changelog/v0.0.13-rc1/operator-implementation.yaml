@@ -1,4 +1,0 @@
-changelog:
-  - type: NEW_FEATURE
-    description: 'Adds support for `init` and `build` for the AssemblyScript language: https://github.com/AssemblyScript/assemblyscript'
-    issueLink: https://github.com/solo-io/wasme/issues/71

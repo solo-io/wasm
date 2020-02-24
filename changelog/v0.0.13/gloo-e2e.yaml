@@ -1,0 +1,8 @@
+changelog:
+  - type: NON_USER_FACING
+    description: 'Add Gloo e2e test'
+  - type: NON_USER_FACING
+    description: 'Update & improve documentation'
+  - type: NEW_FEATURE
+    description: 'Support use of labelSelector to deploy filters to Istio'
+    issueLink: https://github.com/solo-io/wasme/issues/43
