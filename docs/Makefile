@@ -32,7 +32,7 @@ site-common: clean
 # this theme is crucial (has the nested scoped short codes: protobuf and versioned_link_path - see web-assembly-hub docs for use demos)
 	if [ ! -d themes/hugo-theme-soloio ]; then git clone https://github.com/solo-io/hugo-theme-soloio themes/hugo-theme-soloio; fi
 	# style updates for putting docs in the web-assembly-hub repo, see details here https://github.com/solo-io/hugo-theme-soloio/commit/e0c50784a92fb7f61c635ff9a6e3a010f636f550
-	git -C themes/hugo-theme-soloio checkout ba9072114c4d82194605de4378c82d42e7b44c2c
+	git -C themes/hugo-theme-soloio checkout a9c18a63d56bea026a9e241ce0078caf56eabbc5
 
 .PHONY: site-test
 site-test: site-common
