@@ -61,3 +61,7 @@ weight = 10
 # remove the default hugo taxonomies (tag and category directories)
 disableKinds = ["taxonomy", "taxonomyTerm"]
 [taxonomies]
+
+# allow embedded html with older versions of hugo
+[markup.goldmark.renderer]
+unsafe= true
