@@ -63,6 +63,6 @@ func runNpmBuild(build buildOptions, npm npmOpts) (string, error) {
 		return "", err
 	}
 
-	// filter.wasm currently hard-coded in bazel BUILD file
+	// filter.wasm currently hard-coded in package.json file
 	return filepath.Join(build.tmpDir, "filter.wasm"), nil
 }

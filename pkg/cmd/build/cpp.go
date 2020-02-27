@@ -2,14 +2,11 @@ package build
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"runtime"
-
-	"github.com/solo-io/wasme/pkg/util"
 
 	"github.com/sirupsen/logrus"
+	"github.com/solo-io/wasme/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -45,28 +42,11 @@ func runBazelBuild(build buildOptions, bazel bazelOptions) (string, error) {
 		return "", err
 	}
 
-	tmpDirName := build.tmpDir
-	// workaround for darwin, cannot mount /var to docker
-	if tmpDirName == "" && runtime.GOOS == "darwin" {
-		tmpDirName = "/tmp"
-	}
-	tmpDir, err := ioutil.TempDir(tmpDirName, "wasme")
-	if err != nil {
-		return "", err
-	}
-	defer os.RemoveAll(tmpDir)
-
-	// use abs dir because docker requires it
-	tmpDir, err = filepath.Abs(tmpDir)
-	if err != nil {
-		return "", err
-	}
-
 	// container paths are currently hard-coded in builder image
 	args := []string{
 		"--rm",
 		"-v", sourceDir + ":/src/workspace",
-		"-v", tmpDir + ":/build_output",
+		"-v", build.tmpDir + ":/build_output",
 		"-w", "/src/workspace",
 		"-e", "BUILD_BASE=" + bazel.buildDir,
 		"-e", "BAZEL_OUTPUT=" + bazel.bazelOutput,
@@ -83,5 +63,5 @@ func runBazelBuild(build buildOptions, bazel bazelOptions) (string, error) {
 	}
 
 	// filter.wasm currently hard-coded in bazel BUILD file
-	return filepath.Join(tmpDir, "filter.wasm"), nil
+	return filepath.Join(build.tmpDir, "filter.wasm"), nil
 }
