@@ -1,6 +1,8 @@
 
 use log::{info, debug};
 use std::collections::HashMap;
+use std::ffi::CString;
+use std::os::raw::{c_char};
 // use serde::de;
 
 mod filter;
@@ -19,13 +21,13 @@ impl Logger {
         log::set_logger(&LOGGER).map(|()| log::set_max_level(log::LevelFilter::Trace))
     }
 
-    fn proxywasm_loglevel(level: log::Level) -> u32 {
+    fn proxywasm_loglevel(level: log::Level) -> host::LogLevel {
         match level {
-            log::Level::Trace => 0,
-            log::Level::Debug => 1,
-            log::Level::Info => 2,
-            log::Level::Warn => 3,
-            log::Level::Error => 4,
+            log::Level::Trace => host::LogLevel::Trace,
+            log::Level::Debug => host::LogLevel::Debug,
+            log::Level::Info => host::LogLevel::Info,
+            log::Level::Warn => host::LogLevel::Warn,
+            log::Level::Error => host::LogLevel::Error,
         }
     }
 }
@@ -300,6 +302,9 @@ fn proxy_on_queue_ready(root_context_id: u32, token: u32) {
 #[no_mangle]
 fn proxy_on_create(context_id: u32, root_context_id: u32) {}
 #[no_mangle]
+pub fn proxy_on_context_create(context_id: u32, parent_context_id: u32) {}
+
+#[no_mangle]
 fn proxy_on_new_connection(context_id: u32) -> FilterStatus {FilterStatus::Continue}
 /// stream decoder
 #[no_mangle]
@@ -330,12 +335,33 @@ fn proxy_on_response_body(context_id: u32, body_buffer_length: u32, end_of_strea
 #[no_mangle]
 fn proxy_on_response_trailers(context_id: u32, trailers: u32) -> FilterTrailersStatus {FilterTrailersStatus::Continue}
 
+pub fn proxy_on_http_call_response(
+    context_id: u32,
+    token: u32,
+    headers: u32,
+    body_size: u32,
+    trailers: u32,
+) {}
 
+// gRPC
+#[no_mangle]
+pub fn proxy_on_grpc_create_initial_metadata(context_id: u32, token: u32, headers: u32) {}
+#[no_mangle]
+pub fn proxy_on_grpc_receive_initial_metadata(context_id: u32, token: u32, headers: u32) {}
+#[no_mangle]
+pub fn proxy_on_grpc_trailing_metadata(context_id: u32, token: u32, trailers: u32) {}
+#[no_mangle]
+pub fn proxy_on_grpc_receive(context_id: u32, token: u32, response_size: u32) {}
+#[no_mangle]
+pub fn proxy_on_grpc_close(context_id: u32, token: u32, status_code: u32) {}
+
+// The stream/vm has completed.
 #[no_mangle]
 fn proxy_on_done(context_id: u32) -> u32 {1}
+// proxy_on_log occurs after proxy_on_done.
 #[no_mangle]
 fn proxy_on_log(context_id: u32) {}
+// The Context in the proxy has been destroyed and no further calls will be coming.
 #[no_mangle]
 fn proxy_on_delete(context_id: u32)  {}
-
 
