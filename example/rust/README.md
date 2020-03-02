@@ -20,7 +20,16 @@ The example projects use cargo, so there are two ways to build the project:
     `cargo build --target wasm32-unknown-unknown --release`
 
 ## Deploy using wasme
-Once you build the .wasm file you can publish it to the Hub using wasme. Navigate to the `rust/target/wasm32-unknown-unknown/release` directory and run:
+Now that the build is ready you need to package it into an OCI image. First, navigate to
+the `rust/target/wasm32-unknown-unknown/release` directory.
+
+You need to tell `wasme` some details about your filter. Change the `config.json` file
+to reflect your filters details. Most importantly you want to change the filter `rootId` field.
+
+Now you need to actually generate the image. You can do so with `wasme` by running:
+`wasme build precompiled target/wasm32-unknown-unknown/release/wasm_filter_bindings.wasm --tag webassemblyhub.io/<github username>/<filter-name>:v0.5 --config config-13.json`
+
+Once the image is built you can publish it to the Hub using `wasme`. Run:
 `wasme push webassemblyhub.io/<github username>/<filter-name>:v0.1 ./wasm_filter_bindings.wasm`
 
 ## More about wasme
