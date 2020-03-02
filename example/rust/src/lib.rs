@@ -327,7 +327,39 @@ fn proxy_on_request_body(context_id: u32, body_buffer_length: u32, end_of_stream
 fn proxy_on_request_trailers(context_id: u32, trailers: u32) -> FilterTrailersStatus {FilterTrailersStatus::Continue}
 
 #[no_mangle]
-fn proxy_on_response_headers(context_id: u32, headers: u32) -> FilterHeadersStatus {FilterHeadersStatus::Continue}
+fn proxy_on_response_headers(context_id: u32, headers: u32) -> FilterHeadersStatus {
+    let key = CString::new("test-header").expect("CString::new failed");
+    let value = CString::new("testval").expect("CString::new failed");
+    let key_len = key.as_bytes_with_nul().len();
+    let val_len = value.as_bytes_with_nul().len();
+
+    let key2 = CString::new("extra-header").expect("CString::new failed");
+    let value2 = CString::new("someval").expect("CString::new failed");
+    let key_len2 = key2.as_bytes_with_nul().len();
+    let val_len2 = value2.as_bytes_with_nul().len();
+    info!("proxy_on_response_headers about to add");
+
+    unsafe {
+        info!("Replace Header key: {}, len {}, value: {}, len: {}", key.to_str().unwrap(), key_len, value.to_str().unwrap(), val_len);
+        host::proxy_replace_header_map_value(
+            host::HeaderMapType::ResponseHeaders,
+            key.as_ptr(),
+            key_len,
+            value.as_ptr(),
+            val_len
+        );
+        info!("Add header key: {}, len {}, value: {}, len: {}", key2.to_str().unwrap(), key_len2, value2.to_str().unwrap(), val_len2);
+        host::proxy_add_header_map_value(
+            host::HeaderMapType::ResponseHeaders,
+            key2.as_ptr(),
+            key_len2,
+            value2.as_ptr(),
+            val_len2
+        );
+    }
+    info!("proxy_on_response_headers added, returning");
+    FilterHeadersStatus::Continue
+}
 #[no_mangle]
 fn proxy_on_response_metadata(context_id: u32, elements: u32) -> FilterMetadataStatus {FilterMetadataStatus::Continue}
 #[no_mangle]
