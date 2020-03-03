@@ -45,7 +45,7 @@ func ListCmd() *cobra.Command {
 	cmd.Flags().BoolVarP(&opts.wide, "wide", "w", false, "Set to true to list images with their full tag length.")
 	cmd.Flags().BoolVarP(&opts.showDir, "show-dir", "d", false, "Set to true to show the local directories for images. Does not apply to published images.")
 	cmd.Flags().StringVarP(&opts.server, "server", "s", consts.HubDomain, "If using --published, read images from this remote registry.")
-	cmd.Flags().StringVarP(&opts.search, "search", "", "", "Search images from the remote registry. If unset, `wasme list --published` will return the top repositories which are accessed the most.")
+	cmd.Flags().StringVarP(&opts.search, "search", "", "", "Search images from the remote registry. If unset, `wasme list --published` will return all public repositories.")
 	cmd.Flags().StringVar(&opts.storageDir, "store", "", "Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store. Ignored if using --published")
 
 	return cmd
@@ -200,7 +200,7 @@ func getPublishedImages(serverAddress, searchQuery string) ([]image, error) {
 		}
 		repos = r
 	} else {
-		r, err := getTopRepos(serverAddress)
+		r, err := getAllRepos(serverAddress)
 		if err != nil {
 			return nil, err
 		}
@@ -225,15 +225,30 @@ func getPublishedImages(serverAddress, searchQuery string) ([]image, error) {
 	return images, nil
 }
 
-func getTopRepos(serverAddress string) ([]repository, error) {
-	var repos []repository
-	err := getJson(serverAddress, fmt.Sprintf("/api/repositories/top"), &repos)
-	return repos, err
+func getAllRepos(serverAddress string) ([]repository, error) {
+	var projects []project
+	_, err := getJson(serverAddress, fmt.Sprintf("/api/projects"), &projects)
+	if err != nil {
+		return nil, err
+	}
+	var reposAcrossProjects []repository
+	for _, project := range projects {
+		if project.RepoCount == 0 {
+			continue
+		}
+		var repos []repository
+		_, err := getJson(serverAddress, fmt.Sprintf("/api/repositories?project_id=%v", project.ProjectID), &repos)
+		if err != nil {
+			return nil, err
+		}
+		reposAcrossProjects = append(reposAcrossProjects, repos...)
+	}
+	return reposAcrossProjects, err
 }
 
 func searchRepos(serverAddress, query string) ([]repository, error) {
 	var searchRes searchResult
-	err := getJson(serverAddress, fmt.Sprintf("/api/search?q=%v", query), &searchRes)
+	_, err := getJson(serverAddress, fmt.Sprintf("/api/search?q=%v", query), &searchRes)
 
 	var repos []repository
 	for _, repo := range searchRes.Repository {
@@ -245,26 +260,47 @@ func searchRepos(serverAddress, query string) ([]repository, error) {
 
 func getTags(serverAddress, repo string) ([]tag, error) {
 	var tags []tag
-	err := getJson(serverAddress, fmt.Sprintf("/api/repositories/%v/tags?detail=true", repo), &tags)
+	_, err := getJson(serverAddress, fmt.Sprintf("/api/repositories/%v/tags?detail=true", repo), &tags)
 	return tags, err
 }
 
-func getJson(serverAddress, path string, into interface{}) error {
+func getJson(serverAddress, path string, into interface{}) (*http.Response, error) {
 	res, err := http.Get(fmt.Sprintf("https://" + serverAddress + path))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer res.Body.Close()
 	b, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return res, err
 	}
 	if err := json.Unmarshal(b, &into); err != nil {
-		return err
+		return res, err
 	}
-	return nil
+	return res, nil
 }
 
+type project struct {
+	ProjectID          int       `json:"project_id"`
+	OwnerID            int       `json:"owner_id"`
+	Name               string    `json:"name"`
+	CreationTime       time.Time `json:"creation_time"`
+	UpdateTime         time.Time `json:"update_time"`
+	Deleted            bool      `json:"deleted"`
+	OwnerName          string    `json:"owner_name"`
+	CurrentUserRoleID  int       `json:"current_user_role_id"`
+	CurrentUserRoleIds []int     `json:"current_user_role_ids"`
+	RepoCount          int       `json:"repo_count"`
+	ChartCount         int       `json:"chart_count"`
+	CveWhitelist       struct {
+		ID           int         `json:"id"`
+		ProjectID    int         `json:"project_id"`
+		Items        interface{} `json:"items"`
+		CreationTime time.Time   `json:"creation_time"`
+		UpdateTime   time.Time   `json:"update_time"`
+	} `json:"cve_whitelist"`
+	Metadata map[string]string `json:"metadata,omitempty"`
+}
 type repository struct {
 	Name string `json:"name"`
 }

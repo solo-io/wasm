@@ -1,0 +1,5 @@
+changelog:
+  - type: NEW_FEATURE
+    description: 'List all repos with `wasme list`'
+    issueLink: https://github.com/solo-io/wasme/issues/80
+    
