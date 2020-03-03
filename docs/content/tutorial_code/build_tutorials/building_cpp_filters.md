@@ -1,7 +1,7 @@
 ---
 title: "Building WASM Filters in C++"
 weight: 1
-description: "Build a simple C++ filter in AssemblyScript."
+description: "Build a simple WebAssembly filter in C++."
 ---
 
 In this tutorial we will write an Envoy filter in C++ and build it using `wasme`.
