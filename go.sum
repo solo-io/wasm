@@ -908,6 +908,7 @@ github.com/soheilhy/cmux v0.1.3/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4k
 github.com/soheilhy/cmux v0.1.4/go.mod h1:IM3LyeVVIOuxMH7sFAkER9+bJ4dT7Ms6E4xg4kGIyLM=
 github.com/solo-io/anyvendor v0.0.1 h1:csAXLNLkUQWlr/ll4tgmc+Id9kHw2ibncf35weg03mI=
 github.com/solo-io/anyvendor v0.0.1/go.mod h1:SLucIeU8qBOYI82BveNVn2LzZFcMWJSCf8Kd1S4Jcr4=
+github.com/solo-io/autopilot v0.1.0 h1:3nusFhhRpa9eTR+Hp8ZizNcHPTVS7/PuND28L0myg7U=
 github.com/solo-io/autopilot v0.1.1-0.20200205211911-ee21dd59807e h1:Zu34pXt/ByZDyA+/p+zDY8hkESasLQB9SmjO6VYxVrY=
 github.com/solo-io/autopilot v0.1.1-0.20200205211911-ee21dd59807e/go.mod h1:ChONxgEh+B2WxCOiX79u+gd2+5sABOwD3EG4cKtR6KA=
 github.com/solo-io/autopilot v0.1.1-0.20200211163026-f295a102fd94 h1:X+Ra7Pu/P8cVTPsaFkocG6hk/NKlkx4MFW0XCGQBL3M=

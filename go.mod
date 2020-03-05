@@ -3,6 +3,7 @@ module github.com/solo-io/wasme
 go 1.13
 
 require (
+	github.com/avast/retry-go v2.4.3+incompatible
 	github.com/containerd/containerd v1.3.0
 	github.com/deislabs/oras v0.7.0
 	github.com/docker/cli v0.0.0-20191017083524-a8ff7f821017
