@@ -8,7 +8,7 @@
 
 int main(int argc, char* argv[]) {
 
-  if (args != 2) {
+  if (argc != 2) {
     std::cerr << "please provide path to wasm file" << std::endl;
     exit(1);
   }
