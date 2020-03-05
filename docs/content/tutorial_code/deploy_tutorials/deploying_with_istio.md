@@ -86,7 +86,7 @@ wasme list --published
 ```
 
 ```
-NAME                                            TAG                 SIZE    SHA      UPDATED
+NAME                                            TAG       SIZE    SHA      UPDATED
 ...                 
 webassemblyhub.io/ilackarms/assemblyscript-test istio-1.5 12.5 kB 8b74e9b0 13 Feb 20 13:59 EST
 ...

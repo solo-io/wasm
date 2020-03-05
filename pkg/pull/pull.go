@@ -3,6 +3,8 @@ package pull
 import (
 	"context"
 
+	"github.com/solo-io/wasme/pkg/util"
+
 	"github.com/solo-io/wasme/pkg/model"
 
 	"github.com/containerd/containerd/images"
@@ -35,6 +37,16 @@ func NewPuller(resolver remotes.Resolver) *puller {
 }
 
 func (p *puller) Pull(ctx context.Context, ref string) (Image, error) {
+	var image Image
+	err := util.RetryOn500(func() error {
+		var err error
+		image, err = p.pull(ctx, ref)
+		return err
+	})
+	return image, err
+}
+
+func (p *puller) pull(ctx context.Context, ref string) (Image, error) {
 	ref, err := model.FullRef(ref)
 	if err != nil {
 		return nil, err
