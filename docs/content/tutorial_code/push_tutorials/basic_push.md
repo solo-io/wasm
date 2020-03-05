@@ -46,19 +46,21 @@ Let's open [`webassemblyhub.io`](https://webassemblyhub.io) in the browser to cr
 
 1. Click **Log In** in the top right:
 
-    ![](../log-in-1.png)
+    ![](../../../img/login/log-in-1.png)
 
 1. Choose **Sign up now** under the login form:
 
-    ![](../log-in-2.png)
+    ![](../../../img/login/log-in-2.png)
     
 1. Fill out the sign-up form and click **Sign Up**:
 
-    ![](../log-in-3.png)
+    ![](../../../img/login/log-in-3.png)
     
 1. You should now be logged in as a new user:
 
-    ![](../log-in-4.png)
+    ![](../../../img/login/log-in-4.png)
+
+Great. Now we're ready to start pushing images.
 
 ## Tagging our image
 
@@ -119,7 +121,7 @@ Let's confirm the image has now appeared in our registry. Return to the [`webass
 
 We should be able to see the `assemblyscript-test` image listed under our user:
 
-![](../log-in-5.png) 
+![](../../../img/login/log-in-5.png) 
 
 We can also verify the image was pushed via the command-line:
 

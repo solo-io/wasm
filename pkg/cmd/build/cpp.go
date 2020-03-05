@@ -31,7 +31,7 @@ func cppCmd(ctx *context.Context, opts *buildOptions) *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&bazel.buildDir, "build-dir", "b", ".", "Directory containing the target BUILD file.")
-	cmd.Flags().StringVarP(&bazel.bazelOutput, "bazel-ouptut", "f", "filter.wasm", "Path relative to `bazel-bin` to the wasm file produced by running the Bazel target.")
+	cmd.Flags().StringVarP(&bazel.bazelOutput, "bazel-output", "f", "filter.wasm", "Path relative to `bazel-bin` to the wasm file produced by running the Bazel target.")
 	cmd.Flags().StringVarP(&bazel.bazelTarget, "bazel-target", "g", ":filter.wasm", "Name of the bazel target to run.")
 	return cmd
 }
@@ -56,7 +56,7 @@ func runBazelBuild(build buildOptions, bazel bazelOptions) (string, error) {
 
 	log.WithFields(logrus.Fields{
 		"args": args,
-	}).Debug("running npm-in-docker build...")
+	}).Debug("running bazel-in-docker build...")
 
 	if err := util.DockerRun(os.Stdout, os.Stderr, nil, build.builderImage, args, nil); err != nil {
 		return "", err

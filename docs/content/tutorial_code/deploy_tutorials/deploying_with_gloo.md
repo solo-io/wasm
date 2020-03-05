@@ -11,8 +11,7 @@ In this tutorial we'll deploy an existing WebAssembly (WASM) module from [the We
 To get started, let's deploy a sample service that we can call through Envoy. We'll deploy the sample petstore API:
 
 ```shell
-kubectl apply -f \
-https://raw.githubusercontent.com/solo-io/gloo/master/example/petstore/petstore.yaml
+kubectl apply -f https://raw.githubusercontent.com/solo-io/gloo/master/example/petstore/petstore.yaml
 ```
 
 You should now have the petstore running:
@@ -36,8 +35,7 @@ First, install Gloo via the helm chart:
 ```shell
 helm repo update
 kubectl create ns gloo-system
-helm install gloo-gateway gloo/gloo --namespace gloo-system \
-  --set global.wasm.enabled=true
+helm install gloo-gateway gloo/gloo --namespace gloo-system --set global.wasm.enabled=true
 ```
 
 Gloo will be installed to the `gloo-system` namespace.
@@ -75,13 +73,9 @@ EOF
 
 Next, we'll get the Gloo Gateway's external IP by running the following:
 
-```shell
-URL=$(kubectl get svc -n gloo-system gateway-proxy \ -o jsonpath='{.status.loadBalancer.ingress[*].ip}')
-```
-
 {{< tabs >}}
 {{< tab name="Cloud Provider" codelang="shell">}}
-URL=$(kubectl get svc -n gloo-system gateway-proxy \ -o jsonpath='{.status.loadBalancer.ingress[*].ip}')
+URL=$(kubectl get svc -n gloo-system gateway-proxy -o jsonpath='{.status.loadBalancer.ingress[*].ip}')
 {{< /tab >}}
 {{< tab name="Minikube" codelang="shell" >}}
 URL=$(minikube ip):$(kubectl get svc -n gloo-system gateway-proxy -o jsonpath='{.spec.ports[?(@.name == "http")].nodePort}')`
