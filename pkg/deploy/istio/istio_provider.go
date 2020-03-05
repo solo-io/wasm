@@ -231,7 +231,7 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 
 	// TODO: remove sleep once we have a better way of synchronizing between
 	// image cache pull and the deployment
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 20)
 
 	return nil
 

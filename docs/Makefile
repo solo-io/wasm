@@ -36,11 +36,11 @@ site-common: clean
 
 .PHONY: site-test
 site-test: site-common
-	hugo --config docs.toml
+	hugo --config docs.toml --themesDir themes
 
 .PHONY: site-release
 site-release: site-common
-	HUGO_PARAMS_Version=$(VERSION) hugo --config docs.toml
+	HUGO_PARAMS_Version=$(VERSION) hugo --config docs.toml --themesDir themes
 	mv site site-latest
 
 ## Old way of deploying site. TODO: remove when old hosting setup is disabled

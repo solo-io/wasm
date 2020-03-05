@@ -15,7 +15,7 @@ import (
 	plugin_go "github.com/golang/protobuf/protoc-gen-go/plugin"
 	"github.com/pkg/errors"
 	gendoc "github.com/pseudomuto/protoc-gen-doc"
-	"github.com/pseudomuto/protoc-gen-doc/parser"
+	"github.com/pseudomuto/protokit"
 	"github.com/solo-io/autopilot/codegen/util"
 	"github.com/solo-io/solo-kit/pkg/code-generator/collector"
 
@@ -213,5 +213,5 @@ func collectDescriptors(protoDir, outDir string, customImports []string) (*gendo
 		return &golangReq, nil
 	}()
 
-	return gendoc.NewTemplate(parser.ParseCodeRequest(golangRequest)), nil
+	return gendoc.NewTemplate(protokit.ParseCodeGenRequest(golangRequest)), nil
 }

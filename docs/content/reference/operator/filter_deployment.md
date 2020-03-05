@@ -23,6 +23,7 @@ title: "wasme.iofilter_deployment.proto"
   - [FilterSpec](#wasme.io.FilterSpec)
   - [ImagePullOptions](#wasme.io.ImagePullOptions)
   - [IstioDeploymentSpec](#wasme.io.IstioDeploymentSpec)
+  - [IstioDeploymentSpec.LabelsEntry](#wasme.io.IstioDeploymentSpec.LabelsEntry)
   - [WorkloadStatus](#wasme.io.WorkloadStatus)
 
   - [WorkloadStatus.State](#wasme.io.WorkloadStatus.State)
@@ -140,8 +141,8 @@ if the user provides |
 | pullSecret | [string](#string) |  | if a username/password is required,
 specify here the name of a secret:
 with keys:
-username: &lt;username&gt;
-password: &lt;password&gt;
+* username: &lt;username&gt;
+* password: &lt;password&gt;
 
 the secret must live in the same namespace
 as the FilterDeployment |
@@ -163,11 +164,27 @@ how to deploy to Istio
 | ----- | ---- | ----- | ----------- |
 | kind | [string](#string) |  | the kind of workload to deploy the filter to
 can either be Deployment or DaemonSet |
-| name | [string](#string) |  | the name of the workload to deploy the filter to
+| labels | [][IstioDeploymentSpec.LabelsEntry](#wasme.io.IstioDeploymentSpec.LabelsEntry) | repeated | deploy the filter to workloads with these labels
 the workload must live in the same namespace as the FilterDeployment
 if empty, the filter will be deployed to all workloads in the namespace |
 | istioNamespace | [string](#string) |  | the namespace where the Istio control plane is installed.
 defaults to `istio-system`. |
+
+
+
+
+
+
+<a name="wasme.io.IstioDeploymentSpec.LabelsEntry"></a>
+
+### IstioDeploymentSpec.LabelsEntry
+
+
+
+| Field | Type | Label | Description |
+| ----- | ---- | ----- | ----------- |
+| key | [string](#string) |  |  |
+| value | [string](#string) |  |  |
 
 
 

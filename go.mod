@@ -3,6 +3,7 @@ module github.com/solo-io/wasme
 go 1.13
 
 require (
+	github.com/avast/retry-go v2.4.3+incompatible
 	github.com/containerd/containerd v1.3.0
 	github.com/deislabs/oras v0.7.0
 	github.com/docker/cli v0.0.0-20191017083524-a8ff7f821017
@@ -25,8 +26,8 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.8.1
-	github.com/pseudomuto/protoc-gen-doc v1.0.0
-	github.com/pseudomuto/protokit v0.2.0 // indirect
+	github.com/pseudomuto/protoc-gen-doc v1.3.0
+	github.com/pseudomuto/protokit v0.2.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/solo-io/autopilot v0.1.1-0.20200211163026-f295a102fd94
 	github.com/solo-io/gloo v1.3.1

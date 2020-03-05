@@ -54,6 +54,9 @@ At least must one valid [`root_id`](https://github.com/envoyproxy/envoy-wasm/blo
 matching the WASM Filter must be present in the `rootIds` field.
 {{% /notice %}}
 
+Open this project in your favorite IDE. The source code is [AssemblyScript](https://github.com/AssemblyScript/assemblyscript) (a subset of [Typescript](https://www.typescriptlang.org/)) and we'll make some changes to customize our new filter.
+
+
 ## Making changes to the base filter
 
 The new directory contains all files necessary to build and deploy a WASM filter with `wasme`. A brief description of each file is found below:
@@ -108,8 +111,12 @@ In this example we'll include the registry address `webassemblyhub.io` so our im
 Build and tag our image like so:
 
 ```shell
-wasme build . -t webassemblyhub.io/<USERNAME>/add-header:v0.1
+wasme build assemblyscript -t webassemblyhub.io/$YOUR_USERNAME/add-header:v0.1 .
 ```
+
+{{% notice note %}}
+`wasme build` runs a build container inside of Docker which may run into issues due to SELinux (on Linux environments). To disable, run `sudo setenforce 0` 
+{{% /notice %}}
 
 The module will take up to a few minutes to build. In the background, `wasme` has launched a Docker container to run the necessary 
 build steps. 
@@ -121,8 +128,8 @@ wasme list
 ```
 
 ```
-NAME                                     SHA      UPDATED             SIZE   TAGS
-webassemblyhub.io/ilackarms/add-header  bbfdf674 26 Jan 20 10:45 EST 1.0 MB v0.1
+NAME                                   SHA      UPDATED             SIZE   TAGS
+webassemblyhub.io/ilackarms/add-header bbfdf674 26 Jan 20 10:45 EST 1.0 MB v0.1
 ```
 
 ## Next Steps
