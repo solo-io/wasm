@@ -17,7 +17,7 @@ wasme build cpp SOURCE_DIRECTORY [-b <bazel target>] -t <name:tag> [flags]
 ### Options
 
 ```
-  -f, --bazel-ouptut bazel-bin   Path relative to bazel-bin to the wasm file produced by running the Bazel target. (default "filter.wasm")
+  -f, --bazel-output bazel-bin   Path relative to bazel-bin to the wasm file produced by running the Bazel target. (default "filter.wasm")
   -g, --bazel-target string      Name of the bazel target to run. (default ":filter.wasm")
   -b, --build-dir string         Directory containing the target BUILD file. (default ".")
   -h, --help                     help for cpp

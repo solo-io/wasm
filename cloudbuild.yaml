@@ -25,16 +25,13 @@ steps:
       - 'WASM_IMAGE_REGISTRY=yuval-test.solo.io'
       - 'FILTER_IMAGE_TAG=yuval-test.solo.io/ilackarms/test-image:$BUILD_ID'
       - 'IMAGE_PUSH=1'
-      - 'WASME_LOGIN_USERNAME=admin'
+      - 'WASME_LOGIN_USERNAME=ilackarms'
       - 'SKIP_PACKAGES=pkg/deploy/local' # this test runs in circleci
     entrypoint: 'make'
     args: ['run-tests']
     secretEnv:
     - 'GITHUB_TOKEN'
     - 'WASME_LOGIN_PASSWORD'
-    - 'NPM_LOGIN_USERNAME'
-    - 'NPM_LOGIN_PASSWORD'
-    - 'NPM_LOGIN_EMAIL'
     id: 'run-tests'
 
   - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
@@ -90,10 +87,7 @@ secrets:
       #  --location=global \
       #  --keyring=build \
       #  --key=build-key | base64
-      WASME_LOGIN_PASSWORD: CiQABlzmSfVO+t9/Jqg+puB6xV1HUr0TOahZExsqx6CLxjFr4rISPQCCPGSGDbZrW2pqV/fpb8IlrAuY1eoktnRnbEuSYDl3tN88WrQC6aM28cUZiauTeghkSEEFiy5tKgQxKm0=
-      NPM_LOGIN_USERNAME: CiQABlzmSYGv/5wuCyU0wdpxCGmykRu02wFMuDRelsznJxa/Q4oSMgCCPGSGqBUMvBriqgKv/Spy8rJrjBJoQ9sK0iiC4YWKWqBa4ObrtLxz18hv5B8qxtZj
-      NPM_LOGIN_PASSWORD: CiQABlzmSSKjfyKudwH94HnqkjXpBAOtzwMvk3TNYxD0WML8qk8SNACCPGSG5xLS+sqZlpMTC/V4un0Ttm9jIMzrUvna5NmeU5lJSdNg1uNdgdT1Htt5fs8YDqk=
-      NPM_LOGIN_EMAIL: CiQABlzmSc0aSbA/cKYwpMUo1oqtzTK4SrQ7jUivqL4gbv8knRcSOgCCPGSGl17+bCj5T+H/ebrN/xpzOf92B85LQzDVk1YLpoPvisHW4b3aKhjAAwp2C0SGNL92e6Sgg1A=
+      WASME_LOGIN_PASSWORD: CiQABlzmSY4tslkGgQoco9hESHjD2pcQi+G6OOMKFFwuebg88+MSNQCCPGSG96Vtu5qZOZ72j1fLaL/vKWvJAvPf89FZbw4OMbV0q+P5uXb6C0WFeQt0UUSKk2My
 
 timeout: 1200s
 tags: ['wasme']

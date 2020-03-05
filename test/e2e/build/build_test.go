@@ -18,9 +18,6 @@ var _ = Describe("Build", func() {
 		imageName := test.GetImageTag()
 		username := test.GetEnv("WASME_LOGIN_USERNAME")
 		password := test.GetEnv("WASME_LOGIN_PASSWORD")
-		npmUsername := test.GetEnv("NPM_LOGIN_USERNAME")
-		npmPassword := test.GetEnv("NPM_LOGIN_PASSWORD")
-		npmEmail := test.GetEnv("NPM_LOGIN_EMAIL")
 
 		err := test.RunMake("generated-code")
 		Expect(err).NotTo(HaveOccurred())
@@ -46,9 +43,6 @@ var _ = Describe("Build", func() {
 				"-t="+imageName,
 				"test-filter",
 				// TODO: remove login info when NPM repo is published
-				"-u="+npmUsername,
-				"-p="+npmPassword,
-				"-e="+npmEmail,
 			)
 			Expect(err).NotTo(HaveOccurred())
 		}

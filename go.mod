@@ -27,7 +27,7 @@ require (
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.8.1
 	github.com/pseudomuto/protoc-gen-doc v1.3.0
-	github.com/pseudomuto/protokit v0.2.0 // indirect
+	github.com/pseudomuto/protokit v0.2.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/solo-io/autopilot v0.1.1-0.20200211163026-f295a102fd94
 	github.com/solo-io/gloo v1.3.1

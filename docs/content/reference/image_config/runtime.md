@@ -50,13 +50,13 @@ Example:
 
 ```json
 {
-&#34;type&#34;: &#34;envoy_proxy&#34;,
-&#34;abiVersions&#34;: [&#34;v0-541b2c1155fffb15ccde92b8324f3e38f7339ba6&#34;],
-&#34;config&#34;: {
-&#34;rootIds&#34;: [
-&#34;add_header_root_id&#34;
-]
-}
+  &#34;type&#34;: &#34;envoy_proxy&#34;,
+  &#34;abiVersions&#34;: [&#34;v0-541b2c1155fffb15ccde92b8324f3e38f7339ba6&#34;],
+  &#34;config&#34;: {
+    &#34;rootIds&#34;: [
+      &#34;add_header_root_id&#34;
+    ]
+  }
 }
 ```
 
