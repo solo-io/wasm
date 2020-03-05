@@ -291,7 +291,7 @@ func (p *Provider) waitForCacheEvents(image string) error {
 
 		for _, evt := range events {
 			if evt.Reason == cache.Reason_ImageError {
-				return errors.Errorf("event %v was in Error state: %+v", evt)
+				return errors.Errorf("event %v was in Error state: %+v", evt.Name, evt)
 			}
 			successEvents++
 		}
