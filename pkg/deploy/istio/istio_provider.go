@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/solo-io/wasme/pkg/util"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/solo-io/wasme/pkg/abi"
@@ -256,56 +255,51 @@ func (p *Provider) waitForCacheEvents(image string) error {
 		logrus.Infof("skipping cache events wait")
 		return nil
 	}
-	timeout, err := time.ParseDuration(cacheTimeoutStr)
-	if err != nil || timeout == 0 {
-		timeout = time.Minute * 2
+	timeoutDuration, err := time.ParseDuration(cacheTimeoutStr)
+	if err != nil || timeoutDuration == 0 {
+		timeoutDuration = time.Minute * 2
 	}
-	ticker := time.After(timeout)
+	timeout := time.After(timeoutDuration)
+	interval := time.Tick(time.Second)
 
-	logrus.Infof("waiting for event with timeout %v", timeout)
+	logrus.Infof("waiting for event with timeout %v", timeoutDuration)
 
 	cacheDaemonset, err := p.KubeClient.AppsV1().DaemonSets(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "getting daemonset for cache %v", p.Cache)
 	}
 
-	var retry bool
-	return util.RetryOnFunc(func() error {
-		retry = false
-
+	var eventsErr error
+	for {
 		select {
-		case <-ticker:
-			return errors.Errorf("timed out after %s", timeout)
-		default:
-		}
-
-		events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
-		if err != nil {
-			return errors.Wrapf(err, "getting events for image %v", image)
-		}
-
-		retry = true
-
-		// expect an event for each cache instance
-		var successEvents int32
-
-		for _, evt := range events {
-			if evt.Reason == cache.Reason_ImageError {
-				return errors.Errorf("event %v was in Error state: %+v", evt.Name, evt)
+		case <-timeout:
+			return errors.Errorf("timed out after %s (last err: %v)", timeoutDuration, eventsErr)
+		case <-interval:
+			events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
+			if err != nil {
+				return errors.Wrapf(err, "getting events for image %v", image)
 			}
-			successEvents++
-		}
+			// expect an event for each cache instance
+			var successEvents int32
 
-		if successEvents != cacheDaemonset.Status.NumberReady {
-			return errors.Errorf("expected %v image-ready events for image %v, only found %v", cacheDaemonset.Status.NumberReady, image, successEvents)
-		}
+			for _, evt := range events {
+				if evt.Reason == cache.Reason_ImageError {
+					logrus.Warnf("event %v was in Error state: %+v", evt.Name, evt)
+					continue
+				}
+				successEvents++
+			}
 
-		return nil
-	},
-		func(err error) bool {
-			return err != nil && retry
-		},
-	)
+			if successEvents != cacheDaemonset.Status.NumberReady {
+				eventsErr = errors.Errorf("expected %v image-ready events for image %v, only found %v", cacheDaemonset.Status.NumberReady, image, successEvents)
+				logrus.Warnf("event err: %v", eventsErr)
+				continue
+			}
+
+			logrus.Debugf("ACK all events for image %v", image)
+			return nil
+		}
+	}
 }
 
 func (p *Provider) cleanupCacheEvents(image string) error {
