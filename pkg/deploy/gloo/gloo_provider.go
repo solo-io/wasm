@@ -4,6 +4,9 @@ import (
 	"context"
 	"sort"
 
+	skerrors "github.com/solo-io/solo-kit/pkg/errors"
+	"github.com/solo-io/wasme/pkg/util"
+
 	"github.com/sirupsen/logrus"
 
 	"github.com/pkg/errors"
@@ -33,17 +36,24 @@ type Provider struct {
 
 // applies the filter to all selected workloads in selected namespaces
 func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
-	return p.updateGateways(func(gateway *gatewayv1.Gateway) error {
+	return p.retryUpdateGateways(func(gateway *gatewayv1.Gateway) error {
 		return apendWasmConfig(filter, gateway)
 	})
 }
 
 // removes the filter from all selected workloads in selected namespaces
 func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
-	return p.updateGateways(func(gateway *gatewayv1.Gateway) error {
+	return p.retryUpdateGateways(func(gateway *gatewayv1.Gateway) error {
 		return removeWasmConfig(filter.Id, gateway)
 	})
 }
+
+func (p *Provider) retryUpdateGateways(updateFunc func(gateway *gatewayv1.Gateway) error) error {
+	return util.RetryOnFunc(func() error {
+		return p.updateGateways(updateFunc)
+	}, skerrors.IsResourceVersion)
+}
+
 func (p *Provider) updateGateways(updateFunc func(gateway *gatewayv1.Gateway) error) error {
 	namespaces := p.Selector.Namespaces
 	if len(namespaces) == 0 {
