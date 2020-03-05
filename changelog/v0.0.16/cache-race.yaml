@@ -2,20 +2,3 @@ changelog:
   - type: FIX
     description: Fix cache race by firing events
     issueLink: https://github.com/solo-io/wasme/issues/64
-
-
-apiVersion: v1
-kind: Event
-message: Hi
-metadata:
-  name: myevent
-  namespace: default
-involvedObject: {}
-#    apiVersion: policy/v1beta1
-#    kind: PodDisruptionBudget
-#    name: istio-citadel
-#    namespace: istio-system
-#    resourceVersion: "8022091"
-#    uid: a28406e1-4c5e-11ea-8f92-42010a8e024b
-#  reason: SomeReason
-#  type: Normal

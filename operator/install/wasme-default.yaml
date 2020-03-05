@@ -19,17 +19,6 @@ data:
   images: ""
 ---
 # Source: Wasme Operator/templates/deployment.yaml
-# Service account for wasme-cache
-
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app: wasme-cache
-  name: wasme-cache
-  namespace: wasme
----
-# Source: Wasme Operator/templates/deployment.yaml
 # Service account for wasme-operator
 
 apiVersion: v1
@@ -38,6 +27,17 @@ metadata:
   labels:
     app: wasme-operator
   name: wasme-operator
+  namespace: wasme
+---
+# Source: Wasme Operator/templates/deployment.yaml
+# Service account for wasme-cache
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: wasme-cache
+  name: wasme-cache
   namespace: wasme
 ---
 # Source: Wasme Operator/templates/rbac.yaml
