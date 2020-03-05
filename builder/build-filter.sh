@@ -2,9 +2,6 @@
 
 set -e
 
-find .
-pwd
-
 ls /build_output || echo "/build_output must be mounted to this container" exit 1
 
 # must have mounted /build_output
