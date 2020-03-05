@@ -22,8 +22,8 @@ steps:
       - 'TAGGED_VERSION=$TAG_NAME'
       - 'BUILD_ID=$BUILD_ID'
       - 'IMAGE_REGISTRY=gcr.io/$PROJECT_ID'
-      - 'WASM_IMAGE_REGISTRY=yuvaltest.solo.io'
-      - 'FILTER_IMAGE_TAG=yuvaltest.solo.io/ilackarms/test-image:$BUILD_ID'
+      - 'WASM_IMAGE_REGISTRY=yuval-test.solo.io'
+      - 'FILTER_IMAGE_TAG=yuval-test.solo.io/ilackarms/test-image:$BUILD_ID'
       - 'IMAGE_PUSH=1'
       - 'WASME_LOGIN_USERNAME=admin'
       - 'SKIP_PACKAGES=pkg/deploy/local' # this test runs in circleci
@@ -44,6 +44,14 @@ steps:
       - 'BUILD_ID=$BUILD_ID'
     secretEnv: ['GITHUB_TOKEN']
     id: 'build-images'
+
+  - name: 'gcr.io/$PROJECT_ID/go-mod-make:0.2.1'
+    args: ['operator-gen', 'manifest-gen']
+    env:
+      - 'TAGGED_VERSION=$TAG_NAME'
+      - 'BUILD_ID=$BUILD_ID'
+    secretEnv: ['GITHUB_TOKEN']
+    id: 'build-operator'
 
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
