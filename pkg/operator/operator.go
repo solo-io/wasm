@@ -59,6 +59,11 @@ func (f *filterDeploymentHandler) Generic(obj *v1.FilterDeployment) error {
 }
 
 func (f *filterDeploymentHandler) deploy(obj *v1.FilterDeployment) error {
+	// refresh obj
+	if err := f.client.Get(f.ctx, obj); err != nil {
+		return err
+	}
+
 	status := v1.FilterDeploymentStatus{
 		ObservedGeneration: obj.Generation,
 		Workloads:          map[string]*v1.WorkloadStatus{},
@@ -86,10 +91,19 @@ func (f *filterDeploymentHandler) deploy(obj *v1.FilterDeployment) error {
 
 	obj.Status = status
 
-	return f.client.UpdateStatus(f.ctx, obj)
+	if err := f.client.UpdateStatus(f.ctx, obj); err != nil {
+		log.Log.Error(err, "failed to update status", "filterdeployment", obj.Name)
+	}
+
+	return nil
 }
 
 func (f *filterDeploymentHandler) undeploy(obj *v1.FilterDeployment) error {
+	// refresh obj
+	if err := f.client.Get(f.ctx, obj); err != nil {
+		return err
+	}
+
 	status := v1.FilterDeploymentStatus{
 		ObservedGeneration: obj.Generation,
 		Workloads:          map[string]*v1.WorkloadStatus{},
@@ -103,7 +117,11 @@ func (f *filterDeploymentHandler) undeploy(obj *v1.FilterDeployment) error {
 
 	obj.Status = status
 
-	return f.client.UpdateStatus(f.ctx, obj)
+	if err := f.client.UpdateStatus(f.ctx, obj); err != nil {
+		log.Log.Error(err, "failed to update status", "filterdeployment", obj.Name)
+	}
+
+	return nil
 }
 
 func getFilter(obj *v1.FilterDeployment) (*v1.FilterSpec, error) {

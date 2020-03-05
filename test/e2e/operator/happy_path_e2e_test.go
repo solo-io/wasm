@@ -164,7 +164,7 @@ var _ = Describe("AutopilotGenerate", func() {
 				return 0, err
 			}
 			return fd.Status.ObservedGeneration, nil
-		}).Should(Equal(fmt.Sprintf("%s", fd.Generation)))
+		}).Should(Equal(fmt.Sprintf("%v", fd.Generation)))
 	})
 })
 
