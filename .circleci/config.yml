@@ -7,7 +7,7 @@ jobs:
     machine:
       image: ubuntu-1604:201903-01
     environment:
-      WASM_IMAGE_REGISTRY: 'yuvaltest.solo.io'
+      WASM_IMAGE_REGISTRY: 'yuval-test.solo.io'
 #    docker:
 #      - image: ilackarms/e2e-go-mod-ginkgo:wasme
 

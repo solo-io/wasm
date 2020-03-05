@@ -137,8 +137,12 @@ In this example we'll include the registry address `webassemblyhub.io` so our im
 Build and tag our image like so:
 
 ```shell
-wasme build . -t webassemblyhub.io/<USERNAME>/add-header:v0.1
+wasme build cpp -t webassemblyhub.io/$YOUR_USERNAME/add-header:v0.1 .
 ```
+
+{{% notice note %}}
+`wasme build` runs a build container inside of Docker which may run into issues due to SELinux (on Linux environments). To disable, run `sudo setenforce 0` 
+{{% /notice %}}
 
 The module will take up to a few minutes to build. In the background, `wasme` has launched a Docker container to run the necessary 
 build steps. 

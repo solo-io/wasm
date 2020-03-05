@@ -25,7 +25,7 @@ wasme undeploy istio --id=<unique name> --namespace=<deployment namespace> [--na
       --config string            optional config that will be passed to the filter. accepts an inline string.
   -h, --help                     help for istio
       --istio-namespace string   the namespace where the Istio control plane is installed (default "istio-system")
-      --name string              name of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace
+  -l, --labels stringToString    labels of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace (default [])
   -n, --namespace string         namespace of the workload(s) to inject the filter. (default "default")
       --root-id string           optional root ID used to bind the filter at the Envoy level. this value is normally read from the filter image directly.
   -t, --workload-type string     type of workload into which the filter should be injected. possible values are deployment or daemonset (default "deployment")

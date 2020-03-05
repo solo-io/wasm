@@ -19,7 +19,7 @@ wasme list [flags]
 ```
   -h, --help                            help for list
       --published                       Set to true to list images that have been published to a remote registry. If unset, lists images stored in local image cache.
-      --search wasme list --published   Search images from the remote registry. If unset, wasme list --published will return the top repositories which are accessed the most.
+      --search wasme list --published   Search images from the remote registry. If unset, wasme list --published will return all public repositories.
   -s, --server string                   If using --published, read images from this remote registry. (default "webassemblyhub.io")
   -d, --show-dir                        Set to true to show the local directories for images. Does not apply to published images.
       --store string                    Set the path to the local storage directory for wasm images. Defaults to $HOME/.wasme/store. Ignored if using --published

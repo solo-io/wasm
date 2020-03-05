@@ -46,6 +46,10 @@ To ensure everything installed correctly, let's try running a request between tw
 kubectl exec -ti -n bookinfo deploy/productpage-v1 -c istio-proxy -- curl -v http://details.bookinfo:9080/details/123
 ```
 
+{{% notice note %}}
+It may take a few minutes before all the Istio sidecars are ready to serve traffic.
+{{% /notice %}}
+
 The output should look have a `200 OK` response and look like the following:
 
 {{< highlight yaml "hl_lines=9-15" >}}
@@ -78,7 +82,7 @@ Refer to the [installation guide]({{< versioned_link_path fromRoot="/installatio
 Let's run `wasme list` to see what's available on the hub:
 
 ```shell
-wasme list
+wasme list --published
 ```
 
 ```
