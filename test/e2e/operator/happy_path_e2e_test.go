@@ -1,11 +1,17 @@
 package operator_test
 
 import (
+	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	"github.com/solo-io/autopilot/codegen/util"
 
@@ -22,6 +28,8 @@ import (
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 )
 
+var filterDeploymentName = "myfilter"
+
 func generateCrdExample(filename, image, ns string) error {
 	filterDeployment := &v1.FilterDeployment{
 		TypeMeta: metav1.TypeMeta{
@@ -29,7 +37,7 @@ func generateCrdExample(filename, image, ns string) error {
 			APIVersion: "wasme.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "myfilter",
+			Name:      filterDeploymentName,
 			Namespace: ns,
 		},
 		Spec: v1.FilterDeploymentSpec{
@@ -138,6 +146,25 @@ var _ = Describe("AutopilotGenerate", func() {
 
 		// expect header not in response
 		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring("hello: world"))
+
+		// ensure filter deployment status is set
+		cfg, err := config.GetConfig()
+		Expect(err).NotTo(HaveOccurred())
+
+		err = v1.AddToScheme(scheme.Scheme)
+		Expect(err).NotTo(HaveOccurred())
+
+		kube, err := client.New(cfg, client.Options{})
+		Expect(err).NotTo(HaveOccurred())
+
+		fd := &v1.FilterDeployment{}
+		Eventually(func() (int64, error) {
+			err := kube.Get(context.TODO(), client.ObjectKey{Name: filterDeploymentName, Namespace: ns}, fd)
+			if err != nil {
+				return 0, err
+			}
+			return fd.Status.ObservedGeneration, nil
+		}).Should(Equal(fmt.Sprintf("%s", fd.Generation)))
 	})
 })
 

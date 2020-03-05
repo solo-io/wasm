@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 
+	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
+
 	"github.com/solo-io/wasme/pkg/cache"
 
 	"github.com/solo-io/wasme/pkg/cmd/opts"
@@ -20,7 +23,15 @@ type cacheOptions struct {
 	directory  string
 	refFile    string
 
+	kubeOpts kubeOpts
+
 	*opts.AuthOptions
+}
+
+type kubeOpts struct {
+	disableKube    bool
+	cacheNamespace string
+	cacheName      string
 }
 
 func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Command {
@@ -44,6 +55,9 @@ func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Comma
 	cmd.Flags().IntVarP(&opts.port, "port", "", 9979, "port")
 	cmd.Flags().StringVarP(&opts.directory, "directory", "", "", "directory to write the refs we need to cache")
 	cmd.Flags().StringVarP(&opts.refFile, "ref-file", "", "", "file to watch for images we need to cache.")
+	cmd.Flags().BoolVarP(&opts.kubeOpts.disableKube, "disable-kube", "", false, "disable sending events to kubernetes when images are pulled successfully")
+	cmd.Flags().StringVarP(&opts.kubeOpts.cacheNamespace, "cache-ns", "", cache.CacheNamespace, "namespace where the cache is running, if kube integration is enabled")
+	cmd.Flags().StringVarP(&opts.kubeOpts.cacheName, "cache-name", "", cache.CacheName, "name of the cache configmap")
 	return cmd
 }
 
@@ -67,13 +81,25 @@ func runCache(ctx context.Context, opts cacheOptions) error {
 	}
 	if opts.refFile != "" {
 		errg.Go(func() error {
-			return watchFile(ctx, imageCache, opts.refFile, opts.directory)
+			return watchFile(ctx, imageCache, opts.refFile, opts.directory, opts.kubeOpts)
 		})
 	}
 	return errg.Wait()
 }
 
-func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory string) error {
+func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory string, kubeOpts kubeOpts) error {
+
+	if !kubeOpts.disableKube {
+		cfg := config.GetConfigOrDie()
+		kube := kubernetes.NewForConfigOrDie(cfg)
+		imageCache = cache.NewNotifyingCache(
+			kube,
+			imageCache,
+			kubeOpts.cacheNamespace,
+			kubeOpts.cacheName,
+		)
+	}
+
 	// for each ref in the file, add it to the cache,
 	// and if directory is not empty write it t here
 	fw := cache.NewLocalImagePuller(

@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/opencontainers/go-digest"
 	"github.com/pkg/errors"
 )
@@ -31,13 +33,17 @@ func NewLocalImagePuller(imageCache Cache, refFile string, directory string) *lo
 }
 
 func (f *localImagePuller) WatchFile(ctx context.Context) error {
+	logrus.Infof("starting writing images to %v, reading from %v", f.directory, f.refFile)
 	for ref := range f.watchFileAndGetRefs(ctx, f.refFile) {
+		logrus.Infof("pulling ref %v", ref)
 		digest, err := f.imageCache.Add(ctx, ref)
 		if err != nil {
+			logrus.Infof("pulling error: %v", err)
 			return err
 		}
 		err = f.addToDirectory(ctx, digest)
 		if err != nil {
+			logrus.Infof("writing image err: %v", err)
 			return errors.Wrapf(err, "adding digest to directory %v", f.directory)
 		}
 	}
@@ -83,6 +89,8 @@ func (f *localImagePuller) addToDirectory(ctx context.Context, digest digest.Dig
 	// get filename from ref
 	// check if filename exists
 	filename := filepath.Join(f.directory, Digest2filename(digest))
+
+	logrus.Infof("writing image to %v", filename)
 
 	err := f.copyToFile(ctx, filename, digest)
 	if err != nil {

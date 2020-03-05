@@ -2,10 +2,12 @@ package istio
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/solo-io/wasme/pkg/util"
 	"k8s.io/apimachinery/pkg/labels"
 
 	"github.com/solo-io/wasme/pkg/abi"
@@ -31,6 +33,10 @@ const (
 	WorkloadTypeDaemonSet  = "daemonset"
 
 	backupAnnotationPrefix = "wasme-backup."
+	// wait this long to wait for the image cache event to be reported by the cache
+	// if it doesn't happen, error out
+	// set to "skip" to skip the events check
+	cacheUpdateTimeoutEnv = "CACHE_UPDATE_TIMEOUT"
 )
 
 // the target workload to deploy the filter to
@@ -202,6 +208,7 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 
 	logger := logrus.WithFields(logrus.Fields{
 		"cache": p.Cache,
+		"image": image,
 	})
 
 	if cm.Data == nil {
@@ -227,14 +234,94 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 		return err
 	}
 
-	logger.Info("added image to cache")
+	logger.Info("added image to cache config...")
 
-	// TODO: remove sleep once we have a better way of synchronizing between
-	// image cache pull and the deployment
-	time.Sleep(time.Second * 20)
+	if err := p.waitForCacheEvents(image); err != nil {
+		return errors.Wrapf(err, "waiting for cache to publish event for image")
+	}
+
+	if err := p.cleanupCacheEvents(image); err != nil {
+		return errors.Wrapf(err, "cleaning up cache events for image")
+	}
 
 	return nil
 
+}
+
+// we want to see a cache event for each cache instance, with each ref
+// we can mark the events as processed after receiving
+func (p *Provider) waitForCacheEvents(image string) error {
+	cacheTimeoutStr := os.Getenv(cacheUpdateTimeoutEnv)
+	if cacheTimeoutStr == "skip" {
+		logrus.Infof("skipping cache events wait")
+		return nil
+	}
+	timeout, err := time.ParseDuration(cacheTimeoutStr)
+	if err != nil || timeout == 0 {
+		timeout = time.Minute * 2
+	}
+	ticker := time.After(timeout)
+
+	logrus.Infof("waiting for event with timeout %v", timeout)
+
+	cacheDaemonset, err := p.KubeClient.AppsV1().DaemonSets(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "getting daemonset for cache %v", p.Cache)
+	}
+
+	var retry bool
+	return util.RetryOnFunc(func() error {
+		retry = false
+
+		select {
+		case <-ticker:
+			return errors.Errorf("timed out after %s", timeout)
+		default:
+		}
+
+		events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
+		if err != nil {
+			return errors.Wrapf(err, "getting events for image %v", image)
+		}
+
+		retry = true
+
+		// expect an event for each cache instance
+		var successEvents int32
+
+		for _, evt := range events {
+			if evt.Reason == cache.Reason_ImageError {
+				return errors.Errorf("event %v was in Error state: %+v", evt)
+			}
+			successEvents++
+		}
+
+		if successEvents != cacheDaemonset.Status.NumberReady {
+			return errors.Errorf("expected %v image-ready events for image %v, only found %v", cacheDaemonset.Status.NumberReady, image, successEvents)
+		}
+
+		return nil
+	},
+		func(err error) bool {
+			return err != nil && retry
+		},
+	)
+}
+
+func (p *Provider) cleanupCacheEvents(image string) error {
+	logrus.Infof("cleaning up cache events for image %v", image)
+	events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
+	if err != nil {
+		return errors.Wrapf(err, "getting events for image %v", image)
+	}
+
+	for _, event := range events {
+		if err := p.KubeClient.CoreV1().Events(event.Namespace).Delete(event.Name, nil); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // runs a function on the workload pod template spec

@@ -29,10 +29,13 @@ func WasmeCli(args ...string) error {
 	return c.Execute()
 }
 
-func RunMake(target string) error {
+func RunMake(target string, opts ...func(*exec.Cmd)) error {
 	cmd := exec.Command("make", "-B", "-C", filepath.Dir(util.GoModPath()), target)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
+	for _, opt := range opts {
+		opt(cmd)
+	}
 	return cmd.Run()
 }
 
