@@ -42,7 +42,6 @@ var _ = Describe("Build", func() {
 				"--tmp-dir=.",
 				"-t="+imageName,
 				"test-filter",
-				// TODO: remove login info when NPM repo is published
 			)
 			Expect(err).NotTo(HaveOccurred())
 		}

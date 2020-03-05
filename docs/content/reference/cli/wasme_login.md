@@ -26,7 +26,7 @@ wasme login [-s SERVER_ADDRESS] -u USERNAME -p PASSWORD  [flags]
   -h, --help                      help for login
   -p, --password string           login password
       --plaintext                 use plaintext to connect to the remote registry (HTTP) rather than HTTPS
-  -s, --server string             the address of the remote registry to which to authenticate (default "yuval-test.solo.io")
+  -s, --server string             the address of the remote registry to which to authenticate (default "webassemblyhub.io")
   -u, --username string           login username
 ```
 
