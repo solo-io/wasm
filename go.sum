@@ -858,7 +858,9 @@ github.com/prometheus/tsdb v0.10.0 h1:If5rVCMTp6W2SiRAQFlbpJNgVlgMEd+U2GZckwK38i
 github.com/prometheus/tsdb v0.10.0/go.mod h1:oi49uRhEe9dPUTlS3JRZOwJuVi6tmh10QSgwXEyGCt4=
 github.com/pseudomuto/protoc-gen-doc v1.0.0 h1:g4ld0LeJ2OO2FXhm1o7Arrv+W75sdEClxuvVUSN2RAE=
 github.com/pseudomuto/protoc-gen-doc v1.0.0/go.mod h1:fwtQAY9erXp3mC92O8OTECnDlJT2r0Ff4KSEKbGEmy0=
+github.com/pseudomuto/protoc-gen-doc v1.3.0 h1:wpwmaSCWY2lGwkzAxAaqYcGyoklZjZmeXrJ/X7IskJM=
 github.com/pseudomuto/protoc-gen-doc v1.3.0/go.mod h1:fwtQAY9erXp3mC92O8OTECnDlJT2r0Ff4KSEKbGEmy0=
+github.com/pseudomuto/protoc-gen-doc v1.3.1 h1:Segz6bKr2LCo9bZgm+foCYiyfr4s0BurLzH3MDE7wC0=
 github.com/pseudomuto/protokit v0.2.0 h1:hlnBDcy3YEDXH7kc9gV+NLaN0cDzhDvD1s7Y6FZ8RpM=
 github.com/pseudomuto/protokit v0.2.0/go.mod h1:2PdH30hxVHsup8KpBTOXTBeMVhJZVio3Q8ViKSAXT0Q=
 github.com/quobyte/api v0.1.2/go.mod h1:jL7lIHrmqQ7yh05OJ+eEEdHr0u/kmT1Ff9iHd+4H6VI=
