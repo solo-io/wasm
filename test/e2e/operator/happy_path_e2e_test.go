@@ -2,7 +2,6 @@ package operator_test
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -183,7 +182,7 @@ var _ = Describe("AutopilotGenerate", func() {
 				return 0, err
 			}
 			return fd.Status.ObservedGeneration, nil
-		}).Should(Equal(fmt.Sprintf("%v", 1)))
+		}).Should(Equal(int64(1)))
 
 		err = test.DeleteFile(filterFile, ns)
 		Expect(err).NotTo(HaveOccurred())
