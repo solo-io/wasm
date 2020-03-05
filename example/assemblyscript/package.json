@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "@assemblyscript/loader": "^0.9.1",
-    "@solo-io/proxy-runtime": "^0.1.0"
+    "@solo-io/proxy-runtime": "^0.1.1"
   },
   "devDependencies": {
     "assemblyscript": "^0.9.1"

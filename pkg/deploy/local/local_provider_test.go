@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	testvars "github.com/solo-io/wasme/pkg/consts/test"
+
 	"github.com/solo-io/wasme/pkg/consts"
 	"github.com/solo-io/wasme/test"
 
@@ -26,7 +28,7 @@ var _ = Describe("LocalProvider", func() {
 	var (
 		filter = &v1.FilterSpec{
 			Id:     "my_filter",
-			Image:  consts.HubDomain + "/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0",
+			Image:  consts.HubDomain + "/ilackarms/assemblyscript-test:" + testvars.Istio15Tag,
 			Config: "wurld",
 		}
 		storeDir string

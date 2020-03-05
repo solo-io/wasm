@@ -6,11 +6,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
-	"github.com/avast/retry-go"
-	orascontent "github.com/containerd/containerd/content"
 	"github.com/pkg/errors"
+	"github.com/solo-io/wasme/pkg/util"
 
 	"github.com/solo-io/wasme/pkg/config"
 
@@ -41,6 +39,12 @@ func NewPusher(resolver remotes.Resolver, authorizer docker.Authorizer) *pusher 
 }
 
 func (p *pusher) Push(ctx context.Context, image Image) error {
+	return util.RetryOn500(func() error {
+		return p.push(ctx, image)
+	})
+}
+
+func (p *pusher) push(ctx context.Context, image Image) error {
 	p.checkAuth(ctx, image.Ref())
 
 	store := content.NewMemoryStore()
@@ -76,7 +80,10 @@ func (p *pusher) Push(ctx context.Context, image Image) error {
 
 	annotations := ManifestAnnotations(cfg)
 
-	imageDesciptor, err := p.orasPush(ctx, image, store, files, cfgDescriptor, annotations)
+	imageDesciptor, err := oras.Push(ctx, p.resolver, image.Ref(), store, files,
+		oras.WithConfig(cfgDescriptor),
+		oras.WithManifestAnnotations(annotations),
+	)
 	if err != nil {
 		return errors.Wrap(err, "oras push failed")
 	}
@@ -85,26 +92,6 @@ func (p *pusher) Push(ctx context.Context, image Image) error {
 	logrus.Infof("Digest: %v", imageDesciptor.Digest)
 
 	return err
-}
-
-// add some retry logic here as some registries can be flaky
-func (p *pusher) orasPush(ctx context.Context, image Image, store orascontent.Provider, files []ocispec.Descriptor, cfgDescriptor ocispec.Descriptor, annotations map[string]string) (ocispec.Descriptor, error) {
-	var imageDesciptor ocispec.Descriptor
-	err := retry.Do(func() error {
-		desc, err := oras.Push(ctx, p.resolver, image.Ref(), store, files,
-			oras.WithConfig(cfgDescriptor),
-			oras.WithManifestAnnotations(annotations),
-		)
-		imageDesciptor = desc
-		return err
-	},
-		retry.Attempts(4),
-		retry.Delay(250*time.Millisecond),
-		retry.RetryIf(func(err error) bool {
-			return strings.Contains(err.Error(), "500 Internal Server Error")
-		}),
-	)
-	return imageDesciptor, err
 }
 
 func (p *pusher) checkAuth(ctx context.Context, ref string) {

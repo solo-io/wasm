@@ -28,13 +28,13 @@ Note that WASM modules must be stored as OCI images in your local cache director
 Let's pull a published image to our local cache, which we can then re-tag and push:
 
 ```bash
-# pull the webassemblyhub.io/demo/assemblyscript-test:istio-1.5.0-alpha.0 image
-wasme pull webassemblyhub.io/demo/assemblyscript-test:istio-1.5.0-alpha.0
+# pull the webassemblyhub.io/demo/assemblyscript-test:istio-1.5 image
+wasme pull webassemblyhub.io/demo/assemblyscript-test:istio-1.5
 ```
 
 ```
-INFO[0000] Pulling image webassemblyhub.io/demo/assemblyscript-test:istio-1.5.0-alpha.0
-INFO[0000] Image: webassemblyhub.io/demo/assemblyscript-test:istio-1.5.0-alpha.0
+INFO[0000] Pulling image webassemblyhub.io/demo/assemblyscript-test:istio-1.5
+INFO[0000] Image: webassemblyhub.io/demo/assemblyscript-test:istio-1.5
 INFO[0000] Digest: sha256:8b74e9b0bbc5ff674c49cde904669a775a939b4d8f7f72aba88c184d527dfc30
 ```
 
@@ -67,19 +67,19 @@ Great. Now we're ready to start pushing images.
 Now that we have a user account which will allow us to push images to a remote registry, let's tag the image we pulled:
 
 ```bash
-wasme tag webassemblyhub.io/demo/assemblyscript-test:istio-1.5.0-alpha.0  webassemblyhub.io/$YOUR_USERNAME/assemblyscript-test:istio-1.5.0-alpha.0 
+wasme tag webassemblyhub.io/demo/assemblyscript-test:istio-1.5  webassemblyhub.io/$YOUR_USERNAME/assemblyscript-test:istio-1.5 
 ```
 
 ```
-INFO[0000] tagged image                                  digest="sha256:8b74e9b0bbc5ff674c49cde904669a775a939b4d8f7f72aba88c184d527dfc30" image="webassemblyhub.io/demo/assemblyscript-test:istio-1.5.0-alpha.0"
+INFO[0000] tagged image                                  digest="sha256:8b74e9b0bbc5ff674c49cde904669a775a939b4d8f7f72aba88c184d527dfc30" image="webassemblyhub.io/demo/assemblyscript-test:istio-1.5"
 ```
 
 We should now see both images with `wasme list`:
 
 ```
 NAME                                             TAG                 SIZE    SHA      UPDATED
-webassemblyhub.io/demo/assemblyscript-test      istio-1.5.0-alpha.0 12.5 kB 8b74e9b0 03 Mar 20 09:37 EST
-webassemblyhub.io/ilackarms/assemblyscript-test istio-1.5.0-alpha.0 12.5 kB 8b74e9b0 03 Mar 20 09:40 EST
+webassemblyhub.io/demo/assemblyscript-test      istio-1.5 12.5 kB 8b74e9b0 03 Mar 20 09:37 EST
+webassemblyhub.io/ilackarms/assemblyscript-test istio-1.5 12.5 kB 8b74e9b0 03 Mar 20 09:40 EST
 ```
 
 ## Log In from the `wasme` command line
@@ -104,12 +104,12 @@ Great! We're logged in and ready to push our image.
 Pushing the image is done with a single command:
 
 ```bash
-wasme push webassemblyhub.io/$YOUR_USERNAME/assemblyscript-test:istio-1.5.0-alpha.0
+wasme push webassemblyhub.io/$YOUR_USERNAME/assemblyscript-test:istio-1.5
 ```
 
 ```
-INFO[0000] Pushing image webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
-INFO[0005] Pushed webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5.0-alpha.0
+INFO[0000] Pushing image webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
+INFO[0005] Pushed webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
 INFO[0005] Digest: sha256:297527f8740818bd18514a066f936927383a688f827a9573b108609d1a411beb
 ```
  
@@ -130,8 +130,8 @@ wasme list --search $YOUR_USERNAME
 ```
 
 ```
-NAME                                             TAG                 SIZE    SHA      UPDATED
-webassemblyhub.io/ilackarms/assemblyscript-test istio-1.5.0-alpha.0 13.6 kB 297527f8 03 Mar 20 14:42 UTC
+NAME                                            TAG                 SIZE    SHA      UPDATED
+webassemblyhub.io/ilackarms/assemblyscript-test istio-1.5 13.6 kB 297527f8 03 Mar 20 14:42 UTC
 ```
 
 Now that you've practiced pushing an image, you can start deploying your own filters to Envoy with `wasme`!

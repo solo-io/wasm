@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	pilotDeploymentName   = "istio-pilot"
+	pilotDeploymentName   = "istiod"
 	defaultIstioNamespace = "istio-system"
 	pilotContainerName    = "discovery"
 )

@@ -207,7 +207,7 @@ var _ = Describe("IstioProvider", func() {
 		Expect(ef2.Spec.ConfigPatches).To(HaveLen(1))
 	})
 
-	// note: this test assumes istio 1.5.0-alpha.0 installed to cluster
+	// note: this test assumes istio 1.5 installed to cluster
 	It("returns an error when the image abi version does not support the istio version", func() {
 		workload := Workload{
 			//all workloads
@@ -233,7 +233,7 @@ var _ = Describe("IstioProvider", func() {
 			Config: "{}",
 		})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " not supported by istio version 1.5.0-alpha.0"))
+		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " not supported by istio version"))
 
 		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
