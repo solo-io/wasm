@@ -1,27 +1,28 @@
 package cache
 
 import (
-	"context"
 	"crypto/md5"
 	"fmt"
 
 	"github.com/hashicorp/go-multierror"
-	"github.com/opencontainers/go-digest"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
-// sends Events to kubernetes when images are added
-type NotifyingCache struct {
-	kube kubernetes.Interface
-	Cache
+type EventNotifier interface {
+	Notify(err error, image string) error
+}
+
+// sends Events to kubernetes when images are added to the cache
+type Notifier struct {
+	kube           kubernetes.Interface
 	wasmeNamespace string
 	cacheName      string
 }
 
-func NewNotifyingCache(kube kubernetes.Interface, cache Cache, wasmeNamespace string, cacheName string) *NotifyingCache {
-	return &NotifyingCache{kube: kube, Cache: cache, wasmeNamespace: wasmeNamespace, cacheName: cacheName}
+func NewNotifier(kube kubernetes.Interface, wasmeNamespace string, cacheName string) *Notifier {
+	return &Notifier{kube: kube, wasmeNamespace: wasmeNamespace, cacheName: cacheName}
 }
 
 const (
@@ -33,15 +34,14 @@ const (
 	Reason_ImageError  = "ImageError"
 )
 
-func (n *NotifyingCache) Add(ctx context.Context, image string) (digest.Digest, error) {
+func (n *Notifier) Notify(err error, image string) error {
 	var reason, message string
-	dgst, err := n.Cache.Add(ctx, image)
 	if err != nil {
 		reason = Reason_ImageError
 		message = err.Error()
 	} else {
 		reason = Reason_ImageAdded
-		message = fmt.Sprintf("Image %v with digest %+v added successfully", image, dgst)
+		message = fmt.Sprintf("Image %v added successfully", image)
 	}
 	_, eventCreateErr := n.kube.CoreV1().Events(n.wasmeNamespace).Create(&v1.Event{
 		ObjectMeta: metav1.ObjectMeta{
@@ -63,7 +63,7 @@ func (n *NotifyingCache) Add(ctx context.Context, image string) (digest.Digest, 
 		},
 	})
 
-	return dgst, multierror.Append(err, eventCreateErr)
+	return multierror.Append(err, eventCreateErr)
 }
 
 func EventLabels(image string) map[string]string {

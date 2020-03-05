@@ -13,7 +13,6 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/opencontainers/go-digest"
-	"github.com/pkg/errors"
 )
 
 // pulls images for a local cache
@@ -23,13 +22,14 @@ type LocalImagePuller interface {
 }
 
 type localImagePuller struct {
-	imageCache Cache
-	refFile    string
-	directory  string
+	imageCache    Cache
+	refFile       string
+	directory     string
+	cacheNotifier EventNotifier
 }
 
-func NewLocalImagePuller(imageCache Cache, refFile string, directory string) *localImagePuller {
-	return &localImagePuller{imageCache: imageCache, refFile: refFile, directory: directory}
+func NewLocalImagePuller(imageCache Cache, refFile string, directory string, cacheNotifier EventNotifier) *localImagePuller {
+	return &localImagePuller{imageCache: imageCache, refFile: refFile, directory: directory, cacheNotifier: cacheNotifier}
 }
 
 func (f *localImagePuller) WatchFile(ctx context.Context) error {
@@ -37,14 +37,14 @@ func (f *localImagePuller) WatchFile(ctx context.Context) error {
 	for ref := range f.watchFileAndGetRefs(ctx, f.refFile) {
 		logrus.Infof("pulling ref %v", ref)
 		digest, err := f.imageCache.Add(ctx, ref)
-		if err != nil {
-			logrus.Infof("pulling error: %v", err)
-			return err
+		if err == nil {
+			err = f.addToDirectory(ctx, digest)
 		}
-		err = f.addToDirectory(ctx, digest)
+		if f.cacheNotifier != nil {
+			err = f.cacheNotifier.Notify(err, ref)
+		}
 		if err != nil {
-			logrus.Infof("writing image err: %v", err)
-			return errors.Wrapf(err, "adding digest to directory %v", f.directory)
+			logrus.Errorf("caching image failed: %v", err)
 		}
 	}
 	return nil

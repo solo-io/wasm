@@ -30,7 +30,7 @@ type filterDeploymentHandler struct {
 	kubeClient kubernetes.Interface
 	client     ezkube.Ensurer
 
-	cache istio.Cache
+	cache        istio.Cache
 	cacheTimeout time.Duration
 
 	// custom overrides for testing

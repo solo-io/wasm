@@ -109,12 +109,12 @@ func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory s
 		}
 	}
 
+	var cacheNotifier cache.EventNotifier
 	if !kubeOpts.disableKube {
 		cfg := config.GetConfigOrDie()
 		kube := kubernetes.NewForConfigOrDie(cfg)
-		imageCache = cache.NewNotifyingCache(
+		cacheNotifier = cache.NewNotifier(
 			kube,
-			imageCache,
 			kubeOpts.cacheNamespace,
 			kubeOpts.cacheName,
 		)
@@ -126,6 +126,7 @@ func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory s
 		imageCache,
 		refFile,
 		directory,
+		cacheNotifier,
 	)
 
 	return fw.WatchFile(ctx)
