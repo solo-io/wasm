@@ -2,7 +2,6 @@ package istio
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -32,10 +31,6 @@ const (
 	WorkloadTypeDaemonSet  = "daemonset"
 
 	backupAnnotationPrefix = "wasme-backup."
-	// wait this long to wait for the image cache event to be reported by the cache
-	// if it doesn't happen, error out
-	// set to "skip" to skip the events check
-	cacheUpdateTimeoutEnv = "CACHE_UPDATE_TIMEOUT"
 )
 
 // the target workload to deploy the filter to
@@ -83,9 +78,14 @@ type Provider struct {
 	// for abi compatibility
 	// defaults to istio-system
 	IstioNamespace string
+
+	// if non-zero, wait for cache events to be populated with this timeout before
+	// creating istio EnvoyFilters.
+	// set to zero to skip the check
+	WaitForCacheTimeout time.Duration
 }
 
-func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error), istioNamespace string) (*Provider, error) {
+func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error), istioNamespace string, cacheTimeout time.Duration) (*Provider, error) {
 
 	// ensure istio types are added to scheme
 	if err := v1alpha3.AddToScheme(client.Manager().GetScheme()); err != nil {
@@ -93,15 +93,16 @@ func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ez
 	}
 
 	return &Provider{
-		Ctx:            ctx,
-		KubeClient:     kubeClient,
-		Client:         client,
-		Puller:         puller,
-		Workload:       workload,
-		Cache:          cache,
-		ParentObject:   parentObject,
-		OnWorkload:     onWorkload,
-		IstioNamespace: istioNamespace,
+		Ctx:                 ctx,
+		KubeClient:          kubeClient,
+		Client:              client,
+		Puller:              puller,
+		Workload:            workload,
+		Cache:               cache,
+		ParentObject:        parentObject,
+		OnWorkload:          onWorkload,
+		IstioNamespace:      istioNamespace,
+		WaitForCacheTimeout: cacheTimeout,
 	}, nil
 }
 
@@ -250,19 +251,16 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 // we want to see a cache event for each cache instance, with each ref
 // we can mark the events as processed after receiving
 func (p *Provider) waitForCacheEvents(image string) error {
-	cacheTimeoutStr := os.Getenv(cacheUpdateTimeoutEnv)
-	if cacheTimeoutStr == "skip" {
+
+	if p.WaitForCacheTimeout == 0 {
 		logrus.Infof("skipping cache events wait")
 		return nil
 	}
-	timeoutDuration, err := time.ParseDuration(cacheTimeoutStr)
-	if err != nil || timeoutDuration == 0 {
-		timeoutDuration = time.Minute * 2
-	}
-	timeout := time.After(timeoutDuration)
+
+	timeout := time.After(p.WaitForCacheTimeout)
 	interval := time.Tick(time.Second)
 
-	logrus.Infof("waiting for event with timeout %v", timeoutDuration)
+	logrus.Infof("waiting for event with timeout %v", p.WaitForCacheTimeout)
 
 	cacheDaemonset, err := p.KubeClient.AppsV1().DaemonSets(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
 	if err != nil {
@@ -273,7 +271,7 @@ func (p *Provider) waitForCacheEvents(image string) error {
 	for {
 		select {
 		case <-timeout:
-			return errors.Errorf("timed out after %s (last err: %v)", timeoutDuration, eventsErr)
+			return errors.Errorf("timed out after %s (last err: %v)", p.WaitForCacheTimeout, eventsErr)
 		case <-interval:
 			events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
 			if err != nil {

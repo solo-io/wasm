@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"time"
 
 	"github.com/solo-io/wasme/pkg/deploy"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -30,14 +31,15 @@ type filterDeploymentHandler struct {
 	client     ezkube.Ensurer
 
 	cache istio.Cache
+	cacheTimeout time.Duration
 
 	// custom overrides for testing
 	makePullerFn   func(secretNamespace string, opts *v1.ImagePullOptions) (pull.ImagePuller, error)
 	makeProviderFn func(obj *v1.FilterDeployment, puller pull.ImagePuller, onWorkload func(workloadMeta metav1.ObjectMeta, err error)) (deploy.Provider, error)
 }
 
-func NewFilterDeploymentHandler(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, cache istio.Cache) controller.FilterDeploymentEventHandler {
-	return &filterDeploymentHandler{ctx: ctx, kubeClient: kubeClient, client: client, cache: cache}
+func NewFilterDeploymentHandler(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, cache istio.Cache, cacheTimeout time.Duration) controller.FilterDeploymentEventHandler {
+	return &filterDeploymentHandler{ctx: ctx, kubeClient: kubeClient, client: client, cache: cache, cacheTimeout: cacheTimeout}
 }
 
 func (f *filterDeploymentHandler) Create(obj *v1.FilterDeployment) error {
@@ -199,6 +201,7 @@ func (f *filterDeploymentHandler) makeProvider(obj *v1.FilterDeployment, puller 
 			obj,
 			onWorkload,
 			dep.Istio.IstioNamespace,
+			f.cacheTimeout,
 		)
 		if err != nil {
 			return nil, err
