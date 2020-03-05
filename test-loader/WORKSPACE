@@ -9,7 +9,7 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 git_repository(
     name = "envoy",
     remote = "https://github.com/yuval-k/envoy-wasm",
-    commit = "9fbd857798f990381b22f2032109422bde876f63",
+    commit = "541b2c1155fffb15ccde92b8324f3e38f7339ba6",
 )
 
 load("@envoy//bazel:api_binding.bzl", "envoy_api_binding")
