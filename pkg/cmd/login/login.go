@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/manifoldco/promptui"
+
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/wasme/pkg/consts"
@@ -54,10 +56,24 @@ func runLogin(opts loginOptions) error {
 		opts.credentialsFile = defaults.WasmeCredentialsFile
 	}
 	if opts.username == "" {
-		return errors.Errorf("must specify username")
+		username, err := getStringInteractive("Enter username", false)
+		if err != nil {
+			return err
+		}
+		if username == "" {
+			return errors.Errorf("must specify username")
+		}
+		opts.username = username
 	}
 	if opts.password == "" {
-		return errors.Errorf("must specify password")
+		password, err := getStringInteractive("Enter password", true)
+		if err != nil {
+			return err
+		}
+		if password == "" {
+			return errors.Errorf("must specify password")
+		}
+		opts.password = password
 	}
 	usr, err := getCurrentUser(opts.username, opts.password, opts.serverAddress, opts.usePlaintext)
 	if err != nil {
@@ -118,4 +134,14 @@ type user struct {
 	ResetUUID       string    `json:"reset_uuid"`
 	CreationTime    time.Time `json:"creation_time"`
 	UpdateTime      time.Time `json:"update_time"`
+}
+
+func getStringInteractive(message string, hidden bool) (string, error) {
+	prompt := promptui.Prompt{
+		Label: message,
+	}
+	if hidden {
+		prompt.Mask = '*'
+	}
+	return prompt.Run()
 }
