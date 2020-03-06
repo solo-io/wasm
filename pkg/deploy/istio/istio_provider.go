@@ -78,9 +78,14 @@ type Provider struct {
 	// for abi compatibility
 	// defaults to istio-system
 	IstioNamespace string
+
+	// if non-zero, wait for cache events to be populated with this timeout before
+	// creating istio EnvoyFilters.
+	// set to zero to skip the check
+	WaitForCacheTimeout time.Duration
 }
 
-func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error), istioNamespace string) (*Provider, error) {
+func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error), istioNamespace string, cacheTimeout time.Duration) (*Provider, error) {
 
 	// ensure istio types are added to scheme
 	if err := v1alpha3.AddToScheme(client.Manager().GetScheme()); err != nil {
@@ -88,15 +93,16 @@ func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ez
 	}
 
 	return &Provider{
-		Ctx:            ctx,
-		KubeClient:     kubeClient,
-		Client:         client,
-		Puller:         puller,
-		Workload:       workload,
-		Cache:          cache,
-		ParentObject:   parentObject,
-		OnWorkload:     onWorkload,
-		IstioNamespace: istioNamespace,
+		Ctx:                 ctx,
+		KubeClient:          kubeClient,
+		Client:              client,
+		Puller:              puller,
+		Workload:            workload,
+		Cache:               cache,
+		ParentObject:        parentObject,
+		OnWorkload:          onWorkload,
+		IstioNamespace:      istioNamespace,
+		WaitForCacheTimeout: cacheTimeout,
 	}, nil
 }
 
@@ -202,6 +208,7 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 
 	logger := logrus.WithFields(logrus.Fields{
 		"cache": p.Cache,
+		"image": image,
 	})
 
 	if cm.Data == nil {
@@ -227,14 +234,86 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 		return err
 	}
 
-	logger.Info("added image to cache")
+	logger.Info("added image to cache config...")
 
-	// TODO: remove sleep once we have a better way of synchronizing between
-	// image cache pull and the deployment
-	time.Sleep(time.Second * 20)
+	if err := p.waitForCacheEvents(image); err != nil {
+		return errors.Wrapf(err, "waiting for cache to publish event for image")
+	}
+
+	if err := p.cleanupCacheEvents(image); err != nil {
+		return errors.Wrapf(err, "cleaning up cache events for image")
+	}
 
 	return nil
 
+}
+
+// we want to see a cache event for each cache instance, with each ref
+// we can mark the events as processed after receiving
+func (p *Provider) waitForCacheEvents(image string) error {
+
+	if p.WaitForCacheTimeout == 0 {
+		logrus.Infof("skipping cache events wait")
+		return nil
+	}
+
+	timeout := time.After(p.WaitForCacheTimeout)
+	interval := time.Tick(time.Second)
+
+	logrus.Infof("waiting for event with timeout %v", p.WaitForCacheTimeout)
+
+	cacheDaemonset, err := p.KubeClient.AppsV1().DaemonSets(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "getting daemonset for cache %v", p.Cache)
+	}
+
+	var eventsErr error
+	for {
+		select {
+		case <-timeout:
+			return errors.Errorf("timed out after %s (last err: %v)", p.WaitForCacheTimeout, eventsErr)
+		case <-interval:
+			events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
+			if err != nil {
+				return errors.Wrapf(err, "getting events for image %v", image)
+			}
+			// expect an event for each cache instance
+			var successEvents int32
+
+			for _, evt := range events {
+				if evt.Reason == cache.Reason_ImageError {
+					logrus.Warnf("event %v was in Error state: %+v", evt.Name, evt)
+					continue
+				}
+				successEvents++
+			}
+
+			if successEvents != cacheDaemonset.Status.NumberReady {
+				eventsErr = errors.Errorf("expected %v image-ready events for image %v, only found %v", cacheDaemonset.Status.NumberReady, image, successEvents)
+				logrus.Warnf("event err: %v", eventsErr)
+				continue
+			}
+
+			logrus.Debugf("ACK all events for image %v", image)
+			return nil
+		}
+	}
+}
+
+func (p *Provider) cleanupCacheEvents(image string) error {
+	logrus.Infof("cleaning up cache events for image %v", image)
+	events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
+	if err != nil {
+		return errors.Wrapf(err, "getting events for image %v", image)
+	}
+
+	for _, event := range events {
+		if err := p.KubeClient.CoreV1().Events(event.Namespace).Delete(event.Name, nil); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // runs a function on the workload pod template spec

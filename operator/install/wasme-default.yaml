@@ -19,17 +19,6 @@ data:
   images: ""
 ---
 # Source: Wasme Operator/templates/deployment.yaml
-# Service account for wasme-cache
-
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app: wasme-cache
-  name: wasme-cache
-  namespace: wasme
----
-# Source: Wasme Operator/templates/deployment.yaml
 # Service account for wasme-operator
 
 apiVersion: v1
@@ -38,6 +27,17 @@ metadata:
   labels:
     app: wasme-operator
   name: wasme-operator
+  namespace: wasme
+---
+# Source: Wasme Operator/templates/deployment.yaml
+# Service account for wasme-cache
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: wasme-cache
+  name: wasme-cache
   namespace: wasme
 ---
 # Source: Wasme Operator/templates/rbac.yaml
@@ -72,6 +72,12 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - '*'
+- apiGroups:
   - apps
   resources:
   - deployments
@@ -95,6 +101,21 @@ rules:
   - '*'
 ---
 # Source: Wasme Operator/templates/rbac.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: wasme-cache
+  labels:
+    app: wasme-cache
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+---
+# Source: Wasme Operator/templates/rbac.yaml
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
@@ -108,6 +129,23 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: wasme-operator
+  apiGroup: rbac.authorization.k8s.io
+# Rbac manifests for wasme-cache
+---
+# Source: Wasme Operator/templates/rbac.yaml
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: wasme-cache
+  labels:
+    app: wasme-cache
+subjects:
+- kind: ServiceAccount
+  name: wasme-cache
+  namespace: wasme
+roleRef:
+  kind: ClusterRole
+  name: wasme-cache
   apiGroup: rbac.authorization.k8s.io
 ---
 # Source: Wasme Operator/templates/deployment.yaml
@@ -153,6 +191,8 @@ spec:
         - /var/local/lib/wasme-cache
         - --ref-file
         - /etc/wasme-cache/images.txt
+        - --cache-ns
+        - 'wasme'
         volumeMounts:
         - mountPath: /var/local/lib/wasme-cache
           name: cache-dir

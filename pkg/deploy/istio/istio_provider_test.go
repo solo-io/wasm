@@ -116,6 +116,7 @@ var _ = Describe("IstioProvider", func() {
 				callbackCalled = true
 			},
 			"",
+			0,
 		)
 		Expect(err).NotTo(HaveOccurred())
 

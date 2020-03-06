@@ -31,6 +31,7 @@ wasme deploy istio <image> --id=<unique name> [--config=<inline string>] [--root
       --cache-namespace string           namespace of resources for the wasm image cache server (default "wasme")
       --cache-repo string                name of the image repository to use for the cache server daemonset (default "quay.io/solo-io/wasme")
       --cache-tag string                 image tag to use for the cache server daemonset (default "dev")
+      --cache-timeout duration           the length of time to wait for the server-side filter cache to pull the filter image before giving up with an error. set to 0 to skip the check entirely (note, this may produce a known race condition). (default 1m0s)
   -h, --help                             help for istio
       --istio-namespace string           the namespace where the Istio control plane is installed (default "istio-system")
   -l, --labels stringToString            labels of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace (default [])

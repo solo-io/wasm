@@ -137,6 +137,11 @@ func makeOperator() model.Operator {
 				APIGroups: []string{""},
 				Resources: []string{"secrets"},
 			},
+			{
+				Verbs:     []string{"*"},
+				APIGroups: []string{""},
+				Resources: []string{"events"},
+			},
 
 			// managed resources
 			{
@@ -165,6 +170,7 @@ func makeOperator() model.Operator {
 func makeCache() model.Operator {
 	name := "wasme-cache"
 	defaultDaemonSet := cache.MakeDaemonSet(name, "", "", nil, nil, "")
+	defaultRole, _ := cache.MakeRbac(name, "")
 	cacheVolumes := defaultDaemonSet.Spec.Template.Spec.Volumes
 	cacheContainer := defaultDaemonSet.Spec.Template.Spec.Containers[0]
 
@@ -175,9 +181,10 @@ func makeCache() model.Operator {
 			Resources:    &cacheContainer.Resources,
 			UseDaemonSet: true,
 		},
-		Args:         cache.DefaultCacheArgs,
+		Args:         cache.DefaultCacheArgs("{{ .Release.Namespace }}"),
 		Volumes:      cacheVolumes,
 		VolumeMounts: cacheContainer.VolumeMounts,
+		Rbac:         defaultRole.Rules,
 		ConfigMaps: []v1.ConfigMap{
 			{
 				ObjectMeta: metav1.ObjectMeta{

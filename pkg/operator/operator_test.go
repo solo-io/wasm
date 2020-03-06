@@ -82,6 +82,7 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 	})
 	applyTest := func(applyFunc func(obj *v1.FilterDeployment) error) {
 		provider.EXPECT().ApplyFilter(filterDeployment.Spec.Filter).Return(nil)
+		client.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil)
 		client.EXPECT().UpdateStatus(gomock.Any(), gomock.Any()).Return(nil)
 
 		// ensure the status gets set for the workload
@@ -114,6 +115,7 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 	})
 	It("handles delete event", func() {
 		provider.EXPECT().RemoveFilter(filterDeployment.Spec.Filter).Return(nil)
+		client.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil)
 		client.EXPECT().UpdateStatus(gomock.Any(), gomock.Any()).Return(nil)
 
 		err := handler.Delete(filterDeployment)

@@ -18,7 +18,6 @@ require (
 	github.com/golang/mock v1.4.0
 	github.com/golang/protobuf v1.3.3
 	github.com/hashicorp/go-multierror v1.0.0
-	github.com/ilackarms/protokit v0.0.0-20181231193355-ee2393f3bbf0
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.11.0

@@ -3,7 +3,15 @@ package cache
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
+
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
+
+	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	"github.com/solo-io/wasme/pkg/cache"
 
@@ -19,8 +27,17 @@ type cacheOptions struct {
 	port       int
 	directory  string
 	refFile    string
+	clearCache bool
+
+	kubeOpts kubeOpts
 
 	*opts.AuthOptions
+}
+
+type kubeOpts struct {
+	disableKube    bool
+	cacheNamespace string
+	cacheName      string
 }
 
 func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Command {
@@ -44,6 +61,10 @@ func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Comma
 	cmd.Flags().IntVarP(&opts.port, "port", "", 9979, "port")
 	cmd.Flags().StringVarP(&opts.directory, "directory", "", "", "directory to write the refs we need to cache")
 	cmd.Flags().StringVarP(&opts.refFile, "ref-file", "", "", "file to watch for images we need to cache.")
+	cmd.Flags().BoolVarP(&opts.clearCache, "clear-cache", "", false, "clear any files from the cache dir on boot")
+	cmd.Flags().BoolVarP(&opts.kubeOpts.disableKube, "disable-kube", "", false, "disable sending events to kubernetes when images are pulled successfully")
+	cmd.Flags().StringVarP(&opts.kubeOpts.cacheNamespace, "cache-ns", "", cache.CacheNamespace, "namespace where the cache is running, if kube integration is enabled")
+	cmd.Flags().StringVarP(&opts.kubeOpts.cacheName, "cache-name", "", cache.CacheName, "name of the cache configmap")
 	return cmd
 }
 
@@ -67,19 +88,45 @@ func runCache(ctx context.Context, opts cacheOptions) error {
 	}
 	if opts.refFile != "" {
 		errg.Go(func() error {
-			return watchFile(ctx, imageCache, opts.refFile, opts.directory)
+			return watchFile(ctx, imageCache, opts.refFile, opts.directory, opts.clearCache, opts.kubeOpts)
 		})
 	}
 	return errg.Wait()
 }
 
-func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory string) error {
+func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory string, clearCache bool, kubeOpts kubeOpts) error {
+
+	if clearCache {
+		cacheContents, err := ioutil.ReadDir(directory)
+		if err != nil {
+			return errors.Wrap(err, "reading cache dir")
+		}
+		for _, file := range cacheContents {
+			logrus.Infof("removing cached file %v", file.Name())
+			if err := os.RemoveAll(file.Name()); err != nil {
+				return err
+			}
+		}
+	}
+
+	var cacheNotifier cache.EventNotifier
+	if !kubeOpts.disableKube {
+		cfg := config.GetConfigOrDie()
+		kube := kubernetes.NewForConfigOrDie(cfg)
+		cacheNotifier = cache.NewNotifier(
+			kube,
+			kubeOpts.cacheNamespace,
+			kubeOpts.cacheName,
+		)
+	}
+
 	// for each ref in the file, add it to the cache,
 	// and if directory is not empty write it t here
 	fw := cache.NewLocalImagePuller(
 		imageCache,
 		refFile,
 		directory,
+		cacheNotifier,
 	)
 
 	return fw.WatchFile(ctx)

@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"time"
 
 	"github.com/solo-io/wasme/pkg/deploy"
 	"sigs.k8s.io/controller-runtime/pkg/log"
@@ -29,15 +30,16 @@ type filterDeploymentHandler struct {
 	kubeClient kubernetes.Interface
 	client     ezkube.Ensurer
 
-	cache istio.Cache
+	cache        istio.Cache
+	cacheTimeout time.Duration
 
 	// custom overrides for testing
 	makePullerFn   func(secretNamespace string, opts *v1.ImagePullOptions) (pull.ImagePuller, error)
 	makeProviderFn func(obj *v1.FilterDeployment, puller pull.ImagePuller, onWorkload func(workloadMeta metav1.ObjectMeta, err error)) (deploy.Provider, error)
 }
 
-func NewFilterDeploymentHandler(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, cache istio.Cache) controller.FilterDeploymentEventHandler {
-	return &filterDeploymentHandler{ctx: ctx, kubeClient: kubeClient, client: client, cache: cache}
+func NewFilterDeploymentHandler(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, cache istio.Cache, cacheTimeout time.Duration) controller.FilterDeploymentEventHandler {
+	return &filterDeploymentHandler{ctx: ctx, kubeClient: kubeClient, client: client, cache: cache, cacheTimeout: cacheTimeout}
 }
 
 func (f *filterDeploymentHandler) Create(obj *v1.FilterDeployment) error {
@@ -59,6 +61,11 @@ func (f *filterDeploymentHandler) Generic(obj *v1.FilterDeployment) error {
 }
 
 func (f *filterDeploymentHandler) deploy(obj *v1.FilterDeployment) error {
+	// refresh obj
+	if err := f.client.Get(f.ctx, obj); err != nil {
+		return err
+	}
+
 	status := v1.FilterDeploymentStatus{
 		ObservedGeneration: obj.Generation,
 		Workloads:          map[string]*v1.WorkloadStatus{},
@@ -86,10 +93,19 @@ func (f *filterDeploymentHandler) deploy(obj *v1.FilterDeployment) error {
 
 	obj.Status = status
 
-	return f.client.UpdateStatus(f.ctx, obj)
+	if err := f.client.UpdateStatus(f.ctx, obj); err != nil {
+		log.Log.Error(err, "failed to update status", "filterdeployment", obj.Name)
+	}
+
+	return nil
 }
 
 func (f *filterDeploymentHandler) undeploy(obj *v1.FilterDeployment) error {
+	// refresh obj
+	if err := f.client.Get(f.ctx, obj); err != nil {
+		return err
+	}
+
 	status := v1.FilterDeploymentStatus{
 		ObservedGeneration: obj.Generation,
 		Workloads:          map[string]*v1.WorkloadStatus{},
@@ -103,7 +119,11 @@ func (f *filterDeploymentHandler) undeploy(obj *v1.FilterDeployment) error {
 
 	obj.Status = status
 
-	return f.client.UpdateStatus(f.ctx, obj)
+	if err := f.client.UpdateStatus(f.ctx, obj); err != nil {
+		log.Log.Error(err, "failed to update status", "filterdeployment", obj.Name)
+	}
+
+	return nil
 }
 
 func getFilter(obj *v1.FilterDeployment) (*v1.FilterSpec, error) {
@@ -181,6 +201,7 @@ func (f *filterDeploymentHandler) makeProvider(obj *v1.FilterDeployment, puller 
 			obj,
 			onWorkload,
 			dep.Istio.IstioNamespace,
+			f.cacheTimeout,
 		)
 		if err != nil {
 			return nil, err

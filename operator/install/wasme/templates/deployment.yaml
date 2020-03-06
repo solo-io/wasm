@@ -110,6 +110,8 @@ spec:
         - /var/local/lib/wasme-cache
         - --ref-file
         - /etc/wasme-cache/images.txt
+        - --cache-ns
+        - '{{ .Release.Namespace }}'
         volumeMounts:
         - mountPath: /var/local/lib/wasme-cache
           name: cache-dir

@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"time"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/go-utils/contextutils"
@@ -33,8 +34,9 @@ func (f flagSetLogLevel) Type() string {
 }
 
 type operatorOpts struct {
-	cache    istio.Cache
-	logLevel flagSetLogLevel
+	cache        istio.Cache
+	logLevel     flagSetLogLevel
+	cacheTimeout time.Duration
 }
 
 func OperatorCmd(ctx *context.Context) *cobra.Command {
@@ -52,6 +54,7 @@ func OperatorCmd(ctx *context.Context) *cobra.Command {
 	cmd.Flags().StringVar(&opts.cache.Name, "cache-name", cachedeployment.CacheName, "name of resources for the wasm image cache server")
 	cmd.Flags().StringVar(&opts.cache.Namespace, "cache-namespace", cachedeployment.CacheNamespace, "namespace of resources for the wasm image cache server")
 	cmd.Flags().Var(&opts.logLevel, "log-level", "the logging level to use")
+	cmd.Flags().DurationVar(&opts.cacheTimeout, "cache-timeout", time.Minute, "the length of time to wait for the server-side filter cache to pull the filter image before giving up with an error. set to 0 to skip the check entirely (note, this may produce a known race condition).")
 
 	return cmd
 }
@@ -100,6 +103,7 @@ func runOperator(ctx context.Context, opts operatorOpts) error {
 		kubeClient,
 		client,
 		opts.cache,
+		opts.cacheTimeout,
 	)
 
 	// register the handler to the controller

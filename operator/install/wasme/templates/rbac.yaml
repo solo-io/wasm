@@ -34,6 +34,12 @@ rules:
   - list
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - '*'
+- apiGroups:
   - apps
   resources:
   - deployments
@@ -71,4 +77,38 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: wasme-operator
+  apiGroup: rbac.authorization.k8s.io
+# Rbac manifests for wasme-cache
+
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: wasme-cache
+  labels:
+    app: wasme-cache
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: wasme-cache
+  labels:
+    app: wasme-cache
+subjects:
+- kind: ServiceAccount
+  name: wasme-cache
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: wasme-cache
   apiGroup: rbac.authorization.k8s.io

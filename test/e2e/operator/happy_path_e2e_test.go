@@ -1,11 +1,18 @@
 package operator_test
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/solo-io/wasme/pkg/cache"
+	appsv1 "k8s.io/api/apps/v1"
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	"github.com/solo-io/autopilot/codegen/util"
 
@@ -22,6 +29,8 @@ import (
 	"github.com/solo-io/autopilot/cli/pkg/utils"
 )
 
+var filterDeploymentName = "myfilter"
+
 func generateCrdExample(filename, image, ns string) error {
 	filterDeployment := &v1.FilterDeployment{
 		TypeMeta: metav1.TypeMeta{
@@ -29,7 +38,7 @@ func generateCrdExample(filename, image, ns string) error {
 			APIVersion: "wasme.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "myfilter",
+			Name:      filterDeploymentName,
 			Namespace: ns,
 		},
 		Spec: v1.FilterDeploymentSpec{
@@ -86,12 +95,35 @@ var _ = BeforeSuite(func() {
 	err = test.ApplyFile("operator/install/wasme-default.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
+	patchCacheDaemonSet()
+
 	err = test.ApplyFile("test/e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = waitDeploymentReady("productpage", ns, time.Minute*2)
 	Expect(err).NotTo(HaveOccurred())
 })
+
+// need to patch the cache daemonset to use the --clear-cache flag, to ensure
+// our cache starts fresh every test
+func patchCacheDaemonSet() {
+	cfg, err := config.GetConfig()
+	Expect(err).NotTo(HaveOccurred())
+
+	kube, err := client.New(cfg, client.Options{})
+	Expect(err).NotTo(HaveOccurred())
+
+	ds := &appsv1.DaemonSet{}
+	err = kube.Get(context.TODO(), client.ObjectKey{Name: cache.CacheName, Namespace: cache.CacheNamespace}, ds)
+	Expect(err).NotTo(HaveOccurred())
+
+	args := ds.Spec.Template.Spec.Containers[0].Args
+	args = append(args, "--clear-cache")
+	ds.Spec.Template.Spec.Containers[0].Args = args
+
+	err = kube.Update(context.TODO(), ds)
+	Expect(err).NotTo(HaveOccurred())
+}
 
 var _ = AfterSuite(func() {
 	if err := test.DeleteFile("test/e2e/operator/bookinfo.yaml", ns); err != nil {
@@ -133,11 +165,31 @@ var _ = Describe("AutopilotGenerate", func() {
 		// expect header in response
 		Eventually(testRequest, time.Minute*5).Should(ContainSubstring("hello: world"))
 
+		// ensure filter deployment status is up to date
+		cfg, err := config.GetConfig()
+		Expect(err).NotTo(HaveOccurred())
+
+		err = v1.AddToScheme(scheme.Scheme)
+		Expect(err).NotTo(HaveOccurred())
+
+		kube, err := client.New(cfg, client.Options{})
+		Expect(err).NotTo(HaveOccurred())
+
+		fd := &v1.FilterDeployment{}
+		Eventually(func() (int64, error) {
+			err := kube.Get(context.TODO(), client.ObjectKey{Name: filterDeploymentName, Namespace: ns}, fd)
+			if err != nil {
+				return 0, err
+			}
+			return fd.Status.ObservedGeneration, nil
+		}).Should(Equal(int64(1)))
+
 		err = test.DeleteFile(filterFile, ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
 		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring("hello: world"))
+
 	})
 })
 

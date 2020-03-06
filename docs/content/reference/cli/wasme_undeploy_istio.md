@@ -22,6 +22,7 @@ wasme undeploy istio --id=<unique name> --namespace=<deployment namespace> [--na
 ### Options
 
 ```
+      --cache-timeout duration   the length of time to wait for the server-side filter cache to pull the filter image before giving up with an error. set to 0 to skip the check entirely (note, this may produce a known race condition). (default 1m0s)
       --config string            optional config that will be passed to the filter. accepts an inline string.
   -h, --help                     help for istio
       --istio-namespace string   the namespace where the Istio control plane is installed (default "istio-system")
