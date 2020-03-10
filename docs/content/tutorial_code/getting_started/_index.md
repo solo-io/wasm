@@ -37,7 +37,7 @@ wasme --version
 ```
 
 ```
-wasme version 0.0.14
+wasme version 0.0.16
 ```
 
 ### Initialize a new filter project
