@@ -210,6 +210,7 @@ func selectCompatiblePlatformsInteractive(language string) (compatiblePlatforms,
 	selectableBases := map[string]*filterBase{}
 
 	for _, base := range bases {
+		base := base
 		key := strings.Join(base.compatiblePlatforms.Keys(), ", ")
 		selectableBases[key] = &base
 		baseOptions = append(baseOptions, key)
