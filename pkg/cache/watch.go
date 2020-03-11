@@ -68,6 +68,7 @@ func (f *localImagePuller) watchFileAndGetRefs(ctx context.Context, refFile stri
 					// TODO: log? panic?
 					fmt.Fprintln(os.Stderr, "failed parsing refs file: "+err.Error())
 				}
+				logrus.Infof("detected refs %v", refs)
 			}
 
 			for _, ref := range refs {
