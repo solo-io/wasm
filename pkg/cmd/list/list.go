@@ -147,6 +147,9 @@ func byteCountSI(b int64) string {
 }
 
 func getLocalImages(storageDir string) ([]image, error) {
+	if _, err := os.Stat(storageDir); err != nil && os.IsNotExist(err) {
+		return []image{}, nil
+	}
 	imageStore := store.NewStore(storageDir)
 
 	storedImages, err := imageStore.List()
