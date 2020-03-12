@@ -90,7 +90,7 @@ See the next section to learn how to get started with the Operator.
 
 Interacting with the Wasme Operator happens through the `FilterDeployment`  Custom Resource.
 
-The full spec for this CRD can be read at https://github.com/solo-io/wasme/blob/master/operator/pkg/api/wasme.io/v1/types.go#L14
+The full spec for this CRD can be read at https://github.com/solo-io/wasme/blob/master/operator/api/wasme/v1/filter_deployment.proto#L11
 
 Let's try the following example to see it in action:
 
