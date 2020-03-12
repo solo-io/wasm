@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Fix issue where `wasme list` returns an empty list if --store is not set
+    issueLink: https://github.com/solo-io/wasme/issues/87
