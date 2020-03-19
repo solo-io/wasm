@@ -421,7 +421,7 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 	makeClusterConfigPatch := func() *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch {
 		return &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
 			Match: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-				Context: networkingv1alpha3.EnvoyFilter_SIDECAR_INBOUND,
+				Context: networkingv1alpha3.EnvoyFilter_SIDECAR_OUTBOUND,
 				ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Cluster{
 					Cluster: &networkingv1alpha3.EnvoyFilter_ClusterMatch{},
 				},
