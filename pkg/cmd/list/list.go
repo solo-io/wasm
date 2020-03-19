@@ -12,6 +12,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/solo-io/wasme/pkg/defaults"
+
 	"github.com/solo-io/wasme/pkg/consts"
 
 	"github.com/solo-io/wasme/pkg/util"
@@ -147,6 +149,12 @@ func byteCountSI(b int64) string {
 }
 
 func getLocalImages(storageDir string) ([]image, error) {
+	if storageDir == "" {
+		storageDir = defaults.WasmeImageDir
+	}
+	if _, err := os.Stat(storageDir); err != nil && os.IsNotExist(err) {
+		return []image{}, nil
+	}
 	imageStore := store.NewStore(storageDir)
 
 	storedImages, err := imageStore.List()
@@ -164,7 +172,8 @@ func getLocalImages(storageDir string) ([]image, error) {
 
 		descriptor, err := img.Descriptor()
 		if err != nil {
-			return nil, err
+			logrus.Errorf("failed getting image %v descriptor: %v", img.Ref(), err)
+			continue
 		}
 
 		dir, err := imageStore.Dir(img.Ref())
@@ -175,7 +184,8 @@ func getLocalImages(storageDir string) ([]image, error) {
 
 		imageInfo, err := os.Stat(dir)
 		if err != nil {
-			return nil, err
+			logrus.Errorf("stat image %v dir %v: %v", img.Ref(), dir, err)
+			continue
 		}
 
 		images = append(images, image{

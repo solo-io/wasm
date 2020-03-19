@@ -17,14 +17,14 @@ metadata:
   namespace: wasme
 ---
 # Source: Wasme Operator/templates/deployment.yaml
-# Service account for wasme-cache
+# Service account for wasme-operator
 
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app: wasme-cache
-  name: wasme-cache
+    app: wasme-operator
+  name: wasme-operator
   namespace: wasme
 ---
 # Source: Wasme Operator/templates/configmap.yaml
@@ -34,7 +34,6 @@ kind: ConfigMap
 metadata:
   labels:
     app: wasme-cache
-    configmap: wasme-cache
   name: wasme-cache
   namespace: wasme
 data:

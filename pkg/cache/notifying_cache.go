@@ -63,7 +63,11 @@ func (n *Notifier) Notify(err error, image string) error {
 		},
 	})
 
-	return multierror.Append(err, eventCreateErr)
+	if eventCreateErr != nil {
+		return multierror.Append(err, eventCreateErr)
+	}
+
+	return err
 }
 
 func EventLabels(image string) map[string]string {
