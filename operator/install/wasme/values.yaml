@@ -2,7 +2,7 @@
 wasmeOperator:
   image:
     pullPolicy: Always
-    registry: gcr.io/solo-test-236622
+    registry: quay.io/solo-io
     repository: wasme
     tag: dev
   resources:
@@ -12,7 +12,7 @@ wasmeOperator:
 wasmeCache:
   image:
     pullPolicy: Always
-    registry: gcr.io/solo-test-236622
+    registry: quay.io/solo-io
     repository: wasme
     tag: dev
   resources:
