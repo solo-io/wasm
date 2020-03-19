@@ -164,6 +164,12 @@ func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image
 	})
 
 	logger.Info("updated workload sidecar annotations")
+	clusterFilter := p.makeClusterFilter()
+
+	err := p.Client.Ensure(p.Ctx, nil, clusterFilter)
+	if err != nil {
+		return err
+	}
 
 	istioEnvoyFilter, err := p.makeIstioEnvoyFilter(
 		filter,
@@ -341,6 +347,9 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 	return nil
 
 }
+func (p *Provider) clusterName() string {
+	return "wasme-cache-cluster-" + p.Cache.Name + "-" + p.Cache.Namespace
+}
 
 // construct Istio EnvoyFilter Custom Resource
 func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image, workloadName string, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
@@ -351,7 +360,7 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 	sha := strings.TrimPrefix(string(descriptor.Digest), "sha256:")
 	// path to the file in the mounted host volume
 	// created by the cache
-	const clusterName = "wasme-cache-cluster"
+	clusterName := p.clusterName()
 	wasmFilterConfig := envoyfilter.MakeIstioWasmFilter(filter,
 		envoyfilter.MakeRemoteDataSource("http://"+clusterName+"/"+image.Ref(), clusterName, sha), // get cluster name nad filter hash
 	)
@@ -394,6 +403,33 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 		}
 	}
 
+	// create a config patch for each port
+	var configPatches []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch
+	configPatches = append(configPatches, makeConfigPatch(makeMatch()))
+
+	spec := networkingv1alpha3.EnvoyFilter{
+		WorkloadSelector: &networkingv1alpha3.WorkloadSelector{
+			Labels: labels,
+		},
+		ConfigPatches: configPatches,
+	}
+
+	return &v1alpha3.EnvoyFilter{
+		ObjectMeta: metav1.ObjectMeta{
+			// in istio's case, filter ID must be a kube-compliant name
+			Name:      istioEnvoyFilterName(workloadName, filter.Id),
+			Namespace: p.Workload.Namespace,
+		},
+		Spec: spec,
+	}, nil
+}
+
+// construct Istio EnvoyFilter Custom Resource
+func (p *Provider) makeClusterFilter() *v1alpha3.EnvoyFilter {
+	// path to the file in the mounted host volume
+	// created by the cache
+	clusterName := p.clusterName()
+
 	cluster := &envoy_api_v2.Cluster{
 		Name:                 clusterName,
 		ClusterDiscoveryType: &envoy_api_v2.Cluster_Type{Type: envoy_api_v2.Cluster_STRICT_DNS},
@@ -421,7 +457,7 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 	makeClusterConfigPatch := func() *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch {
 		return &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
 			Match: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-				Context: networkingv1alpha3.EnvoyFilter_SIDECAR_INBOUND,
+				Context: networkingv1alpha3.EnvoyFilter_ANY,
 				ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Cluster{
 					Cluster: &networkingv1alpha3.EnvoyFilter_ClusterMatch{},
 				},
@@ -429,7 +465,7 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 			ApplyTo: networkingv1alpha3.EnvoyFilter_CLUSTER,
 			Patch: &networkingv1alpha3.EnvoyFilter_Patch{
 				// use merge in case there is more than one.
-				Operation: networkingv1alpha3.EnvoyFilter_Patch_MERGE,
+				Operation: networkingv1alpha3.EnvoyFilter_Patch_ADD,
 				Value:     clusterValue,
 			},
 		}
@@ -437,24 +473,19 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 
 	// create a config patch for each port
 	var configPatches []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch
-	configPatches = append(configPatches, makeConfigPatch(makeMatch()))
 	configPatches = append(configPatches, makeClusterConfigPatch())
 
 	spec := networkingv1alpha3.EnvoyFilter{
-		WorkloadSelector: &networkingv1alpha3.WorkloadSelector{
-			Labels: labels,
-		},
 		ConfigPatches: configPatches,
 	}
 
 	return &v1alpha3.EnvoyFilter{
 		ObjectMeta: metav1.ObjectMeta{
-			// in istio's case, filter ID must be a kube-compliant name
-			Name:      istioEnvoyFilterName(workloadName, filter.Id),
+			Name:      p.Cache.Name,
 			Namespace: p.Workload.Namespace,
 		},
 		Spec: spec,
-	}, nil
+	}
 }
 
 func istioEnvoyFilterName(workloadName, filterId string) string {
