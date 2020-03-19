@@ -189,7 +189,7 @@ spec:
     spec:
       serviceAccountName: wasme-operator
       containers:
-      - image: gcr.io/solo-test-236622/wasme:dev
+      - image: quay.io/solo-io/wasme:dev
         args:
         - operator
         - --log-level=debug
@@ -231,7 +231,7 @@ spec:
     spec:
       serviceAccountName: wasme-cache
       containers:
-      - image: gcr.io/solo-test-236622/wasme:dev
+      - image: quay.io/solo-io/wasme:dev
         args:
         - cache
         imagePullPolicy: Always
