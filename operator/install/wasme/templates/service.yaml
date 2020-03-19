@@ -1,0 +1,15 @@
+# Service manifest for wasme-operator
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: wasme-cache
+  name: wasme-cache
+  namespace: {{ .Release.Namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: wasme-cache
+  ports:
+  - port: 9979
+    targetPort: 9979

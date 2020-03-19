@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -49,9 +50,6 @@ func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Comma
 		Long: `cache
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 && opts.refFile == "" {
-				return fmt.Errorf("invalid number of arguments")
-			}
 			opts.targetRefs = args
 			return runCache(*ctx, opts)
 		},
@@ -96,7 +94,9 @@ func runCache(ctx context.Context, opts cacheOptions) error {
 
 func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory string, clearCache bool, kubeOpts kubeOpts) error {
 
+	logrus.Infof("watching cache index file cached file %v", refFile)
 	if clearCache {
+		logrus.Infof("clearing cache")
 		cacheContents, err := ioutil.ReadDir(directory)
 		if err != nil {
 			return errors.Wrap(err, "reading cache dir")
@@ -113,11 +113,21 @@ func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory s
 	if !kubeOpts.disableKube {
 		cfg := config.GetConfigOrDie()
 		kube := kubernetes.NewForConfigOrDie(cfg)
-		cacheNotifier = cache.NewNotifier(
-			kube,
-			kubeOpts.cacheNamespace,
-			kubeOpts.cacheName,
-		)
+
+		if kubeOpts.cacheNamespace == "" {
+			if data, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
+				if ns := strings.TrimSpace(string(data)); len(ns) > 0 {
+					kubeOpts.cacheNamespace = ns
+				}
+			}
+		}
+		if kubeOpts.cacheName != "" {
+			cacheNotifier = cache.NewNotifier(
+				kube,
+				kubeOpts.cacheNamespace,
+				kubeOpts.cacheName,
+			)
+		}
 	}
 
 	// for each ref in the file, add it to the cache,

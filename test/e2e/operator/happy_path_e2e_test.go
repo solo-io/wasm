@@ -95,7 +95,7 @@ var _ = BeforeSuite(func() {
 	err = test.ApplyFile("operator/install/wasme-default.yaml", "")
 	Expect(err).NotTo(HaveOccurred())
 
-	patchCacheDaemonSet()
+	patchCache()
 
 	err = test.ApplyFile("test/e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
@@ -106,22 +106,22 @@ var _ = BeforeSuite(func() {
 
 // need to patch the cache daemonset to use the --clear-cache flag, to ensure
 // our cache starts fresh every test
-func patchCacheDaemonSet() {
+func patchCache() {
 	cfg, err := config.GetConfig()
 	Expect(err).NotTo(HaveOccurred())
 
 	kube, err := client.New(cfg, client.Options{})
 	Expect(err).NotTo(HaveOccurred())
 
-	ds := &appsv1.DaemonSet{}
-	err = kube.Get(context.TODO(), client.ObjectKey{Name: cache.CacheName, Namespace: cache.CacheNamespace}, ds)
+	deployment := &appsv1.Deployment{}
+	err = kube.Get(context.TODO(), client.ObjectKey{Name: cache.CacheName, Namespace: cache.CacheNamespace}, deployment)
 	Expect(err).NotTo(HaveOccurred())
 
-	args := ds.Spec.Template.Spec.Containers[0].Args
+	args := deployment.Spec.Template.Spec.Containers[0].Args
 	args = append(args, "--clear-cache")
-	ds.Spec.Template.Spec.Containers[0].Args = args
+	deployment.Spec.Template.Spec.Containers[0].Args = args
 
-	err = kube.Update(context.TODO(), ds)
+	err = kube.Update(context.TODO(), deployment)
 	Expect(err).NotTo(HaveOccurred())
 }
 

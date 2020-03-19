@@ -3,11 +3,14 @@ package operator_test
 import (
 	"testing"
 
+	"github.com/solo-io/solo-kit/test/helpers"
+
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	//. "github.com/onsi/gomega"
 )
 
 func TestOperator(t *testing.T) {
-	RegisterFailHandler(Fail)
+	helpers.RegisterCommonFailHandlers()
+	helpers.SetupLog()
 	RunSpecs(t, "Operator Suite")
 }

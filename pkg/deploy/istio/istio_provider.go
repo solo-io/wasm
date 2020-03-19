@@ -2,12 +2,12 @@ package istio
 
 import (
 	"context"
-	"path/filepath"
 	"strings"
 	"time"
 
 	"k8s.io/apimachinery/pkg/labels"
 
+	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/solo-io/wasme/pkg/abi"
 
 	"github.com/solo-io/autopilot/pkg/ezkube"
@@ -24,6 +24,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+
+	envoy_api_v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	envoy_api_v2_core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 )
 
 const (
@@ -106,14 +109,6 @@ func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ez
 	}, nil
 }
 
-// the sidecar annotations required on the pod
-func requiredSidecarAnnotations() map[string]string {
-	return map[string]string{
-		"sidecar.istio.io/userVolume":      `[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
-		"sidecar.istio.io/userVolumeMount": `[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
-	}
-}
-
 // applies the filter to all selected workloads and updates the image cache configmap
 func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 
@@ -144,10 +139,6 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 		}).Warnf("no ABI Version found for image, skipping ABI version check")
 	}
 
-	if err := p.addImageToCacheConfigMap(filter.Image); err != nil {
-		return errors.Wrap(err, "adding image to cache")
-	}
-
 	err = p.forEachWorkload(func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
 		err := p.applyFilterToWorkload(filter, image, meta, spec)
 		if p.OnWorkload != nil {
@@ -164,7 +155,6 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 
 // applies the filter to the target workload: adds annotations and creates the EnvoyFilter CR
 func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
-	p.setAnnotations(spec)
 	labels := spec.Labels
 	workloadName := meta.Name
 
@@ -331,10 +321,6 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
-
-			if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
-				return err
-			}
 		}
 	case WorkloadTypeDaemonSet:
 		workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{
@@ -347,10 +333,6 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
-
-			if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
-				return err
-			}
 		}
 	default:
 		return errors.Errorf("unknown workload type %v, must be %v or %v", p.Workload.Kind, WorkloadTypeDeployment, WorkloadTypeDaemonSet)
@@ -360,36 +342,18 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 
 }
 
-// set sidecar annotations on the workload
-func (p *Provider) setAnnotations(template *corev1.PodTemplateSpec) {
-	if template.Annotations == nil {
-		template.Annotations = map[string]string{}
-	}
-	for k, v := range requiredSidecarAnnotations() {
-		// create backups of the existing annotations if they exist
-		if currentVal, ok := template.Annotations[k]; ok {
-			template.Annotations[backupAnnotationPrefix+k] = currentVal
-		}
-		template.Annotations[k] = v
-	}
-}
-
 // construct Istio EnvoyFilter Custom Resource
 func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image, workloadName string, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
 	descriptor, err := image.Descriptor()
 	if err != nil {
 		return nil, err
 	}
-
+	sha := strings.TrimPrefix(string(descriptor.Digest), "sha256:")
 	// path to the file in the mounted host volume
 	// created by the cache
-	filename := filepath.Join(
-		"/var/local/lib/wasme-cache",
-		cache.Digest2filename(descriptor.Digest),
-	)
-
+	const clusterName = "wasme-cache-cluster"
 	wasmFilterConfig := envoyfilter.MakeIstioWasmFilter(filter,
-		envoyfilter.MakeLocalDatasource(filename),
+		envoyfilter.MakeRemoteDataSource("http://"+clusterName+"/"+image.Ref(), clusterName, sha), // get cluster name nad filter hash
 	)
 
 	// here we need to use the gogo proto marshal
@@ -430,9 +394,51 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 		}
 	}
 
+	cluster := &envoy_api_v2.Cluster{
+		Name:                 clusterName,
+		ClusterDiscoveryType: &envoy_api_v2.Cluster_Type{Type: envoy_api_v2.Cluster_STRICT_DNS},
+		ConnectTimeout:       &duration.Duration{Seconds: 3},
+		Hosts: []*envoy_api_v2_core.Address{
+			&envoy_api_v2_core.Address{
+				Address: &envoy_api_v2_core.Address_SocketAddress{
+					SocketAddress: &envoy_api_v2_core.SocketAddress{
+						Address: p.Cache.Name + "." + p.Cache.Namespace + ".svc.cluster.local", // do we need the suffix svc.cluster.local?
+						PortSpecifier: &envoy_api_v2_core.SocketAddress_PortValue{
+							PortValue: 9979,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	clusterValue, err := protoutils.MarshalStruct(cluster)
+	if err != nil {
+		// this should NEVER HAPPEN!
+		panic(err)
+	}
+
+	makeClusterConfigPatch := func() *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch {
+		return &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch{
+			Match: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
+				Context: networkingv1alpha3.EnvoyFilter_SIDECAR_INBOUND,
+				ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Cluster{
+					Cluster: &networkingv1alpha3.EnvoyFilter_ClusterMatch{},
+				},
+			},
+			ApplyTo: networkingv1alpha3.EnvoyFilter_CLUSTER,
+			Patch: &networkingv1alpha3.EnvoyFilter_Patch{
+				// use merge in case there is more than one.
+				Operation: networkingv1alpha3.EnvoyFilter_Patch_MERGE,
+				Value:     clusterValue,
+			},
+		}
+	}
+
 	// create a config patch for each port
 	var configPatches []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch
 	configPatches = append(configPatches, makeConfigPatch(makeMatch()))
+	configPatches = append(configPatches, makeClusterConfigPatch())
 
 	spec := networkingv1alpha3.EnvoyFilter{
 		WorkloadSelector: &networkingv1alpha3.WorkloadSelector{
@@ -470,25 +476,6 @@ func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
 	err := p.forEachWorkload(func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
 		// collect the name of the workload so we can delete its filter
 		workloads = append(workloads, meta.Name)
-
-		logger := logger.WithFields(logrus.Fields{
-			"workload": meta.Name,
-		})
-
-		for k := range requiredSidecarAnnotations() {
-			delete(spec.Annotations, k)
-		}
-		logger.Info("removing sidecar annotations from workload")
-
-		// restore backup annotations
-		for k, v := range spec.Annotations {
-			if strings.HasPrefix(backupAnnotationPrefix, k) {
-				key := strings.TrimPrefix(k, backupAnnotationPrefix)
-				spec.Annotations[key] = v
-				delete(spec.Annotations, key)
-			}
-		}
-
 		return nil
 	})
 	if err != nil {

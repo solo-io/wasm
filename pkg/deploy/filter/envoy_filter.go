@@ -9,10 +9,11 @@ import (
 	"github.com/solo-io/wasme/pkg/util"
 )
 
-func MakeRemoteDataSource(uri, cluster string) *core.AsyncDataSource {
+func MakeRemoteDataSource(uri, cluster, sha string) *core.AsyncDataSource {
 	return &core.AsyncDataSource{
 		Specifier: &core.AsyncDataSource_Remote{
 			Remote: &core.RemoteDataSource{
+				Sha256: sha,
 				HttpUri: &core.HttpUri{
 					Uri: uri,
 					HttpUpstreamType: &core.HttpUri_Cluster{

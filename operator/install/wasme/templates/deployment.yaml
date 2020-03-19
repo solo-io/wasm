@@ -66,12 +66,12 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 ---
 
-# DaemonSet manifest for wasme-cache
+# Deployment manifest for wasme-cache
 {{- $wasmeCache := $.Values.wasmeCache}}
 {{- $wasmeCacheImage := $wasmeCache.image }}
 
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   labels:
     app: wasme-cache
@@ -91,32 +91,10 @@ spec:
         prometheus.io/scrape: "true"
     spec:
       serviceAccountName: wasme-cache
-      volumes:
-      - hostPath:
-          path: /var/local/lib/wasme-cache
-          type: DirectoryOrCreate
-        name: cache-dir
-      - configMap:
-          items:
-          - key: images
-            path: images.txt
-          name: wasme-cache
-        name: config
       containers:
       - image: {{ $wasmeCacheImage.registry }}/{{ $wasmeCacheImage.repository }}:{{ $wasmeCacheImage.tag }}
         args:
         - cache
-        - --directory
-        - /var/local/lib/wasme-cache
-        - --ref-file
-        - /etc/wasme-cache/images.txt
-        - --cache-ns
-        - '{{ .Release.Namespace }}'
-        volumeMounts:
-        - mountPath: /var/local/lib/wasme-cache
-          name: cache-dir
-        - mountPath: /etc/wasme-cache
-          name: config
         imagePullPolicy: {{ $wasmeCacheImage.pullPolicy }}
         name: wasme-cache
 {{- if $wasmeCache.resources }}

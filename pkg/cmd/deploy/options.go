@@ -12,7 +12,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/pkg/errors"
 	gatewayv1 "github.com/solo-io/gloo/projects/gateway/pkg/api/v1"
 	"github.com/solo-io/gloo/projects/gloo/cli/pkg/helpers"
 	"github.com/solo-io/go-utils/kubeutils"
@@ -25,6 +24,8 @@ import (
 	"github.com/solo-io/wasme/pkg/pull"
 	"github.com/solo-io/wasme/pkg/resolver"
 	"github.com/spf13/pflag"
+
+	k8sJson "k8s.io/apimachinery/pkg/runtime/serializer/json"
 )
 
 type options struct {
@@ -157,9 +158,6 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			Selector:      opts.glooOpts.selector,
 		}, nil
 	case Provider_Istio:
-		if opts.dryRun {
-			return nil, errors.Errorf("dry-run not currenty supported for istio")
-		}
 
 		cfg, err := kubeutils.GetConfig("", "")
 		if err != nil {
@@ -182,11 +180,17 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 				log.Fatalf("failed to start kubernetes dynamic client")
 			}
 		}()
+		var ensurer ezkube.Ensurer = ezkube.NewEnsurer(ezkube.NewRestClient(mgr))
+		if opts.dryRun {
+			ensurer = &DryRunEnsurer{
+				Ensurer: ensurer,
+			}
+		}
 
 		return istio.NewProvider(
 			ctx,
 			kubeClient,
-			ezkube.NewEnsurer(ezkube.NewRestClient(mgr)),
+			ensurer,
 			opts.istioOpts.puller,
 			opts.istioOpts.workload,
 			istio.Cache{
@@ -201,6 +205,21 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 	}
 
 	return nil, nil
+}
+
+type DryRunEnsurer struct {
+	ezkube.Ensurer
+}
+
+func (c *DryRunEnsurer) Ensure(ctx context.Context, parent ezkube.Object, child ezkube.Object, reconcileFuncs ...ezkube.ReconcileFunc) error {
+	serializer := k8sJson.NewSerializerWithOptions(
+		k8sJson.DefaultMetaFactory, nil, nil,
+		k8sJson.SerializerOptions{
+			Yaml:   true,
+			Pretty: true,
+			Strict: true,
+		})
+	return serializer.Encode(child, os.Stdout)
 }
 
 func makeDeployer(ctx context.Context, opts *options) (*deploy.Deployer, error) {

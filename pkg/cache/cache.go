@@ -2,12 +2,15 @@ package cache
 
 import (
 	"context"
+	"crypto"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"path"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -125,10 +128,25 @@ func (c *CacheImpl) Get(ctx context.Context, digest digest.Digest) (model.Filter
 }
 
 func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	_, file := path.Split(r.URL.Path)
+	switch {
+	case len(file) == hex.EncodedLen(crypto.SHA256.Size()):
+		c.ServeHTTPSha(rw, r, file)
+	default:
+		// assume that the path is a ref. add it to cache
+		desc, err := c.Add(r.Context(), strings.TrimPrefix(r.URL.Path, "/"))
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusBadRequest)
+			return
+		}
+		c.ServeHTTPSha(rw, r, desc.Encoded())
+	}
+}
+
+func (c *CacheImpl) ServeHTTPSha(rw http.ResponseWriter, r *http.Request, sha string) {
 	// parse the url
 	ctx := r.Context()
-	_, file := path.Split(r.URL.Path)
-	image := c.cacheState.find(digest.Digest("sha256:" + file))
+	image := c.cacheState.find(digest.Digest("sha256:" + sha))
 	if image == nil {
 		http.NotFound(rw, r)
 		return
@@ -155,7 +173,7 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		// content of digests never changes so set mod time to a constant
 		// don't use zero time because serve content doesn't use that.
 		modTime := time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
-		http.ServeContent(rw, r, file, modTime, rs)
+		http.ServeContent(rw, r, sha, modTime, rs)
 	} else {
 		rw.Header().Add("Content-Length", strconv.Itoa(int(desc.Size)))
 		if r.Method != "HEAD" {

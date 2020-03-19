@@ -31,12 +31,6 @@ var (
 	DefaultCacheArgs     = func(namespace string) []string {
 		return []string{
 			"cache",
-			"--directory",
-			"/var/local/lib/wasme-cache",
-			"--ref-file",
-			"/etc/wasme-cache/images.txt",
-			"--cache-ns",
-			namespace,
 		}
 	}
 )
@@ -78,8 +72,8 @@ func NewDeployer(kube kubernetes.Interface, namespace, name string, imageRepo, i
 		logger: logrus.WithFields(logrus.Fields{
 			"cache": name + "." + namespace,
 			"image": image,
-		},
-		)}
+		}),
+	}
 }
 
 func (d *deployer) EnsureCache() error {
@@ -104,9 +98,17 @@ func (d *deployer) EnsureCache() error {
 		return errors.Wrap(err, "ensuring rolebinding")
 	}
 
-	if err := d.createOrUpdateDaemonSet(); err != nil {
+	if err := d.createOrUpdateDeployment(); err != nil {
 		return errors.Wrap(err, "ensuring daemonset")
 	}
+	if err := d.createOrUpdateService(); err != nil {
+		return errors.Wrap(err, "ensuring daemonset")
+	}
+	/*
+		if err := d.removeOldDaemonSet(); err != nil {
+			return errors.Wrap(err, "ensuring daemonset")
+		}
+	*/
 	return nil
 }
 
@@ -225,38 +227,73 @@ func (d *deployer) createOrUpdateCacheRolebinding(roleBinding *rbacv1.RoleBindin
 	return nil
 }
 
-func (d *deployer) createOrUpdateDaemonSet() error {
+func (d *deployer) createOrUpdateDeployment() error {
 	labels := map[string]string{
 		"app": d.name,
 	}
 
-	desiredDaemonSet := MakeDaemonSet(d.name, d.namespace, d.image, labels, d.args, d.pullPolicy)
+	desiredDeployment := MakeDeployment(d.name, d.namespace, d.image, labels, d.args, d.pullPolicy)
 
-	_, err := d.kube.AppsV1().DaemonSets(d.namespace).Create(desiredDaemonSet)
+	_, err := d.kube.AppsV1().Deployments(d.namespace).Create(desiredDeployment)
+	// update don already exists err
+	if err != nil {
+		if !kubeerrutils.IsAlreadyExists(err) {
+			return err
+		}
+		existing, err := d.kube.AppsV1().Deployments(d.namespace).Get(desiredDeployment.Name, metav1.GetOptions{})
+		if err != nil {
+			return errors.Wrap(err, "failed to get existing cache deployment")
+		}
+
+		// TODO: how will this handle immutable fields?
+		existing.Spec = desiredDeployment.Spec
+
+		_, err = d.kube.AppsV1().Deployments(d.namespace).Update(existing)
+		if err != nil {
+			return err
+		}
+
+		d.logger.Info("cache deployment updated")
+
+		return nil
+	}
+
+	d.logger.Info("cache deployment created")
+
+	return nil
+}
+
+func (d *deployer) createOrUpdateService() error {
+	labels := map[string]string{
+		"app": d.name,
+	}
+
+	desiredService := MakeService(d.name, d.namespace, 9979 /* TODO: make constant */, labels)
+
+	_, err := d.kube.CoreV1().Services(d.namespace).Create(desiredService)
 	// update on already exists err
 	if err != nil {
 		if !kubeerrutils.IsAlreadyExists(err) {
 			return err
 		}
-		existing, err := d.kube.AppsV1().DaemonSets(d.namespace).Get(desiredDaemonSet.Name, metav1.GetOptions{})
+		existing, err := d.kube.CoreV1().Services(d.namespace).Get(desiredService.Name, metav1.GetOptions{})
 		if err != nil {
-			return errors.Wrap(err, "failed to get existing cache daemonset")
+			return errors.Wrap(err, "failed to get existing cache service")
 		}
 
 		// TODO: how will this handle immutable fields?
-		existing.Spec = desiredDaemonSet.Spec
+		existing.Spec = desiredService.Spec
 
-		_, err = d.kube.AppsV1().DaemonSets(d.namespace).Update(existing)
+		_, err = d.kube.CoreV1().Services(d.namespace).Update(existing)
 		if err != nil {
 			return err
 		}
 
-		d.logger.Info("cache daemonset updated")
-
+		d.logger.Info("cache service updated")
 		return nil
 	}
 
-	d.logger.Info("cache daemonset created")
+	d.logger.Info("cache service created")
 
 	return nil
 }
@@ -302,14 +339,14 @@ func MakeRbac(name, namespace string) (*rbacv1.Role, *rbacv1.RoleBinding) {
 	return role, roleBinding
 }
 
-func MakeDaemonSet(name, namespace, image string, labels map[string]string, args []string, pullPolicy v1.PullPolicy) *appsv1.DaemonSet {
-	hostPathType := v1.HostPathDirectoryOrCreate
-	return &appsv1.DaemonSet{
+func MakeDeployment(name, namespace, image string, labels map[string]string, args []string, pullPolicy v1.PullPolicy) *appsv1.Deployment {
+	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
+			Labels:    labels,
 		},
-		Spec: appsv1.DaemonSetSpec{
+		Spec: appsv1.DeploymentSpec{
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
@@ -319,48 +356,11 @@ func MakeDaemonSet(name, namespace, image string, labels map[string]string, args
 				},
 				Spec: v1.PodSpec{
 					ServiceAccountName: name,
-					Volumes: []v1.Volume{
-						{
-							Name: "cache-dir",
-							VolumeSource: v1.VolumeSource{
-								HostPath: &v1.HostPathVolumeSource{
-									Path: "/var/local/lib/wasme-cache",
-									Type: &hostPathType,
-								},
-							},
-						},
-						{
-							Name: "config",
-							VolumeSource: v1.VolumeSource{
-								ConfigMap: &v1.ConfigMapVolumeSource{
-									LocalObjectReference: v1.LocalObjectReference{
-										Name: name,
-									},
-									Items: []v1.KeyToPath{
-										{
-											Key:  "images",
-											Path: "images.txt",
-										},
-									},
-								},
-							},
-						},
-					},
 					Containers: []v1.Container{{
 						Name:            name,
 						Image:           image,
 						ImagePullPolicy: pullPolicy,
 						Args:            args,
-						VolumeMounts: []v1.VolumeMount{
-							{
-								MountPath: "/var/local/lib/wasme-cache",
-								Name:      "cache-dir",
-							},
-							{
-								MountPath: "/etc/wasme-cache",
-								Name:      "config",
-							},
-						},
 						Resources: v1.ResourceRequirements{
 							Limits: v1.ResourceList{
 								v1.ResourceMemory: resource.MustParse("256Mi"),
@@ -374,6 +374,22 @@ func MakeDaemonSet(name, namespace, image string, labels map[string]string, args
 					}},
 				},
 			},
+		},
+	}
+}
+
+func MakeService(name, namespace string, port int, labels map[string]string) *v1.Service {
+	return &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+			Labels:    labels,
+		},
+		Spec: v1.ServiceSpec{
+			Selector: labels,
+			Ports: []v1.ServicePort{{
+				Port: int32(port),
+			}},
 		},
 	}
 }

@@ -124,8 +124,12 @@ Note: currently only Istio 1.5.x is supported.
 		opts.istioOpts.addToFlags,
 		opts.cacheOpts.addToFlags,
 	)
+	opts.addDryRunToFlags(cmd.PersistentFlags())
 
 	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		if opts.dryRun {
+			return nil
+		}
 		cacheDeployer := cachedeployment.NewDeployer(
 			helpers.MustKubeClient(),
 			opts.cacheOpts.namespace,
