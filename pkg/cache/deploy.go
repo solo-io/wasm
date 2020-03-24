@@ -80,9 +80,6 @@ func (d *deployer) EnsureCache() error {
 	if err := d.createNamespaceIfNotExist(); err != nil {
 		return errors.Wrap(err, "ensuring namespace")
 	}
-	if err := d.createConfigMapIfNotExist(); err != nil {
-		return errors.Wrap(err, "ensuring configmap")
-	}
 
 	if err := d.createServiceAccountIfNotExist(); err != nil {
 		return errors.Wrap(err, "ensuring service acct")
@@ -128,28 +125,6 @@ func (d *deployer) createNamespaceIfNotExist() error {
 	}
 	d.logger.Info("cache namespace created")
 	return nil
-}
-
-func (d *deployer) createConfigMapIfNotExist() error {
-	_, err := d.kube.CoreV1().ConfigMaps(d.namespace).Create(&v1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      d.name,
-			Namespace: d.namespace,
-		},
-		Data: map[string]string{
-			ImagesKey: "",
-		},
-	})
-	// ignore already exists err
-	if err != nil {
-		if kubeerrutils.IsAlreadyExists(err) {
-			d.logger.Info("cache configmap already exists")
-			return nil
-		}
-		return err
-	}
-	d.logger.Info("cache configmap created")
-	return err
 }
 
 func (d *deployer) createServiceAccountIfNotExist() error {

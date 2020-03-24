@@ -16,7 +16,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/go-utils/protoutils"
-	"github.com/solo-io/wasme/pkg/cache"
 	envoyfilter "github.com/solo-io/wasme/pkg/deploy/filter"
 	"github.com/solo-io/wasme/pkg/pull"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
@@ -194,124 +193,6 @@ func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image
 	return nil
 }
 
-// updates the deployed wasme-cache configmap
-// if configmap does not exist (cache not deployed), this will error
-func (p *Provider) addImageToCacheConfigMap(image string) error {
-	cm, err := p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
-	if err != nil {
-		return err
-	}
-
-	logger := logrus.WithFields(logrus.Fields{
-		"cache": p.Cache,
-		"image": image,
-	})
-
-	if cm.Data == nil {
-		cm.Data = map[string]string{}
-	}
-
-	images := strings.Split(cm.Data[cache.ImagesKey], "\n")
-
-	for _, existingImage := range images {
-		if image == existingImage {
-			logger.Info("image is already cached")
-			// already exists
-			return nil
-		}
-	}
-
-	images = append(images, image)
-
-	cm.Data[cache.ImagesKey] = strings.Trim(strings.Join(images, "\n"), "\n")
-
-	_, err = p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Update(cm)
-	if err != nil {
-		return err
-	}
-
-	logger.Info("added image to cache config...")
-
-	if err := p.waitForCacheEvents(image); err != nil {
-		return errors.Wrapf(err, "waiting for cache to publish event for image")
-	}
-
-	if err := p.cleanupCacheEvents(image); err != nil {
-		return errors.Wrapf(err, "cleaning up cache events for image")
-	}
-
-	return nil
-
-}
-
-// we want to see a cache event for each cache instance, with each ref
-// we can mark the events as processed after receiving
-func (p *Provider) waitForCacheEvents(image string) error {
-
-	if p.WaitForCacheTimeout == 0 {
-		logrus.Infof("skipping cache events wait")
-		return nil
-	}
-
-	timeout := time.After(p.WaitForCacheTimeout)
-	interval := time.Tick(time.Second)
-
-	logrus.Infof("waiting for event with timeout %v", p.WaitForCacheTimeout)
-
-	cacheDaemonset, err := p.KubeClient.AppsV1().DaemonSets(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
-	if err != nil {
-		return errors.Wrapf(err, "getting daemonset for cache %v", p.Cache)
-	}
-
-	var eventsErr error
-	for {
-		select {
-		case <-timeout:
-			return errors.Errorf("timed out after %s (last err: %v)", p.WaitForCacheTimeout, eventsErr)
-		case <-interval:
-			events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
-			if err != nil {
-				return errors.Wrapf(err, "getting events for image %v", image)
-			}
-			// expect an event for each cache instance
-			var successEvents int32
-
-			for _, evt := range events {
-				if evt.Reason == cache.Reason_ImageError {
-					logrus.Warnf("event %v was in Error state: %+v", evt.Name, evt)
-					continue
-				}
-				successEvents++
-			}
-
-			if successEvents != cacheDaemonset.Status.NumberReady {
-				eventsErr = errors.Errorf("expected %v image-ready events for image %v, only found %v", cacheDaemonset.Status.NumberReady, image, successEvents)
-				logrus.Warnf("event err: %v", eventsErr)
-				continue
-			}
-
-			logrus.Debugf("ACK all events for image %v", image)
-			return nil
-		}
-	}
-}
-
-func (p *Provider) cleanupCacheEvents(image string) error {
-	logrus.Infof("cleaning up cache events for image %v", image)
-	events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
-	if err != nil {
-		return errors.Wrapf(err, "getting events for image %v", image)
-	}
-
-	for _, event := range events {
-		if err := p.KubeClient.CoreV1().Events(event.Namespace).Delete(event.Name, nil); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // runs a function on the workload pod template spec
 // selects all workloads in a namespace if workload.Name == ""
 func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error) error {
@@ -329,7 +210,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 			}
 		}
 	case WorkloadTypeDaemonSet:
-		workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{
+		workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(metav1.ListOptions{
 			LabelSelector: labels.SelectorFromSet(p.Workload.Labels).String(),
 		})
 		if err != nil {

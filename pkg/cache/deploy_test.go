@@ -65,7 +65,7 @@ var _ = Describe("Deploy", func() {
 		}
 	})
 	AfterEach(func() {
-		kube.AppsV1().DaemonSets(cacheNamespace).Delete(CacheName, nil)
+		kube.AppsV1().Deployments(cacheNamespace).Delete(CacheName, nil)
 		kube.CoreV1().ConfigMaps(cacheNamespace).Delete(CacheName, nil)
 		kube.CoreV1().Namespaces().Delete(cacheNamespace, nil)
 	})
@@ -82,7 +82,7 @@ var _ = Describe("Deploy", func() {
 		cm, err := kube.CoreV1().ConfigMaps(cacheNamespace).Get(CacheName, v1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
-		_, err = kube.AppsV1().DaemonSets(cacheNamespace).Get(CacheName, v1.GetOptions{})
+		_, err = kube.AppsV1().Deployments(cacheNamespace).Get(CacheName, v1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
 		if !useRealKube {
@@ -95,7 +95,7 @@ var _ = Describe("Deploy", func() {
 
 		// eventually pods should be ready
 		Eventually(func() (int32, error) {
-			cacheDaemonSet, err := kube.AppsV1().DaemonSets(cacheNamespace).Get(CacheName, v1.GetOptions{})
+			cacheDaemonSet, err := kube.AppsV1().Deployments(cacheNamespace).Get(CacheName, v1.GetOptions{})
 			if err != nil {
 				return 0, err
 			}
