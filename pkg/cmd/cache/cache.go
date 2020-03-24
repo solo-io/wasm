@@ -62,7 +62,7 @@ func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Comma
 	cmd.Flags().StringVarP(&opts.directory, "directory", "", "", "directory to write the refs we need to cache")
 	cmd.Flags().StringVarP(&opts.refFile, "ref-file", "", "", "file to watch for images we need to cache.")
 	cmd.Flags().BoolVarP(&opts.clearCache, "clear-cache", "", false, "clear any files from the cache dir on boot")
-	cmd.Flags().BoolVarP(&opts.kubeOpts.disableKube, "disable-kube", "", true, "disable sending events to kubernetes when images are pulled successfully")
+	cmd.Flags().BoolVarP(&opts.kubeOpts.disableKube, "disable-kube", "", false, "disable sending events to kubernetes when images are pulled successfully")
 	cmd.Flags().StringVarP(&opts.kubeOpts.cacheNamespace, "cache-ns", "", cache.CacheNamespace, "namespace where the cache is running, if kube integration is enabled")
 	cmd.Flags().StringVarP(&opts.kubeOpts.cacheName, "cache-name", "", cache.CacheName, "name of the cache configmap")
 	return cmd

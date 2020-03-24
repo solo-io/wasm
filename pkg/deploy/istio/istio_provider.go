@@ -144,6 +144,10 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 		}).Warnf("no ABI Version found for image, skipping ABI version check")
 	}
 
+	if err := p.addImageToCacheConfigMap(filter.Image); err != nil {
+		return errors.Wrap(err, "adding image to cache")
+	}
+
 	err = p.forEachWorkload(func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
 		err := p.applyFilterToWorkload(filter, image, meta, spec)
 		if p.OnWorkload != nil {
@@ -160,6 +164,7 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 
 // applies the filter to the target workload: adds annotations and creates the EnvoyFilter CR
 func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
+	p.setAnnotations(spec)
 	labels := spec.Labels
 	workloadName := meta.Name
 
@@ -167,6 +172,8 @@ func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image
 		"filter":   filter,
 		"workload": workloadName,
 	})
+
+	logger.Info("updated workload sidecar annotations")
 
 	istioEnvoyFilter, err := p.makeIstioEnvoyFilter(
 		filter,
@@ -191,6 +198,124 @@ func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image
 	return nil
 }
 
+// updates the deployed wasme-cache configmap
+// if configmap does not exist (cache not deployed), this will error
+func (p *Provider) addImageToCacheConfigMap(image string) error {
+	cm, err := p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	logger := logrus.WithFields(logrus.Fields{
+		"cache": p.Cache,
+		"image": image,
+	})
+
+	if cm.Data == nil {
+		cm.Data = map[string]string{}
+	}
+
+	images := strings.Split(cm.Data[cache.ImagesKey], "\n")
+
+	for _, existingImage := range images {
+		if image == existingImage {
+			logger.Info("image is already cached")
+			// already exists
+			return nil
+		}
+	}
+
+	images = append(images, image)
+
+	cm.Data[cache.ImagesKey] = strings.Trim(strings.Join(images, "\n"), "\n")
+
+	_, err = p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Update(cm)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("added image to cache config...")
+
+	if err := p.waitForCacheEvents(image); err != nil {
+		return errors.Wrapf(err, "waiting for cache to publish event for image")
+	}
+
+	if err := p.cleanupCacheEvents(image); err != nil {
+		return errors.Wrapf(err, "cleaning up cache events for image")
+	}
+
+	return nil
+
+}
+
+// we want to see a cache event for each cache instance, with each ref
+// we can mark the events as processed after receiving
+func (p *Provider) waitForCacheEvents(image string) error {
+
+	if p.WaitForCacheTimeout == 0 {
+		logrus.Infof("skipping cache events wait")
+		return nil
+	}
+
+	timeout := time.After(p.WaitForCacheTimeout)
+	interval := time.Tick(time.Second)
+
+	logrus.Infof("waiting for event with timeout %v", p.WaitForCacheTimeout)
+
+	cacheDaemonset, err := p.KubeClient.AppsV1().DaemonSets(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
+	if err != nil {
+		return errors.Wrapf(err, "getting daemonset for cache %v", p.Cache)
+	}
+
+	var eventsErr error
+	for {
+		select {
+		case <-timeout:
+			return errors.Errorf("timed out after %s (last err: %v)", p.WaitForCacheTimeout, eventsErr)
+		case <-interval:
+			events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
+			if err != nil {
+				return errors.Wrapf(err, "getting events for image %v", image)
+			}
+			// expect an event for each cache instance
+			var successEvents int32
+
+			for _, evt := range events {
+				if evt.Reason == cache.Reason_ImageError {
+					logrus.Warnf("event %v was in Error state: %+v", evt.Name, evt)
+					continue
+				}
+				successEvents++
+			}
+
+			if successEvents != cacheDaemonset.Status.NumberReady {
+				eventsErr = errors.Errorf("expected %v image-ready events for image %v, only found %v", cacheDaemonset.Status.NumberReady, image, successEvents)
+				logrus.Warnf("event err: %v", eventsErr)
+				continue
+			}
+
+			logrus.Debugf("ACK all events for image %v", image)
+			return nil
+		}
+	}
+}
+
+func (p *Provider) cleanupCacheEvents(image string) error {
+	logrus.Infof("cleaning up cache events for image %v", image)
+	events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
+	if err != nil {
+		return errors.Wrapf(err, "getting events for image %v", image)
+	}
+
+	for _, event := range events {
+		if err := p.KubeClient.CoreV1().Events(event.Namespace).Delete(event.Name, nil); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // runs a function on the workload pod template spec
 // selects all workloads in a namespace if workload.Name == ""
 func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error) error {
@@ -206,6 +331,10 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
+
+			if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
+				return err
+			}
 		}
 	case WorkloadTypeDaemonSet:
 		workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{
@@ -218,6 +347,10 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
+
+			if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
+				return err
+			}
 		}
 	default:
 		return errors.Errorf("unknown workload type %v, must be %v or %v", p.Workload.Kind, WorkloadTypeDeployment, WorkloadTypeDaemonSet)
@@ -225,6 +358,20 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 
 	return nil
 
+}
+
+// set sidecar annotations on the workload
+func (p *Provider) setAnnotations(template *corev1.PodTemplateSpec) {
+	if template.Annotations == nil {
+		template.Annotations = map[string]string{}
+	}
+	for k, v := range requiredSidecarAnnotations() {
+		// create backups of the existing annotations if they exist
+		if currentVal, ok := template.Annotations[k]; ok {
+			template.Annotations[backupAnnotationPrefix+k] = currentVal
+		}
+		template.Annotations[k] = v
+	}
 }
 
 // construct Istio EnvoyFilter Custom Resource
@@ -323,6 +470,25 @@ func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
 	err := p.forEachWorkload(func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
 		// collect the name of the workload so we can delete its filter
 		workloads = append(workloads, meta.Name)
+
+		logger := logger.WithFields(logrus.Fields{
+			"workload": meta.Name,
+		})
+
+		for k := range requiredSidecarAnnotations() {
+			delete(spec.Annotations, k)
+		}
+		logger.Info("removing sidecar annotations from workload")
+
+		// restore backup annotations
+		for k, v := range spec.Annotations {
+			if strings.HasPrefix(backupAnnotationPrefix, k) {
+				key := strings.TrimPrefix(k, backupAnnotationPrefix)
+				spec.Annotations[key] = v
+				delete(spec.Annotations, key)
+			}
+		}
+
 		return nil
 	})
 	if err != nil {
