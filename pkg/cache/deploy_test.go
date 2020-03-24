@@ -99,7 +99,7 @@ var _ = Describe("Deploy", func() {
 			if err != nil {
 				return 0, err
 			}
-			return cacheDaemonSet.Status.NumberReady, nil
+			return cacheDaemonSet.Status.ReadyReplicas, nil
 		}, time.Second*30).Should(Equal(int32(1)))
 
 		// test that cache event is fired after updating the config
