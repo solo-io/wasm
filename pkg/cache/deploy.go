@@ -278,6 +278,7 @@ func MakeRbac(name, namespace string) (*rbacv1.Role, *rbacv1.RoleBinding) {
 }
 
 func MakeDeployment(name, namespace, image string, labels map[string]string, args []string, pullPolicy v1.PullPolicy) *appsv1.Deployment {
+	hostPathType := v1.HostPathDirectoryOrCreate
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
