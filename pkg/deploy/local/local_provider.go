@@ -116,7 +116,7 @@ func (p *Runner) RunFilter(filter *v1.FilterSpec) error {
 		"--rm",
 		"--name", filter.Id,
 		"--entrypoint", "envoy",
-		"-v", filterDir + ":" + filterDir,
+		"-v", filterDir + ":" + filterDir + ":ro",
 	}, p.DockerRunArgs...)
 
 	for _, port := range ports {
@@ -249,7 +249,7 @@ func addFilterToListeners(filter *v1.FilterSpec, listeners []*envoy_api_v2.Liste
 	})
 }
 
-const DefaultEnvoyImage = "quay.io/solo-io/gloo-envoy-wasm-wrapper:1.3.5"
+const DefaultEnvoyImage = "docker.io/istio/proxyv2:1.5.1"
 
 const BasicEnvoyConfig = `
 admin:
