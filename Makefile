@@ -39,7 +39,7 @@ mod-download:
 install-deps: mod-download
 	go get -u github.com/cratonica/2goarray
 	go get -u github.com/gogo/protobuf@v1.3.1
-	go get -v istio.io/tools/cmd/protoc-gen-jsonshimm
+	go get -v istio.io/tools/cmd/protoc-gen-jsonshim@0992797992b07379922475ec17e6b2a98299ef91
 	go get -v github.com/gogo/protobuf/protoc-gen-gogo@v1.3.1
 	go get -v github.com/golang/protobuf/protoc-gen-go@v1.3.5
 	go get -v github.com/solo-io/protoc-gen-ext@v0.0.7
