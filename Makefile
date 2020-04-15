@@ -38,12 +38,12 @@ mod-download:
 .PHONY: install-deps
 install-deps: mod-download
 	go get -u github.com/cratonica/2goarray
-	go get -u github.com/gogo/protobuf
-	go get -v istio.io/tools/cmd/protoc-gen-jsonshim
-	go get -v github.com/gogo/protobuf/protoc-gen-gogo
+	go get -u github.com/gogo/protobuf@v1.3.1
+	go get -v istio.io/tools/cmd/protoc-gen-jsonshimm@v0.0.0-20200414140130-90db7d74fac2
+	go get -v github.com/gogo/protobuf/protoc-gen-gogo@v1.3.1
 	go get -v github.com/golang/protobuf/protoc-gen-go@v1.3.5
-	go get -u github.com/solo-io/protoc-gen-ext
-	go get -v github.com/golang/mock/mockgen
+	go get -v github.com/solo-io/protoc-gen-ext@v0.0.7
+	go get -v github.com/golang/mock/mockgen@v1.4.3
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
 .PHONY: generated-code
