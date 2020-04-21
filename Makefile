@@ -44,6 +44,7 @@ install-deps: mod-download
 	go get -v github.com/golang/protobuf/protoc-gen-go@v1.3.5
 	go get -v github.com/solo-io/protoc-gen-ext@v0.0.7
 	go get -v github.com/golang/mock/mockgen@v1.4.3
+	go get -v github.com/solo-io/autopilot@v0.0.0-wasme-compatible
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
 .PHONY: generated-code
