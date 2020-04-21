@@ -25,8 +25,10 @@ require (
 	github.com/golang/protobuf v1.3.3
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/karrick/godirwalk v1.14.1 // indirect
+	github.com/lyft/protoc-gen-validate v0.1.0 // indirect
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mitchellh/reflectwalk v1.0.1 // indirect
+	github.com/mwitkow/go-proto-validators v0.3.0 // indirect
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
@@ -36,7 +38,7 @@ require (
 	github.com/pseudomuto/protokit v0.2.0
 	github.com/rogpeppe/go-internal v1.5.2 // indirect
 	github.com/sirupsen/logrus v1.4.2
-	github.com/solo-io/autopilot v0.1.1-0.20200410202616-c54a3e5490bb
+	github.com/solo-io/autopilot v0.1.1-0.20200211163026-f295a102fd94
 	github.com/solo-io/gloo v1.3.1
 	github.com/solo-io/go-utils v0.11.7
 	github.com/solo-io/protoc-gen-ext v0.0.7
@@ -49,6 +51,7 @@ require (
 	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 // indirect
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
+	istio.io/tools v0.0.0-20200214155848-b0036b2c2d76 // indirect
 	k8s.io/api v0.17.2
 	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v11.0.0+incompatible
