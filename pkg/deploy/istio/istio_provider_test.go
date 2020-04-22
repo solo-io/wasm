@@ -65,9 +65,7 @@ var _ = Describe("IstioProvider", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		mgr, c := aptest.ManagerWithOpts(cfg, manager.Options{
-			Namespace:               ns,
-			LeaderElection:          true,
-			LeaderElectionNamespace: ns,
+			Namespace: ns,
 		})
 		cancel = c
 
