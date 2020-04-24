@@ -59,7 +59,8 @@ make wasme-image -B
 make wasme-image -B | sed -nE 's|Successfully tagged (.*$)|\1|p' | while read f; do kind load docker-image --name $cluster $f; done
 
 istioctl manifest apply --set profile=minimal
-kubectl create ns gloo-system; helm install --version 1.3.20 --namespace gloo-system --set global.wasm.enabled=true gloo gloo/gloo
+kubectl create ns gloo-system
+helm install --namespace gloo-system --set global.wasm.enabled=true gloo https://storage.googleapis.com/solo-public-helm/charts/gloo-1.3.20.tgz
 
 kubectl apply -f https://raw.githubusercontent.com/solo-io/gloo/master/example/petstore/petstore.yaml
 cat <<EOF | kubectl apply -f -
