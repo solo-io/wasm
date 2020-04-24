@@ -38,7 +38,7 @@ jobs:
         go mod vendor
     - name: Setup env
       env:
-        KUBECTL: ${{ steps.kubectl.output.kubectl-path }}
+        KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
       run: |
         curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
         curl -sSL https://github.com/istio/istio/releases/download/1.5.1/istio-1.5.1-linux.tar.gz | tar -xzf - istio-1.5.1/bin/istioctl
@@ -48,7 +48,7 @@ jobs:
         ./ci/setup-kind.sh
     - name: Testing
       env:
-        KUBECTL: ${{ steps.kubectl.output.kubectl-path }}
+        KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
         FILTER_IMAGE_TAG=localhost:5000/test:v1 ginkgo -r -v test/e2e/build/
