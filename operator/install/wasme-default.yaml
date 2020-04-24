@@ -5,19 +5,6 @@ kind: Namespace
 metadata:
   name: wasme
 ---
-# Source: Wasme Operator/templates/configmap.yaml
-# ConfigMap wasme-cache
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  labels:
-    app: wasme-cache
-    configmap: wasme-cache
-  name: wasme-cache
-  namespace: wasme
-data:
-  images: ""
----
 # Source: Wasme Operator/templates/deployment.yaml
 # Service account for wasme-operator
 
@@ -39,6 +26,19 @@ metadata:
     app: wasme-cache
   name: wasme-cache
   namespace: wasme
+---
+# Source: Wasme Operator/templates/configmap.yaml
+# ConfigMap wasme-cache
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: wasme-cache
+    configmap: wasme-cache
+  name: wasme-cache
+  namespace: wasme
+data:
+  images: ""
 ---
 # Source: Wasme Operator/templates/rbac.yaml
 kind: ClusterRole
@@ -198,7 +198,7 @@ spec:
           name: cache-dir
         - mountPath: /etc/wasme-cache
           name: config
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: wasme-cache
         resources:
           limits:
@@ -243,7 +243,7 @@ spec:
         args:
         - operator
         - --log-level=debug
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: wasme-operator
         resources:
           requests:
