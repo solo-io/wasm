@@ -102,7 +102,7 @@ func makeImage() model.Image {
 		Registry:   registry,
 		Repository: "wasme",
 		Tag:        version.Version,
-		PullPolicy: v1.PullAlways,
+		PullPolicy: v1.PullIfNotPresent,
 	}
 }
 

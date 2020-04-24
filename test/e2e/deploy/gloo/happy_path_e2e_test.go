@@ -2,7 +2,9 @@ package gloo_test
 
 import (
 	"bytes"
+	"context"
 	"log"
+	"os/exec"
 	"strings"
 	"time"
 
@@ -43,8 +45,9 @@ var _ = Describe("wasme deploy gloo", func() {
 		err := test.WasmeCli("deploy", "gloo", imageName, "--id", "myfilter", "--config", "world")
 		Expect(err).NotTo(HaveOccurred())
 
-		gatewayAddr, err := util.ExecOutput(nil, "kubectl", "get", "svc", "-n", "gloo-system", "gateway-proxy", "-o", "jsonpath={.status.loadBalancer.ingress[*].ip}")
-		Expect(err).NotTo(HaveOccurred())
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		exec.CommandContext(ctx, "kubectl", "proxy").Start()
 
 		testRequest := func() (string, error) {
 			b := &bytes.Buffer{}
@@ -54,7 +57,7 @@ var _ = Describe("wasme deploy gloo", func() {
 				nil,
 				"curl",
 				"-v",
-				"http://"+gatewayAddr+"/api/pets")
+				"http://localhost:8001/api/v1/namespaces/gloo-system/services/gateway-proxy:http/proxy/api/pets")
 
 			out := b.String()
 
@@ -62,13 +65,15 @@ var _ = Describe("wasme deploy gloo", func() {
 		}
 
 		// expect header in response
-		Eventually(testRequest, time.Minute*5).Should(ContainSubstring("hello: world"))
+		// note that header key is capital case as this goes through Kube api
+		const addedHeader = "Hello: world"
+		Eventually(testRequest, time.Minute*5).Should(ContainSubstring(addedHeader))
 
 		err = test.WasmeCli("undeploy", "gloo", "--id", "myfilter")
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
-		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring("hello: world"))
+		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring(addedHeader))
 	})
 })
 

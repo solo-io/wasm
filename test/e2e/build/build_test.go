@@ -4,12 +4,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/solo-io/wasme/pkg/consts"
-
 	"github.com/solo-io/autopilot/codegen/util"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/solo-io/wasme/pkg/consts"
 	"github.com/solo-io/wasme/test"
 )
 
@@ -21,9 +20,10 @@ var _ = Describe("Build", func() {
 
 		err := test.RunMake("generated-code")
 		Expect(err).NotTo(HaveOccurred())
-
-		err = test.WasmeCliSplit("login -u " + username + " -p " + password + " -s " + consts.HubDomain)
-		Expect(err).NotTo(HaveOccurred())
+		if password != "" {
+			err = test.WasmeCliSplit("login -u " + username + " -p " + password + " -s " + consts.HubDomain)
+			Expect(err).NotTo(HaveOccurred())
+		}
 
 		err = test.WasmeCliSplit("init test-filter --platform istio --platform-version 1.5.x --language assemblyscript")
 		Expect(err).NotTo(HaveOccurred())
