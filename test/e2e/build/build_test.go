@@ -15,8 +15,8 @@ import (
 var _ = Describe("Build", func() {
 	It("builds and pushes the image", func() {
 		imageName := test.GetImageTag()
-		username := test.GetEnv("WASME_LOGIN_USERNAME")
-		password := test.GetEnv("WASME_LOGIN_PASSWORD")
+		username := os.Getenv("WASME_LOGIN_USERNAME")
+		password := os.Getenv("WASME_LOGIN_PASSWORD")
 
 		err := test.RunMake("generated-code")
 		Expect(err).NotTo(HaveOccurred())
