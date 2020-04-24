@@ -85,16 +85,13 @@ EOF
 
 kubectl -n istio-system rollout status deployment istiod
 kubectl -n gloo-system rollout status deployment gloo
+kubectl -n gloo-system rollout status deployment gateway
+kubectl -n gloo-system rollout status deployment discovery
+kubectl -n gloo-system rollout status deployment gateway-proxy
+kubectl -n default rollout status deployment petstore
 
 kubectl label namespace default istio-injection=enabled
 # setup local registry
 docker run -d -p 5000:5000 --name registry registry:2
 
 echo setup success
-
-
-# echo context to tests if they watch us
-# dont change this line without changing StartEnv in test/e2e/env.go
-if [ -e /proc/self/fd/3 ]; then
-  echo kind-$cluster >&3
-fi
