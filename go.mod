@@ -8,19 +8,16 @@ require (
 	github.com/deislabs/oras v0.7.0
 	github.com/docker/cli v0.0.0-20191017083524-a8ff7f821017
 	github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker v1.13.1 // indirect
-	github.com/elazarl/goproxy v0.0.0-20190421051319-9d40249d3c2f // indirect
-	github.com/elazarl/goproxy/ext v0.0.0-20190421051319-9d40249d3c2f // indirect
-	github.com/envoyproxy/go-control-plane v0.9.1
+	github.com/envoyproxy/go-control-plane v0.9.6-0.20200401235947-be7fefdaf0df
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/mock v1.4.0
+	github.com/golang/mock v1.4.4-0.20200406172829-6d816de489c1
 	github.com/golang/protobuf v1.3.3
 	github.com/hashicorp/go-multierror v1.0.0
+	github.com/kisielk/godepgraph v0.0.0-20190626013829-57a7e4a651a9 // indirect
 	github.com/manifoldco/promptui v0.7.0
-	github.com/mitchellh/reflectwalk v1.0.1 // indirect
-	github.com/onsi/ginkgo v1.11.0
+	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.8.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
@@ -28,25 +25,22 @@ require (
 	github.com/pseudomuto/protoc-gen-doc v1.3.0
 	github.com/pseudomuto/protokit v0.2.0
 	github.com/sirupsen/logrus v1.4.2
-	github.com/solo-io/autopilot v0.1.1-0.20200211163026-f295a102fd94
-	github.com/solo-io/gloo v1.3.1
-	github.com/solo-io/go-utils v0.11.7
+	github.com/solo-io/gloo v1.3.22
+	github.com/solo-io/go-utils v0.15.2
 	github.com/solo-io/protoc-gen-ext v0.0.7
-	github.com/solo-io/solo-kit v0.12.2
+	github.com/solo-io/skv2 v0.0.5
+	github.com/solo-io/solo-kit v0.13.5
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
-	golang.org/x/crypto v0.0.0-20200128174031-69ecbb4d6d5d // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
-	golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 // indirect
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
-	k8s.io/api v0.17.1
-	k8s.io/apimachinery v0.17.1
+	k8s.io/api v0.17.2
+	k8s.io/apimachinery v0.17.2
 	k8s.io/client-go v11.0.0+incompatible
-	k8s.io/code-generator v0.17.1
-	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f // indirect
-	sigs.k8s.io/controller-runtime v0.4.0
+	k8s.io/code-generator v0.17.2
+	sigs.k8s.io/controller-runtime v0.5.1
 )
 
 // Pinned to kubernetes-1.16.2
@@ -54,6 +48,7 @@ replace (
 	// copypaste from Gloo
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.0.0+incompatible
 	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
+	github.com/solo-io/go-utils => github.com/solo-io/go-utils v0.14.1
 
 	k8s.io/api => k8s.io/api v0.0.0-20191004120104-195af9ec3521
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20191204090712-e0e829f17bab

@@ -8,7 +8,7 @@ import (
 	"github.com/solo-io/wasme/pkg/deploy/local"
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/solo-io/autopilot/pkg/ezkube"
+	"github.com/solo-io/skv2/pkg/ezkube"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
