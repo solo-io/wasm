@@ -10,8 +10,7 @@ import (
 
 	"github.com/onsi/ginkgo"
 
-	"github.com/solo-io/autopilot/cli/pkg/utils"
-	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/skv2/codegen/util"
 	"github.com/solo-io/wasme/pkg/cmd"
 )
 
@@ -40,11 +39,11 @@ func RunMake(target string, opts ...func(*exec.Cmd)) error {
 }
 
 func ApplyFile(file, ns string) error {
-	return WithManifest(file, ns, utils.KubectlApply)
+	return WithManifest(file, ns, util.KubectlApply)
 }
 
 func DeleteFile(file, ns string) error {
-	return WithManifest(file, ns, utils.KubectlDelete)
+	return WithManifest(file, ns, util.KubectlDelete)
 }
 
 // execute a callback for a manifest relative to the root of the project

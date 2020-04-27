@@ -14,19 +14,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/skv2/codegen/util"
 
 	"github.com/solo-io/wasme/test"
 
 	"github.com/pkg/errors"
-	"github.com/solo-io/autopilot/codegen/model"
-	"github.com/solo-io/autopilot/codegen/render"
+	"github.com/solo-io/skv2/codegen/model"
+	"github.com/solo-io/skv2/codegen/render"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/autopilot/cli/pkg/utils"
 )
 
 var filterDeploymentName = "myfilter"
@@ -84,9 +83,9 @@ var _ = BeforeSuite(func() {
 	err = waitNamespaceTerminated(ns, time.Minute)
 	Expect(err).NotTo(HaveOccurred())
 
-	utils.Kubectl(nil, "create", "ns", ns)
+	util.Kubectl(nil, "create", "ns", ns)
 
-	err = utils.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
+	err = util.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
 	Expect(err).NotTo(HaveOccurred())
 
 	err = test.ApplyFile("operator/install/wasme/crds/wasme.io_v1_crds.yaml", "")
@@ -132,14 +131,14 @@ var _ = AfterSuite(func() {
 	if err := test.DeleteFile("operator/install/wasme-default.yaml", ""); err != nil {
 		log.Printf("failed deleting file: %v", err)
 	}
-	if err := utils.Kubectl(nil, "delete", "ns", ns); err != nil {
+	if err := util.Kubectl(nil, "delete", "ns", ns); err != nil {
 		log.Printf("failed deleting ns: %v", err)
 	}
 })
 
 // Test Order matters here.
 // Do not randomize ginkgo specs when running, if the build & push test is enabled
-var _ = Describe("AutopilotGenerate", func() {
+var _ = Describe("skv2Generate", func() {
 	It("runs the wasme operator", func() {
 		filterFile := "test/e2e/operator/test_filter.yaml"
 
@@ -150,7 +149,7 @@ var _ = Describe("AutopilotGenerate", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		testRequest := func() (string, error) {
-			out, err := utils.KubectlOut(nil,
+			out, err := util.KubectlOut(nil,
 				"exec",
 				"-n", ns,
 				"deploy/productpage-v1",
@@ -200,7 +199,7 @@ func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
 		case <-timedOut:
 			return errors.Errorf("timed out after %s", timeout)
 		default:
-			out, err := utils.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
+			out, err := util.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
 			if err != nil {
 				return err
 			}
@@ -219,7 +218,7 @@ func waitNamespaceTerminated(namespace string, timeout time.Duration) error {
 		case <-timedOut:
 			return errors.Errorf("timed out after %s", timeout)
 		default:
-			_, err := utils.KubectlOut(nil, "get", "namespace", namespace)
+			_, err := util.KubectlOut(nil, "get", "namespace", namespace)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
 					return nil

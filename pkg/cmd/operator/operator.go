@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/go-utils/contextutils"
+	"github.com/solo-io/skv2/pkg/ezkube"
 	cachedeployment "github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/deploy/istio"
 	"github.com/solo-io/wasme/pkg/operator"
@@ -83,10 +83,7 @@ func runOperator(ctx context.Context, opts operatorOpts) error {
 	}
 
 	// create controller
-	ctl, err := controller.NewFilterDeploymentController("wasme", mgr)
-	if err != nil {
-		return err
-	}
+	ctl := controller.NewFilterDeploymentEventWatcher("wasme", mgr)
 
 	// kube client
 	kubeClient, err := kubernetes.NewForConfig(cfg)

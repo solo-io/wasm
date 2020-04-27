@@ -6,7 +6,7 @@ import (
 
 	"github.com/solo-io/wasme/pkg/consts"
 
-	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/skv2/codegen/util"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -6,8 +6,8 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/solo-io/autopilot/codegen"
-	"github.com/solo-io/autopilot/codegen/model"
+	"github.com/solo-io/skv2/codegen"
+	"github.com/solo-io/skv2/codegen/model"
 	"github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/version"
 	v1 "k8s.io/api/core/v1"
@@ -33,10 +33,14 @@ func main() {
 					{
 						Kind: "FilterDeployment",
 						Spec: model.Field{
-							Type: "FilterDeploymentSpec",
+							Type: model.Type{
+								Name: "FilterDeploymentSpec",
+							},
 						},
 						Status: &model.Field{
-							Type: "FilterDeploymentStatus",
+							Type: model.Type{
+								Name: "FilterDeploymentStatus",
+							},
 						},
 					},
 				},

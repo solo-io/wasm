@@ -144,7 +144,9 @@ func init() {
 	proto.RegisterType((*EnvoyConfig)(nil), "module.wasm.config.EnvoyConfig")
 }
 
-func init() { proto.RegisterFile("runtime.proto", fileDescriptor_86e2dd377c869464) }
+func init() {
+	proto.RegisterFile("runtime.proto", fileDescriptor_86e2dd377c869464)
+}
 
 var fileDescriptor_86e2dd377c869464 = []byte{
 	// 180 bytes of a gzipped FileDescriptorProto
