@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	skutil "github.com/solo-io/skv2/codegen/util"
 	"github.com/solo-io/wasme/pkg/util"
 
 	"github.com/solo-io/wasme/test"
@@ -15,7 +16,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
-	"github.com/solo-io/autopilot/cli/pkg/utils"
 )
 
 // use a namespace as a "cluster lock"
@@ -26,12 +26,12 @@ var _ = BeforeSuite(func() {
 	err := waitNamespaceTerminated(ns, time.Minute)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = utils.Kubectl(nil, "create", "ns", ns)
+	err = skutil.Kubectl(nil, "create", "ns", ns)
 	Expect(err).NotTo(HaveOccurred())
 })
 
 var _ = AfterSuite(func() {
-	if err := utils.Kubectl(nil, "delete", "ns", ns); err != nil {
+	if err := skutil.Kubectl(nil, "delete", "ns", ns); err != nil {
 		log.Printf("failed deleting ns: %v", err)
 	}
 })
@@ -84,7 +84,7 @@ func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
 		case <-timedOut:
 			return errors.Errorf("timed out after %s", timeout)
 		default:
-			out, err := utils.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
+			out, err := skutil.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
 			if err != nil {
 				return err
 			}
@@ -103,7 +103,7 @@ func waitNamespaceTerminated(namespace string, timeout time.Duration) error {
 		case <-timedOut:
 			return errors.Errorf("timed out after %s", timeout)
 		default:
-			_, err := utils.KubectlOut(nil, "get", "namespace", namespace)
+			_, err := skutil.KubectlOut(nil, "get", "namespace", namespace)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
 					return nil
