@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("Build", func() {
 	It("builds and pushes the image", func() {
-		imageName := test.GetImageTag()
+		imageName := test.GetBuildImageTag()
 		username := os.Getenv("WASME_LOGIN_USERNAME")
 		password := os.Getenv("WASME_LOGIN_PASSWORD")
 

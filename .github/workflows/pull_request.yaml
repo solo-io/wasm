@@ -51,7 +51,7 @@ jobs:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
-        FILTER_IMAGE_TAG=localhost:5000/test:v1 ginkgo -r -v test/e2e/build/
-        FILTER_IMAGE_TAG=yuval-test.solo.io/ilackarms/test-image:v0.0.1 ginkgo -r -v test/e2e/deploy
-        FILTER_IMAGE_TAG=yuval-test.solo.io/ilackarms/test-image:v0.0.1 ginkgo -r -v test/e2e/operator
+        export FILTER_IMAGE_TAG=yuval-test.solo.io/ilackarms/test-image:v0.0.1
+        export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
+        make run-tests
 
