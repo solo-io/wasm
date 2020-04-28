@@ -56,15 +56,10 @@ jobs:
         export FILTER_IMAGE_TAG=yuval-test.solo.io/ilackarms/test-image:v0.0.1
         export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
         make run-tests
-
-  release:
-    name: release
-    runs-on: ubuntu-18.04
-    needs: test
-    if: success() && github.event.release.tag_name
-    steps:
     - name: Release
+      if: github.event.release.tag_name
       env:
+        KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
         QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
       run: |
         docker login quay.io --username "solo-io+solobot" --password $QUAY_IO_PASSWORD

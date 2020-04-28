@@ -7,8 +7,8 @@ import (
 	"os/exec"
 	"time"
 
+	skutil "github.com/solo-io/skv2/codegen/util"
 	"github.com/solo-io/wasme/pkg/util"
-
 	"github.com/solo-io/wasme/test"
 
 	. "github.com/onsi/ginkgo"
