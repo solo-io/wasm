@@ -80,10 +80,7 @@ var _ = BeforeSuite(func() {
 	err := test.RunMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
-	// ensure no collision between tests
-	err = waitNamespaceTerminated(ns, time.Minute)
-	Expect(err).NotTo(HaveOccurred())
-
+	// ns may exist, so dont check for error
 	util.Kubectl(nil, "create", "ns", ns)
 
 	err = util.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
