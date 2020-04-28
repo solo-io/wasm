@@ -5,9 +5,11 @@ on:
     branches:
     - 'master'
   pull_request: {}
+  release:
+    types: [published]
 
 jobs:
-  e2e:
+  test:
     name: end-to-end
     runs-on: ubuntu-18.04
     steps:
@@ -33,9 +35,6 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-    - name: Vendor
-      run: |
-        go mod vendor
     - name: Setup env
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
@@ -49,9 +48,22 @@ jobs:
     - name: Testing
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
+        TAGGED_VERSION: ${{github.event.release.tag_name || "" }}
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
         export FILTER_IMAGE_TAG=yuval-test.solo.io/ilackarms/test-image:v0.0.1
         export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
         make run-tests
 
+  release:
+    runs-on: ubuntu-18.04
+    needs: test
+    if: success() && github.event.release.tag_name
+    steps:
+    - name: Release
+      env:
+        TAGGED_VERSION: ${{github.event.release.tag_name}}
+        QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
+      run: |
+        docker login quay.io --username "solo-io+solobot" --password $QUAY_IO_PASSWORD
+        make build-images operator-gen manifest-gen publish-images upload-github-release-assets publish-docs
