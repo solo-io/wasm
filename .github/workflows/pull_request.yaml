@@ -64,3 +64,10 @@ jobs:
       run: |
         docker login quay.io --username "solo-io+solobot" --password $QUAY_IO_PASSWORD
         make build-images operator-gen manifest-gen publish-images upload-github-release-assets publish-docs
+    - name: Debug Info
+      if: failure()
+      env:
+        KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
+      run: |
+        # see what's in the cluster if we failed
+        kubectl get all -A
