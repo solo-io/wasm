@@ -90,7 +90,10 @@ kubectl -n gloo-system-test rollout status deployment discovery
 kubectl -n gloo-system-test rollout status deployment gateway-proxy
 kubectl -n default rollout status deployment petstore
 
-kubectl label namespace default istio-injection=enabled
+# not sure why, creating it during the test doesn't work for istio,
+# so create it here.
+kubectl create namespace bookinfo
+kubectl label namespace bookinfo istio-injection=enabled
 # setup local registry
 docker run -d -p 5000:5000 --name registry registry:2
 
