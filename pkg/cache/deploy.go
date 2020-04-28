@@ -4,7 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/go-utils/kubeerrutils"
-	"github.com/solo-io/wasme/pkg/defaults"
+	"github.com/solo-io/wasme/pkg/consts"
 	"github.com/solo-io/wasme/pkg/version"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -244,7 +244,7 @@ func (d *deployer) createOrUpdateService() error {
 		"app": d.name,
 	}
 
-	desiredService := MakeService(d.name, d.namespace, defaults.CachePort, labels)
+	desiredService := MakeService(d.name, d.namespace, consts.CachePort, labels)
 
 	_, err := d.kube.CoreV1().Services(d.namespace).Create(desiredService)
 	// update on already exists err

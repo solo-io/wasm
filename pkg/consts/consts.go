@@ -10,3 +10,7 @@ var (
 		return "webassemblyhub.io"
 	}()
 )
+
+const (
+	CachePort = 9979
+)

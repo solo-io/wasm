@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	"github.com/solo-io/wasme/pkg/cache"
+	"github.com/solo-io/wasme/pkg/consts"
 
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/defaults"
@@ -56,7 +57,7 @@ func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Comma
 		Hidden: true,
 	}
 
-	cmd.Flags().IntVarP(&opts.port, "port", "", defaults.CachePort, "port")
+	cmd.Flags().IntVarP(&opts.port, "port", "", consts.CachePort, "port")
 	cmd.Flags().StringVarP(&opts.directory, "directory", "", "", "directory to write the refs we need to cache")
 	cmd.Flags().StringVarP(&opts.refFile, "ref-file", "", "", "file to watch for images we need to cache.")
 	cmd.Flags().BoolVarP(&opts.clearCache, "clear-cache", "", false, "clear any files from the cache dir on boot")
