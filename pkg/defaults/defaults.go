@@ -18,6 +18,10 @@ func NewDefaultCache(opts *opts.AuthOptions) cache.Cache {
 	return cache.NewCache(puller)
 }
 
+const (
+	CachePort = 9979
+)
+
 var (
 	WasmeConfigDir       = home() + "/.wasme"
 	WasmeImageDir        = filepath.Join(WasmeConfigDir, "store")

@@ -9,6 +9,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/solo-io/wasme/pkg/abi"
+	"github.com/solo-io/wasme/pkg/defaults"
 
 	"github.com/solo-io/skv2/pkg/ezkube"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
@@ -210,7 +211,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 			}
 		}
 	case WorkloadTypeDaemonSet:
-		workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(metav1.ListOptions{
+		workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{
 			LabelSelector: labels.SelectorFromSet(p.Workload.Labels).String(),
 		})
 		if err != nil {
@@ -321,7 +322,7 @@ func (p *Provider) makeClusterFilter() *v1alpha3.EnvoyFilter {
 					SocketAddress: &envoy_api_v2_core.SocketAddress{
 						Address: p.Cache.Name + "." + p.Cache.Namespace + ".svc.cluster.local", // do we need the suffix svc.cluster.local?
 						PortSpecifier: &envoy_api_v2_core.SocketAddress_PortValue{
-							PortValue: 9979,
+							PortValue: defaults.CachePort,
 						},
 					},
 				},

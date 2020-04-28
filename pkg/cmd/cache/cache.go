@@ -56,7 +56,7 @@ func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Comma
 		Hidden: true,
 	}
 
-	cmd.Flags().IntVarP(&opts.port, "port", "", 9979, "port")
+	cmd.Flags().IntVarP(&opts.port, "port", "", defaults.CachePort, "port")
 	cmd.Flags().StringVarP(&opts.directory, "directory", "", "", "directory to write the refs we need to cache")
 	cmd.Flags().StringVarP(&opts.refFile, "ref-file", "", "", "file to watch for images we need to cache.")
 	cmd.Flags().BoolVarP(&opts.clearCache, "clear-cache", "", false, "clear any files from the cache dir on boot")

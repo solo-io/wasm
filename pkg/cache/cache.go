@@ -128,6 +128,9 @@ func (c *CacheImpl) Get(ctx context.Context, digest digest.Digest) (model.Filter
 }
 
 func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	// we support two paths:
+	// /<HASH> - used in gloo
+	// /image-name - used here to cache on demand
 	_, file := path.Split(r.URL.Path)
 	switch {
 	case len(file) == hex.EncodedLen(crypto.SHA256.Size()):

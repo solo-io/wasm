@@ -4,6 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/go-utils/kubeerrutils"
+	"github.com/solo-io/wasme/pkg/defaults"
 	"github.com/solo-io/wasme/pkg/version"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
@@ -210,7 +211,7 @@ func (d *deployer) createOrUpdateDeployment() error {
 	desiredDeployment := MakeDeployment(d.name, d.namespace, d.image, labels, d.args, d.pullPolicy)
 
 	_, err := d.kube.AppsV1().Deployments(d.namespace).Create(desiredDeployment)
-	// update don already exists err
+	// update on already exists err
 	if err != nil {
 		if !kubeerrutils.IsAlreadyExists(err) {
 			return err
@@ -243,7 +244,7 @@ func (d *deployer) createOrUpdateService() error {
 		"app": d.name,
 	}
 
-	desiredService := MakeService(d.name, d.namespace, 9979 /* TODO: make constant */, labels)
+	desiredService := MakeService(d.name, d.namespace, defaults.CachePort, labels)
 
 	_, err := d.kube.CoreV1().Services(d.namespace).Create(desiredService)
 	// update on already exists err
