@@ -68,7 +68,7 @@ func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Comma
 
 func runCache(ctx context.Context, opts cacheOptions) error {
 
-	imageCache := defaults.NewDefaultCache()
+	imageCache := defaults.NewDefaultCache(opts.AuthOptions)
 	for _, image := range opts.targetRefs {
 		digest, err := imageCache.Add(context.TODO(), image)
 		if err != nil {

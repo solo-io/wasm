@@ -38,7 +38,7 @@ metadata:
   namespace: wasme
 data:
   images: ""
----
+--- 
 # Source: Wasme Operator/templates/rbac.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -193,7 +193,7 @@ spec:
         args:
         - operator
         - --log-level=debug
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: wasme-operator
         resources:
           requests:
@@ -234,7 +234,7 @@ spec:
       - image: quay.io/solo-io/wasme:dev
         args:
         - cache
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         name: wasme-cache
         resources:
           limits:

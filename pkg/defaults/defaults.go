@@ -5,13 +5,14 @@ import (
 	"path/filepath"
 
 	"github.com/solo-io/wasme/pkg/cache"
+	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/pull"
 	"github.com/solo-io/wasme/pkg/resolver"
 )
 
-func NewDefaultCache() cache.Cache {
-	// cache doesn't need authorizer as it doesn't push
-	resolver, _ := resolver.NewResolver("", "", true, false)
+func NewDefaultCache(opts *opts.AuthOptions) cache.Cache {
+	// Pull command from a private registry still needs authorizer
+	resolver, _ := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.CredentialsFiles...)
 	puller := pull.NewPuller(resolver)
 
 	return cache.NewCache(puller)

@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Use a more recent envoy for local deploy.
+    issueLink: https://github.com/solo-io/wasme/issues/107

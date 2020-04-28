@@ -9,8 +9,8 @@ import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/autopilot/pkg/ezkube"
-	mock_ezkube "github.com/solo-io/autopilot/pkg/ezkube/mocks"
+	"github.com/solo-io/skv2/pkg/ezkube"
+	mock_ezkube "github.com/solo-io/skv2/pkg/ezkube/mocks"
 	"github.com/solo-io/wasme/pkg/deploy"
 	"github.com/solo-io/wasme/pkg/deploy/istio"
 	mock_deploy "github.com/solo-io/wasme/pkg/deploy/mocks"
@@ -106,11 +106,11 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 		}))
 	}
 	It("handles create event", func() {
-		applyTest(handler.Create)
+		applyTest(handler.CreateFilterDeployment)
 	})
 	It("handles update event", func() {
 		applyTest(func(obj *v1.FilterDeployment) error {
-			return handler.Update(nil, obj)
+			return handler.UpdateFilterDeployment(nil, obj)
 		})
 	})
 	It("handles delete event", func() {
@@ -118,7 +118,7 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 		client.EXPECT().Get(gomock.Any(), gomock.Any()).Return(nil)
 		client.EXPECT().UpdateStatus(gomock.Any(), gomock.Any()).Return(nil)
 
-		err := handler.Delete(filterDeployment)
+		err := handler.DeleteFilterDeployment(filterDeployment)
 		Expect(err).NotTo(HaveOccurred())
 
 		updated := client.updatedObjStatus

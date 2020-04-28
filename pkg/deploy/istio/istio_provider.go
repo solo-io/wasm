@@ -10,7 +10,7 @@ import (
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/solo-io/wasme/pkg/abi"
 
-	"github.com/solo-io/autopilot/pkg/ezkube"
+	"github.com/solo-io/skv2/pkg/ezkube"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 
 	"github.com/pkg/errors"

@@ -9,7 +9,7 @@ import (
 	"github.com/solo-io/wasme/pkg/consts"
 
 	"github.com/golang/mock/gomock"
-	mock_ezkube "github.com/solo-io/autopilot/pkg/ezkube/mocks"
+	mock_ezkube "github.com/solo-io/skv2/pkg/ezkube/mocks"
 
 	"github.com/solo-io/wasme/pkg/resolver"
 
@@ -17,10 +17,10 @@ import (
 	"github.com/solo-io/wasme/pkg/model"
 	"github.com/solo-io/wasme/pkg/pull"
 
-	"github.com/solo-io/autopilot/pkg/ezkube"
-	aptest "github.com/solo-io/autopilot/test"
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/randutils"
+	"github.com/solo-io/skv2/pkg/ezkube"
+	aptest "github.com/solo-io/skv2/test"
 	wasmev1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -65,9 +65,7 @@ var _ = Describe("IstioProvider", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		mgr, c := aptest.ManagerWithOpts(cfg, manager.Options{
-			Namespace:               ns,
-			LeaderElection:          true,
-			LeaderElectionNamespace: ns,
+			Namespace: ns,
 		})
 		cancel = c
 

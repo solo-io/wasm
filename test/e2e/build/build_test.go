@@ -4,26 +4,26 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/solo-io/wasme/pkg/consts"
-
-	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/skv2/codegen/util"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/solo-io/wasme/pkg/consts"
 	"github.com/solo-io/wasme/test"
 )
 
 var _ = Describe("Build", func() {
 	It("builds and pushes the image", func() {
-		imageName := test.GetImageTag()
-		username := test.GetEnv("WASME_LOGIN_USERNAME")
-		password := test.GetEnv("WASME_LOGIN_PASSWORD")
+		imageName := test.GetBuildImageTag()
+		username := os.Getenv("WASME_LOGIN_USERNAME")
+		password := os.Getenv("WASME_LOGIN_PASSWORD")
 
 		err := test.RunMake("generated-code")
 		Expect(err).NotTo(HaveOccurred())
-
-		err = test.WasmeCliSplit("login -u " + username + " -p " + password + " -s " + consts.HubDomain)
-		Expect(err).NotTo(HaveOccurred())
+		if password != "" {
+			err = test.WasmeCliSplit("login -u " + username + " -p " + password + " -s " + consts.HubDomain)
+			Expect(err).NotTo(HaveOccurred())
+		}
 
 		err = test.WasmeCliSplit("init test-filter --platform istio --platform-version 1.5.x --language assemblyscript")
 		Expect(err).NotTo(HaveOccurred())

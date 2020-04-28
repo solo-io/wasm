@@ -2,6 +2,7 @@ package operator_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -14,19 +15,18 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/skv2/codegen/util"
 
 	"github.com/solo-io/wasme/test"
 
 	"github.com/pkg/errors"
-	"github.com/solo-io/autopilot/codegen/model"
-	"github.com/solo-io/autopilot/codegen/render"
+	"github.com/solo-io/skv2/codegen/model"
+	"github.com/solo-io/skv2/codegen/render"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/solo-io/autopilot/cli/pkg/utils"
 )
 
 var filterDeploymentName = "myfilter"
@@ -80,13 +80,10 @@ var _ = BeforeSuite(func() {
 	err := test.RunMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
-	// ensure no collision between tests
-	err = waitNamespaceTerminated(ns, time.Minute)
-	Expect(err).NotTo(HaveOccurred())
+	// ns may exist, so dont check for error
+	util.Kubectl(nil, "create", "ns", ns)
 
-	utils.Kubectl(nil, "create", "ns", ns)
-
-	err = utils.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
+	err = util.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
 	Expect(err).NotTo(HaveOccurred())
 
 	err = test.ApplyFile("operator/install/wasme/crds/wasme.io_v1_crds.yaml", "")
@@ -100,7 +97,7 @@ var _ = BeforeSuite(func() {
 	err = test.ApplyFile("test/e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = waitDeploymentReady("productpage", ns, time.Minute*2)
+	err = waitDeploymentReady("productpage", ns, time.Minute*3)
 	Expect(err).NotTo(HaveOccurred())
 })
 
@@ -132,14 +129,14 @@ var _ = AfterSuite(func() {
 	if err := test.DeleteFile("operator/install/wasme-default.yaml", ""); err != nil {
 		log.Printf("failed deleting file: %v", err)
 	}
-	if err := utils.Kubectl(nil, "delete", "ns", ns); err != nil {
+	if err := util.Kubectl(nil, "delete", "ns", ns); err != nil {
 		log.Printf("failed deleting ns: %v", err)
 	}
 })
 
 // Test Order matters here.
 // Do not randomize ginkgo specs when running, if the build & push test is enabled
-var _ = Describe("AutopilotGenerate", func() {
+var _ = Describe("skv2Generate", func() {
 	It("runs the wasme operator", func() {
 		filterFile := "test/e2e/operator/test_filter.yaml"
 
@@ -150,7 +147,7 @@ var _ = Describe("AutopilotGenerate", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		testRequest := func() (string, error) {
-			out, err := utils.KubectlOut(nil,
+			out, err := util.KubectlOut(nil,
 				"exec",
 				"-n", ns,
 				"deploy/productpage-v1",
@@ -198,9 +195,19 @@ func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
 	for {
 		select {
 		case <-timedOut:
+			// get some debug info:
+			out, _ := util.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
+			fmt.Println(GinkgoWriter, "waiting for deployment: pod status", string(out))
+			out, _ = util.KubectlOut(nil, "describe", "pod", "-n", namespace, "-l", "app="+name)
+			fmt.Println(GinkgoWriter, "describe: ", string(out))
+			out, _ = util.KubectlOut(nil, "logs", "pod", "-n", namespace, "--all-containers=true", "-l", "app="+name)
+			fmt.Println(GinkgoWriter, "logs: ", string(out))
+			out, _ = util.KubectlOut(nil, "logs", "pod", "-n", "istio-system", "--all-containers=true", "-l", "istio=pilot")
+			fmt.Println(GinkgoWriter, "istio logs: ", string(out))
+
 			return errors.Errorf("timed out after %s", timeout)
 		default:
-			out, err := utils.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
+			out, err := util.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
 			if err != nil {
 				return err
 			}
@@ -219,7 +226,7 @@ func waitNamespaceTerminated(namespace string, timeout time.Duration) error {
 		case <-timedOut:
 			return errors.Errorf("timed out after %s", timeout)
 		default:
-			_, err := utils.KubectlOut(nil, "get", "namespace", namespace)
+			_, err := util.KubectlOut(nil, "get", "namespace", namespace)
 			if err != nil {
 				if strings.Contains(err.Error(), "not found") {
 					return nil
