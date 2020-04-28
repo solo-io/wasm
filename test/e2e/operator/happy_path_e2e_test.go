@@ -100,7 +100,7 @@ var _ = BeforeSuite(func() {
 	err = test.ApplyFile("test/e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = waitDeploymentReady("productpage", ns, time.Minute*5)
+	err = waitDeploymentReady("productpage", ns, time.Minute*3)
 	Expect(err).NotTo(HaveOccurred())
 })
 
@@ -205,6 +205,8 @@ func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
 			fmt.Println(GinkgoWriter, "describe: ", string(out))
 			out, _ = util.KubectlOut(nil, "logs", "pod", "-n", namespace, "--all-containers=true", "-l", "app="+name)
 			fmt.Println(GinkgoWriter, "logs: ", string(out))
+			out, _ = util.KubectlOut(nil, "logs", "pod", "-n", "istio-system", "--all-containers=true", "-l", "istio=pilot")
+			fmt.Println(GinkgoWriter, "istio logs: ", string(out))
 
 			return errors.Errorf("timed out after %s", timeout)
 		default:
