@@ -3,12 +3,8 @@ module github.com/solo-io/wasme
 go 1.13
 
 require (
-	cuelang.org/go v0.0.14 // indirect
-	fortio.org/fortio v1.3.1 // indirect
 	github.com/avast/retry-go v2.4.3+incompatible
 	github.com/containerd/containerd v1.3.0
-	github.com/coreos/go-systemd/v22 v22.0.0 // indirect
-	github.com/cratonica/2goarray v0.0.0-20190331194516-514510793eaa // indirect
 	github.com/deislabs/oras v0.7.0
 	github.com/docker/cli v0.0.0-20191017083524-a8ff7f821017
 	github.com/docker/distribution v2.7.1+incompatible
@@ -17,7 +13,6 @@ require (
 	github.com/elazarl/goproxy/ext v0.0.0-20190421051319-9d40249d3c2f // indirect
 	github.com/envoyproxy/go-control-plane v0.9.6-0.20200401235947-be7fefdaf0df
 	github.com/envoyproxy/protoc-gen-validate v0.1.0
-	github.com/gertd/go-pluralize v0.1.1 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/go-openapi/validate v0.19.5 // indirect
 	github.com/gogo/protobuf v1.3.1
@@ -36,7 +31,6 @@ require (
 	github.com/pkg/errors v0.8.1
 	github.com/pseudomuto/protoc-gen-doc v1.3.0
 	github.com/pseudomuto/protokit v0.2.0
-	github.com/rogpeppe/go-internal v1.5.2 // indirect
 	github.com/sirupsen/logrus v1.4.2
 	github.com/solo-io/gloo v1.3.5
 	github.com/solo-io/go-utils v0.15.2
