@@ -131,6 +131,7 @@ run-tests:
 		-gcflags=$(GCFLAGS) \
 		-progress \
 		-compilers=4 \
+		-v \
 		-skipPackage=$(SKIP_PACKAGES) $(TEST_PKG)
 
 #----------------------------------------------------------------------------------

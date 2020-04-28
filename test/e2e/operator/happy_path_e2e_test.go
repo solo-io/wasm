@@ -2,6 +2,7 @@ package operator_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -99,7 +100,7 @@ var _ = BeforeSuite(func() {
 	err = test.ApplyFile("test/e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = waitDeploymentReady("productpage", ns, time.Minute*2)
+	err = waitDeploymentReady("productpage", ns, time.Minute*5)
 	Expect(err).NotTo(HaveOccurred())
 })
 
@@ -203,6 +204,7 @@ func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
 			if err != nil {
 				return err
 			}
+			fmt.Println(GinkgoWriter, "waiting for deployment: pod status", string(out))
 			if strings.Contains(out, "Running") && strings.Contains(out, "2/2") {
 				return nil
 			}
