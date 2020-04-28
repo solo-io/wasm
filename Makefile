@@ -37,14 +37,17 @@ mod-download:
 
 .PHONY: install-deps
 install-deps: mod-download
-	go get -u github.com/cratonica/2goarray
-	go get -u github.com/gogo/protobuf@v1.3.1
-	go get -v istio.io/tools/cmd/protoc-gen-jsonshim@0992797992b07379922475ec17e6b2a98299ef91
+	go get -v istio.io/tools/cmd/protoc-gen-jsonshim@v0.0.0-20200414140130-90db7d74fac2
 	go get -v github.com/gogo/protobuf/protoc-gen-gogo@v1.3.1
+	# github.com/golang/protobuf pinned to 1.3.5 else docs/generate_reference_docs.go proto.Unmarshal panics
 	go get -v github.com/golang/protobuf/protoc-gen-go@v1.3.5
 	go get -v github.com/solo-io/protoc-gen-ext@v0.0.7
 	go get -v github.com/golang/mock/mockgen@v1.4.3
-	go get -v github.com/solo-io/autopilot@v0.0.0-wasme-compatible
+	go get -v golang.org/x/tools/cmd/goimports@v0.0.0-20200414131530-0037cb7812fa
+	go get -v github.com/cratonica/2goarray
+	go mod tidy
+
+
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
 .PHONY: generated-code
@@ -123,7 +126,7 @@ builder-image-push:
 # set TEST_PKG to run a specific test package
 .PHONY: run-tests
 run-tests:
-	ginkgo -r -failFast -trace -progress \
+	ginkgo -v -r -failFast -trace -progress \
 		-ldflags=$(LDFLAGS) \
 		-gcflags=$(GCFLAGS) \
 		-progress \

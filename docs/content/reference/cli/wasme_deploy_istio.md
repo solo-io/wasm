@@ -13,13 +13,13 @@ Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).
 wasme uses the EnvoyFilter Istio Custom Resource to pull and run wasm filters.
 wasme deploys a server-side cache component which runs in cluster and pulls filter images.
 
-If --name is not provided, all deployments in the targeted namespace will attach the filter.
+If --labels is not provided, all deployments in the targeted namespace will attach the filter.
 
 Note: currently only Istio 1.5.x is supported.
 
 
 ```
-wasme deploy istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--name deployment-name] [flags]
+wasme deploy istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [flags]
 ```
 
 ### Options

@@ -4,15 +4,17 @@ import (
 	"context"
 	"time"
 
-	"github.com/solo-io/autopilot/pkg/ezkube"
 	"github.com/solo-io/go-utils/contextutils"
+	"github.com/solo-io/skv2/pkg/ezkube"
 	cachedeployment "github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/deploy/istio"
 	"github.com/solo-io/wasme/pkg/operator"
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1/controller"
 	"github.com/solo-io/wasme/pkg/version"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"golang.org/x/sync/errgroup"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	zaputil "sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -81,12 +83,12 @@ func runOperator(ctx context.Context, opts operatorOpts) error {
 	if err != nil {
 		return err
 	}
-
-	// create controller
-	ctl, err := controller.NewFilterDeploymentController("wasme", mgr)
-	if err != nil {
+	// add CRDs to scheme
+	if err := v1.AddToScheme(mgr.GetScheme()); err != nil {
 		return err
 	}
+	// create controller
+	ctl := controller.NewFilterDeploymentEventWatcher("wasme", mgr)
 
 	// kube client
 	kubeClient, err := kubernetes.NewForConfig(cfg)
@@ -106,11 +108,12 @@ func runOperator(ctx context.Context, opts operatorOpts) error {
 		opts.cacheTimeout,
 	)
 
-	// register the handler to the controller
-	if err := ctl.AddEventHandler(ctx, handler); err != nil {
-		return err
-	}
-
-	// start the manager
-	return mgr.Start(ctx.Done())
+	eg := &errgroup.Group{}
+	eg.Go(func() error {
+		return ctl.AddEventHandler(ctx, handler)
+	})
+	eg.Go(func() error {
+		return mgr.Start(ctx.Done())
+	})
+	return eg.Wait()
 }

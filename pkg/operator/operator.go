@@ -8,7 +8,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/pkg/errors"
-	"github.com/solo-io/autopilot/pkg/ezkube"
+	"github.com/solo-io/skv2/pkg/ezkube"
 	"github.com/solo-io/wasme/pkg/deploy/istio"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1/controller"
@@ -42,20 +42,20 @@ func NewFilterDeploymentHandler(ctx context.Context, kubeClient kubernetes.Inter
 	return &filterDeploymentHandler{ctx: ctx, kubeClient: kubeClient, client: client, cache: cache, cacheTimeout: cacheTimeout}
 }
 
-func (f *filterDeploymentHandler) Create(obj *v1.FilterDeployment) error {
+func (f *filterDeploymentHandler) CreateFilterDeployment(obj *v1.FilterDeployment) error {
 	return f.deploy(obj)
 }
 
-func (f *filterDeploymentHandler) Update(_, obj *v1.FilterDeployment) error {
+func (f *filterDeploymentHandler) UpdateFilterDeployment(_, obj *v1.FilterDeployment) error {
 	return f.deploy(obj)
 }
 
-func (f *filterDeploymentHandler) Delete(obj *v1.FilterDeployment) error {
+func (f *filterDeploymentHandler) DeleteFilterDeployment(obj *v1.FilterDeployment) error {
 	//for _, dep := range
 	return f.undeploy(obj)
 }
 
-func (f *filterDeploymentHandler) Generic(obj *v1.FilterDeployment) error {
+func (f *filterDeploymentHandler) GenericFilterDeployment(obj *v1.FilterDeployment) error {
 	// should never be called
 	panic("not implemented")
 }

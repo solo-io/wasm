@@ -16,7 +16,7 @@ import (
 	"github.com/pkg/errors"
 	gendoc "github.com/pseudomuto/protoc-gen-doc"
 	"github.com/pseudomuto/protokit"
-	"github.com/solo-io/autopilot/codegen/util"
+	"github.com/solo-io/skv2/codegen/util"
 	"github.com/solo-io/solo-kit/pkg/code-generator/collector"
 
 	"github.com/solo-io/wasme/pkg/cmd"
