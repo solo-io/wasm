@@ -126,12 +126,11 @@ builder-image-push:
 # set TEST_PKG to run a specific test package
 .PHONY: run-tests
 run-tests:
-	ginkgo -r -failFast -trace -progress \
+	ginkgo -v -r -failFast -trace -progress \
 		-ldflags=$(LDFLAGS) \
 		-gcflags=$(GCFLAGS) \
 		-progress \
 		-compilers=4 \
-		-v \
 		-skipPackage=$(SKIP_PACKAGES) $(TEST_PKG)
 
 #----------------------------------------------------------------------------------
