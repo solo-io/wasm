@@ -21,6 +21,7 @@ var _ = AfterSuite(func() {
 	if err := skutil.Kubectl(nil, "delete", "ns", "gloo-system-test"); err != nil {
 		log.Printf("failed deleting ns: %v", err)
 	}
+	skutil.Kubectl(nil, "delete", "deploy", "-n", "default", "petstore")
 })
 
 // Test Order matters here.
