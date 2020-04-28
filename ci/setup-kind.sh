@@ -59,8 +59,8 @@ make wasme-image -B
 make wasme-image -B | sed -nE 's|Successfully tagged (.*$)|\1|p' | while read f; do kind load docker-image --name $cluster $f; done
 
 istioctl manifest apply --set profile=minimal
-kubectl create ns gloo-system
-helm install --namespace gloo-system --set global.wasm.enabled=true gloo https://storage.googleapis.com/solo-public-helm/charts/gloo-1.3.20.tgz
+kubectl create ns gloo-system-test
+helm install --namespace gloo-system-test --set global.wasm.enabled=true gloo https://storage.googleapis.com/solo-public-helm/charts/gloo-1.3.20.tgz
 
 kubectl apply -f https://raw.githubusercontent.com/solo-io/gloo/master/example/petstore/petstore.yaml
 cat <<EOF | kubectl apply -f -
@@ -68,7 +68,7 @@ apiVersion: gateway.solo.io/v1
 kind: VirtualService
 metadata:
   name: default
-  namespace: gloo-system
+  namespace: gloo-system-test
 spec:
   virtualHost:
     domains:
@@ -80,14 +80,14 @@ spec:
         single:
           upstream:
             name: default-petstore-8080
-            namespace: gloo-system
+            namespace: gloo-system-test
 EOF
 
 kubectl -n istio-system rollout status deployment istiod
-kubectl -n gloo-system rollout status deployment gloo
-kubectl -n gloo-system rollout status deployment gateway
-kubectl -n gloo-system rollout status deployment discovery
-kubectl -n gloo-system rollout status deployment gateway-proxy
+kubectl -n gloo-system-test rollout status deployment gloo
+kubectl -n gloo-system-test rollout status deployment gateway
+kubectl -n gloo-system-test rollout status deployment discovery
+kubectl -n gloo-system-test rollout status deployment gateway-proxy
 kubectl -n default rollout status deployment petstore
 
 kubectl label namespace default istio-injection=enabled

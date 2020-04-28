@@ -38,6 +38,7 @@ jobs:
     - name: Setup env
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
+        TAGGED_VERSION: ${{github.event.release.tag_name || "" }}
       run: |
         curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
         curl -sSL https://github.com/istio/istio/releases/download/1.5.1/istio-1.5.1-linux.tar.gz | tar -xzf - istio-1.5.1/bin/istioctl
@@ -48,6 +49,7 @@ jobs:
     - name: Testing
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
+        TAGGED_VERSION: ${{github.event.release.tag_name || "" }}
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
         export FILTER_IMAGE_TAG=yuval-test.solo.io/ilackarms/test-image:v0.0.1
@@ -62,6 +64,7 @@ jobs:
     steps:
     - name: Release
       env:
+        TAGGED_VERSION: ${{github.event.release.tag_name}}
         QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
       run: |
         docker login quay.io --username "solo-io+solobot" --password $QUAY_IO_PASSWORD

@@ -5,10 +5,8 @@ import (
 	"context"
 	"log"
 	"os/exec"
-	"strings"
 	"time"
 
-	skutil "github.com/solo-io/skv2/codegen/util"
 	"github.com/solo-io/wasme/pkg/util"
 
 	"github.com/solo-io/wasme/test"
@@ -18,20 +16,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-// use a namespace as a "cluster lock"
-var ns = "gloo-e2e-happy-path-test-lock"
-
-var _ = BeforeSuite(func() {
-	// ensure no collision between tests
-	err := waitNamespaceTerminated(ns, time.Minute)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = skutil.Kubectl(nil, "create", "ns", ns)
-	Expect(err).NotTo(HaveOccurred())
-})
-
 var _ = AfterSuite(func() {
-	if err := skutil.Kubectl(nil, "delete", "ns", ns); err != nil {
+	// delete gloo-system-test to make room for other things in the cluster
+	if err := skutil.Kubectl(nil, "delete", "ns", "gloo-system-test"); err != nil {
 		log.Printf("failed deleting ns: %v", err)
 	}
 })
@@ -57,7 +44,7 @@ var _ = Describe("wasme deploy gloo", func() {
 				nil,
 				"curl",
 				"-v",
-				"http://localhost:8001/api/v1/namespaces/gloo-system/services/gateway-proxy:http/proxy/api/pets")
+				"http://localhost:8001/api/v1/namespaces/gloo-system-test/services/gateway-proxy:http/proxy/api/pets")
 
 			out := b.String()
 
@@ -76,41 +63,3 @@ var _ = Describe("wasme deploy gloo", func() {
 		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring(addedHeader))
 	})
 })
-
-func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
-	timedOut := time.After(timeout)
-	for {
-		select {
-		case <-timedOut:
-			return errors.Errorf("timed out after %s", timeout)
-		default:
-			out, err := skutil.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
-			if err != nil {
-				return err
-			}
-			if strings.Contains(out, "Running") && strings.Contains(out, "2/2") {
-				return nil
-			}
-			time.Sleep(time.Second * 2)
-		}
-	}
-}
-
-func waitNamespaceTerminated(namespace string, timeout time.Duration) error {
-	timedOut := time.After(timeout)
-	for {
-		select {
-		case <-timedOut:
-			return errors.Errorf("timed out after %s", timeout)
-		default:
-			_, err := skutil.KubectlOut(nil, "get", "namespace", namespace)
-			if err != nil {
-				if strings.Contains(err.Error(), "not found") {
-					return nil
-				}
-				return err
-			}
-			time.Sleep(time.Second * 2)
-		}
-	}
-}
