@@ -201,9 +201,9 @@ func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
 			// get some debug info:
 			out, _ := util.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
 			fmt.Println(GinkgoWriter, "waiting for deployment: pod status", string(out))
-			out, _ := util.KubectlOut(nil, "describe", "pod", "-n", namespace, "-l", "app="+name)
+			out, _ = util.KubectlOut(nil, "describe", "pod", "-n", namespace, "-l", "app="+name)
 			fmt.Println(GinkgoWriter, "describe: ", string(out))
-			out, _ := util.KubectlOut(nil, "logs", "pod", "-n", namespace, "--all-containers=true", "-l", "app="+name)
+			out, _ = util.KubectlOut(nil, "logs", "pod", "-n", namespace, "--all-containers=true", "-l", "app="+name)
 			fmt.Println(GinkgoWriter, "logs: ", string(out))
 
 			return errors.Errorf("timed out after %s", timeout)
