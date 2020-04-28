@@ -2,6 +2,7 @@ package operator_test
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -79,10 +80,7 @@ var _ = BeforeSuite(func() {
 	err := test.RunMake("manifest-gen")
 	Expect(err).NotTo(HaveOccurred())
 
-	// ensure no collision between tests
-	err = waitNamespaceTerminated(ns, time.Minute)
-	Expect(err).NotTo(HaveOccurred())
-
+	// ns may exist, so dont check for error
 	util.Kubectl(nil, "create", "ns", ns)
 
 	err = util.Kubectl(nil, "label", "namespace", ns, "istio-injection=enabled", "--overwrite")
@@ -99,7 +97,7 @@ var _ = BeforeSuite(func() {
 	err = test.ApplyFile("test/e2e/operator/bookinfo.yaml", ns)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = waitDeploymentReady("productpage", ns, time.Minute*2)
+	err = waitDeploymentReady("productpage", ns, time.Minute*3)
 	Expect(err).NotTo(HaveOccurred())
 })
 
@@ -197,6 +195,16 @@ func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
 	for {
 		select {
 		case <-timedOut:
+			// get some debug info:
+			out, _ := util.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
+			fmt.Println(GinkgoWriter, "waiting for deployment: pod status", string(out))
+			out, _ = util.KubectlOut(nil, "describe", "pod", "-n", namespace, "-l", "app="+name)
+			fmt.Println(GinkgoWriter, "describe: ", string(out))
+			out, _ = util.KubectlOut(nil, "logs", "pod", "-n", namespace, "--all-containers=true", "-l", "app="+name)
+			fmt.Println(GinkgoWriter, "logs: ", string(out))
+			out, _ = util.KubectlOut(nil, "logs", "pod", "-n", "istio-system", "--all-containers=true", "-l", "istio=pilot")
+			fmt.Println(GinkgoWriter, "istio logs: ", string(out))
+
 			return errors.Errorf("timed out after %s", timeout)
 		default:
 			out, err := util.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)

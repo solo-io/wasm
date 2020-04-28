@@ -1,7 +1,7 @@
 
 wasmeOperator:
   image:
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     registry: quay.io/solo-io
     repository: wasme
     tag: dev
@@ -11,7 +11,7 @@ wasmeOperator:
       memory: 256Mi
 wasmeCache:
   image:
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
     registry: quay.io/solo-io
     repository: wasme
     tag: dev

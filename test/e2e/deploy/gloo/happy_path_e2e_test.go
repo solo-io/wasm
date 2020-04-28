@@ -2,13 +2,13 @@ package gloo_test
 
 import (
 	"bytes"
+	"context"
 	"log"
-	"strings"
+	"os/exec"
 	"time"
 
 	skutil "github.com/solo-io/skv2/codegen/util"
 	"github.com/solo-io/wasme/pkg/util"
-
 	"github.com/solo-io/wasme/test"
 
 	. "github.com/onsi/ginkgo"
@@ -16,22 +16,12 @@ import (
 	"github.com/pkg/errors"
 )
 
-// use a namespace as a "cluster lock"
-var ns = "gloo-e2e-happy-path-test-lock"
-
-var _ = BeforeSuite(func() {
-	// ensure no collision between tests
-	err := waitNamespaceTerminated(ns, time.Minute)
-	Expect(err).NotTo(HaveOccurred())
-
-	err = skutil.Kubectl(nil, "create", "ns", ns)
-	Expect(err).NotTo(HaveOccurred())
-})
-
 var _ = AfterSuite(func() {
-	if err := skutil.Kubectl(nil, "delete", "ns", ns); err != nil {
+	// delete gloo-system-test to make room for other things in the cluster
+	if err := skutil.Kubectl(nil, "delete", "ns", "gloo-system-test"); err != nil {
 		log.Printf("failed deleting ns: %v", err)
 	}
+	skutil.Kubectl(nil, "delete", "deploy", "-n", "default", "petstore")
 })
 
 // Test Order matters here.
@@ -43,8 +33,9 @@ var _ = Describe("wasme deploy gloo", func() {
 		err := test.WasmeCli("deploy", "gloo", imageName, "--id", "myfilter", "--config", "world")
 		Expect(err).NotTo(HaveOccurred())
 
-		gatewayAddr, err := util.ExecOutput(nil, "kubectl", "get", "svc", "-n", "gloo-system", "gateway-proxy", "-o", "jsonpath={.status.loadBalancer.ingress[*].ip}")
-		Expect(err).NotTo(HaveOccurred())
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		exec.CommandContext(ctx, "kubectl", "proxy").Start()
 
 		testRequest := func() (string, error) {
 			b := &bytes.Buffer{}
@@ -54,7 +45,7 @@ var _ = Describe("wasme deploy gloo", func() {
 				nil,
 				"curl",
 				"-v",
-				"http://"+gatewayAddr+"/api/pets")
+				"http://localhost:8001/api/v1/namespaces/gloo-system-test/services/gateway-proxy:http/proxy/api/pets")
 
 			out := b.String()
 
@@ -62,50 +53,14 @@ var _ = Describe("wasme deploy gloo", func() {
 		}
 
 		// expect header in response
-		Eventually(testRequest, time.Minute*5).Should(ContainSubstring("hello: world"))
+		// note that header key is capital case as this goes through Kube api
+		const addedHeader = "Hello: world"
+		Eventually(testRequest, time.Minute*5).Should(ContainSubstring(addedHeader))
 
 		err = test.WasmeCli("undeploy", "gloo", "--id", "myfilter")
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
-		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring("hello: world"))
+		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring(addedHeader))
 	})
 })
-
-func waitDeploymentReady(name, namespace string, timeout time.Duration) error {
-	timedOut := time.After(timeout)
-	for {
-		select {
-		case <-timedOut:
-			return errors.Errorf("timed out after %s", timeout)
-		default:
-			out, err := skutil.KubectlOut(nil, "get", "pod", "-n", namespace, "-l", "app="+name)
-			if err != nil {
-				return err
-			}
-			if strings.Contains(out, "Running") && strings.Contains(out, "2/2") {
-				return nil
-			}
-			time.Sleep(time.Second * 2)
-		}
-	}
-}
-
-func waitNamespaceTerminated(namespace string, timeout time.Duration) error {
-	timedOut := time.After(timeout)
-	for {
-		select {
-		case <-timedOut:
-			return errors.Errorf("timed out after %s", timeout)
-		default:
-			_, err := skutil.KubectlOut(nil, "get", "namespace", namespace)
-			if err != nil {
-				if strings.Contains(err.Error(), "not found") {
-					return nil
-				}
-				return err
-			}
-			time.Sleep(time.Second * 2)
-		}
-	}
-}

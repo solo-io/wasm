@@ -63,6 +63,9 @@ func WithManifest(file, ns string, do func(manifest []byte, extraArgs ...string)
 func GetImageTag() string {
 	return GetEnv("FILTER_IMAGE_TAG")
 }
+func GetBuildImageTag() string {
+	return GetEnv("FILTER_BUILD_IMAGE_TAG")
+}
 
 func GetEnv(env string) string {
 	val := strings.TrimSpace(os.Getenv(env))
