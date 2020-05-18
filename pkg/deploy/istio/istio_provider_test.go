@@ -75,13 +75,6 @@ var _ = Describe("IstioProvider", func() {
 			Namespace: ns,
 			Name:      "cache-name",
 		}
-		_, err = kube.CoreV1().ConfigMaps(ns).Create(&kubev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: cache.Namespace,
-				Name:      cache.Name,
-			},
-		})
-		Expect(err).NotTo(HaveOccurred())
 
 		deployment, err = kube.AppsV1().Deployments(ns).Create(makeDeployment(workloadName, ns))
 		Expect(err).NotTo(HaveOccurred())
@@ -123,13 +116,6 @@ var _ = Describe("IstioProvider", func() {
 
 		dep, err := kube.AppsV1().Deployments(workload.Namespace).Get(deployment.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
-
-		Expect(dep.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations()))
-
-		cacheConfig, err := kube.CoreV1().ConfigMaps(cache.Namespace).Get(cache.Name, metav1.GetOptions{})
-		Expect(err).NotTo(HaveOccurred())
-
-		Expect(cacheConfig.Data).To(Equal(map[string]string{"images": filter.Image}))
 
 		ef := &istiov1alpha3.EnvoyFilter{
 			ObjectMeta: metav1.ObjectMeta{
@@ -174,12 +160,8 @@ var _ = Describe("IstioProvider", func() {
 		dep1, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep1.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations()))
-
 		dep2, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep2.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
-
-		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations()))
 
 		ef1 := &istiov1alpha3.EnvoyFilter{
 			ObjectMeta: metav1.ObjectMeta{
