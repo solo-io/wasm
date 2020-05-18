@@ -5,10 +5,11 @@ go 1.13
 require (
 	github.com/avast/retry-go v2.4.3+incompatible
 	github.com/containerd/containerd v1.3.0
+	github.com/containerd/fifo v0.0.0-20200410184934-f15a3290365b // indirect
 	github.com/deislabs/oras v0.7.0
 	github.com/docker/cli v0.0.0-20191017083524-a8ff7f821017
 	github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker v1.13.1 // indirect
+	github.com/docker/docker v1.13.1
 	github.com/elazarl/goproxy v0.0.0-20190421051319-9d40249d3c2f // indirect
 	github.com/elazarl/goproxy/ext v0.0.0-20190421051319-9d40249d3c2f // indirect
 	github.com/envoyproxy/go-control-plane v0.9.6-0.20200401235947-be7fefdaf0df

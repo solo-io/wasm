@@ -139,8 +139,8 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 		}).Warnf("no ABI Version found for image, skipping ABI version check")
 	}
 
-	err = p.forEachWorkload(func(meta metav1.ObjectMeta, ObjectMeta,typ metav1.TypeMeta, spec *corev1.PodTemplateSpec) error {
-		err := p.applyFilterToWorkload(filter, image, meta,typ, spec)
+	err = p.forEachWorkload(func(meta metav1.ObjectMeta, typ metav1.TypeMeta, spec *corev1.PodTemplateSpec) error {
+		err := p.applyFilterToWorkload(filter, image, meta, typ, spec)
 		if p.OnWorkload != nil {
 			p.OnWorkload(meta, err)
 		}
@@ -154,8 +154,9 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 }
 
 // applies the filter to the target workload: adds annotations and creates the EnvoyFilter CR
-func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta,typ metav1.TypeMeta, spec *corev1.PodTemplateSpec) error {
+func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta, typ metav1.TypeMeta, spec *corev1.PodTemplateSpec) error {
 	labels := spec.Labels
+	workloadName := meta.Name
 
 	logger := logrus.WithFields(logrus.Fields{
 		"filter":   filter,
@@ -196,7 +197,7 @@ func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image
 
 // runs a function on the workload pod template spec
 // selects all workloads in a namespace if workload.Name == ""
-func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta,typ metav1.TypeMeta, spec *corev1.PodTemplateSpec) error) error {
+func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, typ metav1.TypeMeta, spec *corev1.PodTemplateSpec) error) error {
 	switch strings.ToLower(p.Workload.Kind) {
 	case WorkloadTypeDeployment:
 		workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(metav1.ListOptions{
@@ -206,7 +207,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta,typ metav1.Typ
 			return err
 		}
 		for _, workload := range workloads.Items {
-			if err := do(workload.ObjectMeta,workload.TypeMeta, &workload.Spec.Template); err != nil {
+			if err := do(workload.ObjectMeta, workload.TypeMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
 		}
@@ -218,7 +219,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta,typ metav1.Typ
 			return err
 		}
 		for _, workload := range workloads.Items {
-			if err := do(workload.ObjectMeta,workload.TypeMeta, &workload.Spec.Template); err != nil {
+			if err := do(workload.ObjectMeta, workload.TypeMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
 		}
@@ -234,7 +235,7 @@ func (p *Provider) clusterName() string {
 }
 
 // construct Istio EnvoyFilter Custom Resource
-func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta,typ metav1.TypeMeta, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
+func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta, typ metav1.TypeMeta, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
 	descriptor, err := image.Descriptor()
 	if err != nil {
 		return nil, err
@@ -305,11 +306,11 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 			OwnerReferences: []metav1.OwnerReference{
 				metav1.OwnerReference{
 					APIVersion: typ.APIVersion,
-					Name: workloadName,
-					UID: meta.UID,
-					Kind: typ.Kind,
+					Name:       workloadName,
+					UID:        meta.UID,
+					Kind:       typ.Kind,
 					// Not a controller, and no need to block owner deletion
-				}
+				},
 			},
 		},
 		Spec: spec,
@@ -396,7 +397,7 @@ func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
 
 	var workloads []string
 	// remove annotations from workload
-	err := p.forEachWorkload(func(meta metav1.ObjectMeta, ObjectMeta,typ metav1.TypeMeta, spec *corev1.PodTemplateSpec) error {
+	err := p.forEachWorkload(func(meta metav1.ObjectMeta, typ metav1.TypeMeta, spec *corev1.PodTemplateSpec) error {
 		// collect the name of the workload so we can delete its filter
 		workloads = append(workloads, meta.Name)
 		return nil
