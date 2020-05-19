@@ -57,17 +57,17 @@ var _ = Describe("IstioProvider", func() {
 		deployment *appsv1.Deployment
 	)
 	BeforeEach(func() {
-		cfg := aptest.MustConfig()
+		cfg := aptest.MustConfig("")
 		kube = kubernetes.NewForConfigOrDie(cfg)
 
 		ns = "istio-provider-test-" + randutils.RandString(4)
 		err := kubeutils.CreateNamespacesInParallel(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
-
-		mgr, c := aptest.ManagerWithOpts(cfg, manager.Options{
+		var ctx context.Context
+		ctx, cancel = context.WithCancel(context.Background())
+		mgr := aptest.ManagerWithOpts(ctx, cfg, manager.Options{
 			Namespace: ns,
 		})
-		cancel = c
 
 		client = ezkube.NewEnsurer(ezkube.NewRestClient(mgr))
 
@@ -85,7 +85,7 @@ var _ = Describe("IstioProvider", func() {
 			kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		}
 	})
-	It("annotates the workload and creates the EnvoyFilter", func() {
+	It("creates the EnvoyFilter", func() {
 		workload := Workload{
 			Labels:    deployment.Labels,
 			Namespace: ns,

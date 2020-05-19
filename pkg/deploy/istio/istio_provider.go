@@ -206,8 +206,12 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, typ metav1.Ty
 		if err != nil {
 			return err
 		}
+		typeMeta := metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "Deployment",
+		}
 		for _, workload := range workloads.Items {
-			if err := do(workload.ObjectMeta, workload.TypeMeta, &workload.Spec.Template); err != nil {
+			if err := do(workload.ObjectMeta, typeMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
 		}
@@ -218,8 +222,12 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, typ metav1.Ty
 		if err != nil {
 			return err
 		}
+		typeMeta := metav1.TypeMeta{
+			APIVersion: "apps/v1",
+			Kind:       "DaemonSet",
+		}
 		for _, workload := range workloads.Items {
-			if err := do(workload.ObjectMeta, workload.TypeMeta, &workload.Spec.Template); err != nil {
+			if err := do(workload.ObjectMeta, typeMeta, &workload.Spec.Template); err != nil {
 				return err
 			}
 		}
@@ -304,11 +312,11 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 			Name:      istioEnvoyFilterName(workloadName, filter.Id),
 			Namespace: p.Workload.Namespace,
 			OwnerReferences: []metav1.OwnerReference{
-				metav1.OwnerReference{
+				{
 					APIVersion: typ.APIVersion,
+					Kind:       typ.Kind,
 					Name:       workloadName,
 					UID:        meta.UID,
-					Kind:       typ.Kind,
 					// Not a controller, and no need to block owner deletion
 				},
 			},
