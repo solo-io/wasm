@@ -29,14 +29,14 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/opencontainers/runc v1.0.0-rc9 // indirect
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/pseudomuto/protoc-gen-doc v1.3.0
 	github.com/pseudomuto/protokit v0.2.0
 	github.com/sirupsen/logrus v1.4.2
 	github.com/solo-io/gloo v1.3.5
 	github.com/solo-io/go-utils v0.15.2
-	github.com/solo-io/protoc-gen-ext v0.0.7
-	github.com/solo-io/skv2 v0.0.5
+	github.com/solo-io/protoc-gen-ext v0.0.9
+	github.com/solo-io/skv2 v0.2.2
 	github.com/solo-io/solo-kit v0.13.5
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
