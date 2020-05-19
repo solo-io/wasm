@@ -208,15 +208,15 @@ var _ = Describe("IstioProvider", func() {
 			Cache:      cache,
 		}
 		glooImage := consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0"
+
+		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		err := p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
 			Image:  glooImage,
 			Config: "{}",
 		})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " not supported by istio version"))
-
-		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " may not be supported by istio version"))
 
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
