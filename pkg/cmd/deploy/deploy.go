@@ -104,14 +104,14 @@ Use --labels to use a match Gateway CRs by label.
 }
 
 func deployIstioCmd(ctx *context.Context, opts *options) *cobra.Command {
-	use := "istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--name deployment-name]"
+	use := "istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--labels deployment-label-key=value]"
 	short := "Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy)."
 	long := `Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).
 
 wasme uses the EnvoyFilter Istio Custom Resource to pull and run wasm filters.
 wasme deploys a server-side cache component which runs in cluster and pulls filter images.
 
-If --name is not provided, all deployments in the targeted namespace will attach the filter.
+If --labels is not provided, all deployments in the targeted namespace will attach the filter.
 
 Note: currently only Istio 1.5.x is supported.
 `
