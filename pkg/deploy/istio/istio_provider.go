@@ -111,7 +111,7 @@ func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ez
 
 // applies the filter to all selected workloads and updates the image cache configmap
 func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
-
+	var warning error
 	image, err := p.Puller.Pull(p.Ctx, filter.Image)
 	if err != nil {
 		return err
@@ -131,7 +131,7 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 		}
 
 		if err := abi.DefaultRegistry.ValidateIstioVersion(abiVersions, istioVersion); err != nil {
-			return errors.Errorf("image %v not supported by istio version %v", image.Ref(), istioVersion)
+			warning = errors.Errorf("warning: image %v may not be supported by istio version %v", image.Ref(), istioVersion)
 		}
 	} else {
 		logrus.WithFields(logrus.Fields{
@@ -150,7 +150,7 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 		return errors.Wrap(err, "applying filter to workload")
 	}
 
-	return nil
+	return warning
 }
 
 // applies the filter to the target workload: adds annotations and creates the EnvoyFilter CR
