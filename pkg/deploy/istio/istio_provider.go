@@ -163,7 +163,6 @@ func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image
 		"workload": workloadName,
 	})
 
-	logger.Info("updated workload sidecar annotations")
 	clusterFilter := p.makeClusterFilter()
 
 	err := p.Client.Ensure(p.Ctx, nil, clusterFilter)
@@ -311,15 +310,6 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 			// in istio's case, filter ID must be a kube-compliant name
 			Name:      istioEnvoyFilterName(workloadName, filter.Id),
 			Namespace: p.Workload.Namespace,
-			OwnerReferences: []metav1.OwnerReference{
-				{
-					APIVersion: typ.APIVersion,
-					Kind:       typ.Kind,
-					Name:       workloadName,
-					UID:        meta.UID,
-					// Not a controller, and no need to block owner deletion
-				},
-			},
 		},
 		Spec: spec,
 	}, nil
@@ -336,7 +326,7 @@ func (p *Provider) makeClusterFilter() *v1alpha3.EnvoyFilter {
 		ClusterDiscoveryType: &envoy_api_v2.Cluster_Type{Type: envoy_api_v2.Cluster_STRICT_DNS},
 		ConnectTimeout:       &duration.Duration{Seconds: 3},
 		Hosts: []*envoy_api_v2_core.Address{
-			&envoy_api_v2_core.Address{
+			{
 				Address: &envoy_api_v2_core.Address_SocketAddress{
 					SocketAddress: &envoy_api_v2_core.SocketAddress{
 						Address: p.Cache.Name + "." + p.Cache.Namespace + ".svc.cluster.local", // do we need the suffix svc.cluster.local?
@@ -372,7 +362,6 @@ func (p *Provider) makeClusterFilter() *v1alpha3.EnvoyFilter {
 		}
 	}
 
-	// create a config patch for each port
 	var configPatches []*networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectPatch
 	configPatches = append(configPatches, makeClusterConfigPatch())
 

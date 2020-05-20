@@ -160,7 +160,7 @@ var _ = Describe("skv2Generate", func() {
 		}
 
 		// expect header in response
-		Eventually(testRequest, time.Minute*5).Should(ContainSubstring("hello: world"))
+		Eventually(testRequest, time.Minute*5, time.Second).Should(ContainSubstring("hello: world"))
 
 		// ensure filter deployment status is up to date
 		cfg, err := config.GetConfig()
@@ -179,13 +179,13 @@ var _ = Describe("skv2Generate", func() {
 				return 0, err
 			}
 			return fd.Status.ObservedGeneration, nil
-		}).Should(Equal(int64(1)))
+		}, time.Second*5, time.Second/5).Should(Equal(int64(1)))
 
 		err = test.DeleteFile(filterFile, ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
-		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring("hello: world"))
+		Eventually(testRequest, time.Minute*3, time.Second).ShouldNot(ContainSubstring("hello: world"))
 
 	})
 })

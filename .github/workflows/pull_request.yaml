@@ -41,10 +41,11 @@ jobs:
     - name: Setup env
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
+        ISTIO_VERSION: 1.6.0-rc.2
       run: |
         curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
-        curl -sSL https://github.com/istio/istio/releases/download/1.5.1/istio-1.5.1-linux.tar.gz | tar -xzf - istio-1.5.1/bin/istioctl
-        export PATH=$PWD/istio-1.5.1/bin:$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
+        curl -sSL https://github.com/istio/istio/releases/download/${ISTIO_VERSION}/istio-${ISTIO_VERSION}-linux.tar.gz | tar -xzf - istio-${ISTIO_VERSION}/bin/istioctl
+        export PATH=$PWD/istio-${ISTIO_VERSION}/bin:$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
         go get -u github.com/onsi/ginkgo/ginkgo
         make install-deps
         ./ci/setup-kind.sh
