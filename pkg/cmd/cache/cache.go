@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -14,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	"github.com/solo-io/wasme/pkg/cache"
+	"github.com/solo-io/wasme/pkg/consts"
 
 	"github.com/solo-io/wasme/pkg/cmd/opts"
 	"github.com/solo-io/wasme/pkg/defaults"
@@ -49,20 +51,17 @@ func CacheCmd(ctx *context.Context, loginOptions *opts.AuthOptions) *cobra.Comma
 		Long: `cache
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 0 && opts.refFile == "" {
-				return fmt.Errorf("invalid number of arguments")
-			}
 			opts.targetRefs = args
 			return runCache(*ctx, opts)
 		},
 		Hidden: true,
 	}
 
-	cmd.Flags().IntVarP(&opts.port, "port", "", 9979, "port")
+	cmd.Flags().IntVarP(&opts.port, "port", "", consts.CachePort, "port")
 	cmd.Flags().StringVarP(&opts.directory, "directory", "", "", "directory to write the refs we need to cache")
 	cmd.Flags().StringVarP(&opts.refFile, "ref-file", "", "", "file to watch for images we need to cache.")
 	cmd.Flags().BoolVarP(&opts.clearCache, "clear-cache", "", false, "clear any files from the cache dir on boot")
-	cmd.Flags().BoolVarP(&opts.kubeOpts.disableKube, "disable-kube", "", false, "disable sending events to kubernetes when images are pulled successfully")
+	cmd.Flags().BoolVarP(&opts.kubeOpts.disableKube, "disable-kube", "", true, "disable sending events to kubernetes when images are pulled successfully")
 	cmd.Flags().StringVarP(&opts.kubeOpts.cacheNamespace, "cache-ns", "", cache.CacheNamespace, "namespace where the cache is running, if kube integration is enabled")
 	cmd.Flags().StringVarP(&opts.kubeOpts.cacheName, "cache-name", "", cache.CacheName, "name of the cache configmap")
 	return cmd
@@ -96,7 +95,9 @@ func runCache(ctx context.Context, opts cacheOptions) error {
 
 func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory string, clearCache bool, kubeOpts kubeOpts) error {
 
+	logrus.Infof("watching cache index file cached file %v", refFile)
 	if clearCache {
+		logrus.Infof("clearing cache")
 		cacheContents, err := ioutil.ReadDir(directory)
 		if err != nil {
 			return errors.Wrap(err, "reading cache dir")
@@ -113,11 +114,21 @@ func watchFile(ctx context.Context, imageCache cache.Cache, refFile, directory s
 	if !kubeOpts.disableKube {
 		cfg := config.GetConfigOrDie()
 		kube := kubernetes.NewForConfigOrDie(cfg)
-		cacheNotifier = cache.NewNotifier(
-			kube,
-			kubeOpts.cacheNamespace,
-			kubeOpts.cacheName,
-		)
+
+		if kubeOpts.cacheNamespace == "" {
+			if data, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
+				if ns := strings.TrimSpace(string(data)); len(ns) > 0 {
+					kubeOpts.cacheNamespace = ns
+				}
+			}
+		}
+		if kubeOpts.cacheName != "" {
+			cacheNotifier = cache.NewNotifier(
+				kube,
+				kubeOpts.cacheNamespace,
+				kubeOpts.cacheName,
+			)
+		}
 	}
 
 	// for each ref in the file, add it to the cache,

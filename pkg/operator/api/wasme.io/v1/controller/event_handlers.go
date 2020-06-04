@@ -16,6 +16,7 @@ import (
 )
 
 // Handle events for the FilterDeployment Resource
+// DEPRECATED: Prefer reconciler pattern.
 type FilterDeploymentEventHandler interface {
 	CreateFilterDeployment(obj *wasme_io_v1.FilterDeployment) error
 	UpdateFilterDeployment(old, new *wasme_io_v1.FilterDeployment) error

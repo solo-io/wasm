@@ -17,14 +17,14 @@ metadata:
   namespace: wasme
 ---
 # Source: Wasme Operator/templates/deployment.yaml
-# Service account for wasme-cache
+# Service account for wasme-operator
 
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    app: wasme-cache
-  name: wasme-cache
+    app: wasme-operator
+  name: wasme-operator
   namespace: wasme
 ---
 # Source: Wasme Operator/templates/configmap.yaml
@@ -34,12 +34,11 @@ kind: ConfigMap
 metadata:
   labels:
     app: wasme-cache
-    configmap: wasme-cache
   name: wasme-cache
   namespace: wasme
 data:
   images: ""
----
+--- 
 # Source: Wasme Operator/templates/rbac.yaml
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -148,71 +147,22 @@ roleRef:
   name: wasme-cache
   apiGroup: rbac.authorization.k8s.io
 ---
-# Source: Wasme Operator/templates/deployment.yaml
-# DaemonSet manifest for wasme-cache
-
-apiVersion: apps/v1
-kind: DaemonSet
+# Source: Wasme Operator/templates/service.yaml
+# Service manifest for wasme-operator
+apiVersion: v1
+kind: Service
 metadata:
   labels:
     app: wasme-cache
   name: wasme-cache
   namespace: wasme
 spec:
+  type: ClusterIP
   selector:
-    matchLabels:
-      app: wasme-cache
-  template:
-    metadata:
-      labels:
-        app: wasme-cache
-      annotations:
-        prometheus.io/path: /metrics
-        prometheus.io/port: "9091"
-        prometheus.io/scrape: "true"
-    spec:
-      serviceAccountName: wasme-cache
-      volumes:
-      - hostPath:
-          path: /var/local/lib/wasme-cache
-          type: DirectoryOrCreate
-        name: cache-dir
-      - configMap:
-          items:
-          - key: images
-            path: images.txt
-          name: wasme-cache
-        name: config
-      containers:
-      - image: quay.io/solo-io/wasme:dev
-        args:
-        - cache
-        - --directory
-        - /var/local/lib/wasme-cache
-        - --ref-file
-        - /etc/wasme-cache/images.txt
-        - --cache-ns
-        - 'wasme'
-        volumeMounts:
-        - mountPath: /var/local/lib/wasme-cache
-          name: cache-dir
-        - mountPath: /etc/wasme-cache
-          name: config
-        imagePullPolicy: IfNotPresent
-        name: wasme-cache
-        resources:
-          limits:
-            cpu: 500m
-            memory: 256Mi
-          requests:
-            cpu: 50m
-            memory: 128Mi
-        securityContext:
-          readOnlyRootFilesystem: true
-          allowPrivilegeEscalation: false
-          capabilities:
-            drop:
-            - ALL
+    app: wasme-cache
+  ports:
+  - port: 9979
+    targetPort: 9979
 ---
 # Source: Wasme Operator/templates/deployment.yaml
 # Deployment manifest for wasme-operator
@@ -249,6 +199,50 @@ spec:
           requests:
             cpu: 125m
             memory: 256Mi
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+---
+# Source: Wasme Operator/templates/deployment.yaml
+# Deployment manifest for wasme-cache
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: wasme-cache
+  name: wasme-cache
+  namespace: wasme
+spec:
+  selector:
+    matchLabels:
+      app: wasme-cache
+  template:
+    metadata:
+      labels:
+        app: wasme-cache
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9091"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: wasme-cache
+      containers:
+      - image: quay.io/solo-io/wasme:dev
+        args:
+        - cache
+        imagePullPolicy: IfNotPresent
+        name: wasme-cache
+        resources:
+          limits:
+            cpu: 500m
+            memory: 256Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
         securityContext:
           readOnlyRootFilesystem: true
           allowPrivilegeEscalation: false

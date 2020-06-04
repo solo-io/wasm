@@ -70,9 +70,9 @@ type filterDeploymentReconcileLoop struct {
 	loop reconcile.Loop
 }
 
-func NewFilterDeploymentReconcileLoop(name string, mgr manager.Manager) FilterDeploymentReconcileLoop {
+func NewFilterDeploymentReconcileLoop(name string, mgr manager.Manager, options reconcile.Options) FilterDeploymentReconcileLoop {
 	return &filterDeploymentReconcileLoop{
-		loop: reconcile.NewLoop(name, mgr, &wasme_io_v1.FilterDeployment{}),
+		loop: reconcile.NewLoop(name, mgr, &wasme_io_v1.FilterDeployment{}, options),
 	}
 }
 

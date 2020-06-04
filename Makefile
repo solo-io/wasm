@@ -44,8 +44,7 @@ install-deps: mod-download
 	go get -v github.com/solo-io/protoc-gen-ext@v0.0.7
 	go get -v github.com/golang/mock/mockgen@v1.4.3
 	go get -v golang.org/x/tools/cmd/goimports@v0.0.0-20200414131530-0037cb7812fa
-	go get -v github.com/cratonica/2goarray
-	go mod tidy
+	go get -v github.com/cratonica/2goarray@514510793eaa1ae2cc2217a9a743104312412f35
 
 
 

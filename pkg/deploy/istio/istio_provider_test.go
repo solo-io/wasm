@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/solo-io/wasme/pkg/consts/test"
-
 	"github.com/solo-io/wasme/pkg/consts"
 
 	"github.com/golang/mock/gomock"
@@ -57,17 +55,17 @@ var _ = Describe("IstioProvider", func() {
 		deployment *appsv1.Deployment
 	)
 	BeforeEach(func() {
-		cfg := aptest.MustConfig()
+		cfg := aptest.MustConfig("")
 		kube = kubernetes.NewForConfigOrDie(cfg)
 
 		ns = "istio-provider-test-" + randutils.RandString(4)
 		err := kubeutils.CreateNamespacesInParallel(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
-
-		mgr, c := aptest.ManagerWithOpts(cfg, manager.Options{
+		var ctx context.Context
+		ctx, cancel = context.WithCancel(context.Background())
+		mgr := aptest.ManagerWithOpts(ctx, cfg, manager.Options{
 			Namespace: ns,
 		})
-		cancel = c
 
 		client = ezkube.NewEnsurer(ezkube.NewRestClient(mgr))
 
@@ -75,13 +73,6 @@ var _ = Describe("IstioProvider", func() {
 			Namespace: ns,
 			Name:      "cache-name",
 		}
-		_, err = kube.CoreV1().ConfigMaps(ns).Create(&kubev1.ConfigMap{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: cache.Namespace,
-				Name:      cache.Name,
-			},
-		})
-		Expect(err).NotTo(HaveOccurred())
 
 		deployment, err = kube.AppsV1().Deployments(ns).Create(makeDeployment(workloadName, ns))
 		Expect(err).NotTo(HaveOccurred())
@@ -92,7 +83,7 @@ var _ = Describe("IstioProvider", func() {
 			kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		}
 	})
-	It("annotates the workload and creates the EnvoyFilter", func() {
+	It("creates the EnvoyFilter", func() {
 		workload := Workload{
 			Labels:    deployment.Labels,
 			Namespace: ns,
@@ -123,13 +114,6 @@ var _ = Describe("IstioProvider", func() {
 
 		dep, err := kube.AppsV1().Deployments(workload.Namespace).Get(deployment.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
-
-		Expect(dep.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations()))
-
-		cacheConfig, err := kube.CoreV1().ConfigMaps(cache.Namespace).Get(cache.Name, metav1.GetOptions{})
-		Expect(err).NotTo(HaveOccurred())
-
-		Expect(cacheConfig.Data).To(Equal(map[string]string{"images": filter.Image}))
 
 		ef := &istiov1alpha3.EnvoyFilter{
 			ObjectMeta: metav1.ObjectMeta{
@@ -174,12 +158,8 @@ var _ = Describe("IstioProvider", func() {
 		dep1, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep1.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations()))
-
 		dep2, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep2.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
-
-		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations()))
 
 		ef1 := &istiov1alpha3.EnvoyFilter{
 			ObjectMeta: metav1.ObjectMeta{
@@ -226,22 +206,23 @@ var _ = Describe("IstioProvider", func() {
 			Cache:      cache,
 		}
 		glooImage := consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0"
+
+		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 		err := p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
 			Image:  glooImage,
 			Config: "{}",
 		})
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " not supported by istio version"))
-
-		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
-
-		err = p.ApplyFilter(&wasmev1.FilterSpec{
-			Id:     "compatible-filter",
-			Image:  test.IstioAssemblyScriptImage,
-			Config: "{}",
-		})
-		Expect(err).NotTo(HaveOccurred())
+		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " may not be supported by istio version"))
+		/*
+			err = p.ApplyFilter(&wasmev1.FilterSpec{
+				Id:     "compatible-filter",
+				Image:  test.IstioAssemblyScriptImage,
+				Config: "{}",
+			})
+			Expect(err).NotTo(HaveOccurred())
+		*/
 	})
 })
 
