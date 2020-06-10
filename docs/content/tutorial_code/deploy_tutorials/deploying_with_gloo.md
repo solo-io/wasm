@@ -78,7 +78,7 @@ Next, we'll get the Gloo Gateway's external IP by running the following:
 URL=$(kubectl get svc -n gloo-system gateway-proxy -o jsonpath='{.status.loadBalancer.ingress[*].ip}')
 {{< /tab >}}
 {{< tab name="Minikube" codelang="shell" >}}
-URL=$(minikube ip):$(kubectl get svc -n gloo-system gateway-proxy -o jsonpath='{.spec.ports[?(@.name == "http")].nodePort}')`
+URL=$(minikube ip):$(kubectl get svc -n gloo-system gateway-proxy -o jsonpath='{.spec.ports[?(@.name == "http")].nodePort}')
 {{< /tab >}}
 {{< /tabs >}}
 
