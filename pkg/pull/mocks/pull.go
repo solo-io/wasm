@@ -6,9 +6,10 @@ package mock_pull
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	model "github.com/solo-io/wasme/pkg/model"
-	reflect "reflect"
 )
 
 // MockImagePuller is a mock of ImagePuller interface
