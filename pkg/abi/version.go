@@ -97,6 +97,10 @@ var (
 		Name:    PlatformNameGloo,
 		Version: Version13x,
 	}
+	Gloo15 = Platform{
+		Name:    PlatformNameGloo,
+		Version: Version15x,
+	}
 
 	Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6 = Version{
 		Name:       "v0-541b2c1155fffb15ccde92b8324f3e38f7339ba6",
@@ -108,10 +112,18 @@ var (
 		Repository: "https://github.com/envoyproxy/envoy-wasm",
 		Commit:     "097b7f2e4cc1fb490cc1943d0d633655ac3c522f",
 	}
+	Version_edc016b1fa5adca3ebd3d7020eaed0ad7b8814ca = Version{
+		Name:       "v0-edc016b1fa5adca3ebd3d7020eaed0ad7b8814ca",
+		Repository: "https://github.com/envoyproxy/envoy-wasm",
+		Commit:     "edc016b1fa5adca3ebd3d7020eaed0ad7b8814ca",
+	}
 
 	DefaultRegistry = Registry{
 		Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6: {
 			Gloo13,
+		},
+		Version_edc016b1fa5adca3ebd3d7020eaed0ad7b8814ca: {
+			Gloo15,
 		},
 		Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: {
 			Istio15,
