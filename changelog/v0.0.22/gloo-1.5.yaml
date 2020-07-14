@@ -1,0 +1,5 @@
+changelog:
+  - type: NEW_FEATURE
+    description: 'Add support for gloo v1.5.x'
+    issueLink: https://github.com/solo-io/wasme/issues/130
+    
