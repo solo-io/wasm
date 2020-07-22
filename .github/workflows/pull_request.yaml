@@ -53,7 +53,7 @@ jobs:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
-        export FILTER_IMAGE_TAG=yuval-test.solo.io/ilackarms/test-image:v0.0.1
+        export FILTER_IMAGE_TAG=webassemblyhub.io/sodman/example-filter:v0.2
         export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
         make run-tests
     - name: Release
