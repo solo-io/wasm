@@ -45,14 +45,18 @@ install-deps: mod-download
 	go get -v github.com/golang/mock/mockgen@v1.4.3
 	go get -v golang.org/x/tools/cmd/goimports@v0.0.0-20200414131530-0037cb7812fa
 	go get -v github.com/cratonica/2goarray
+	go get -v github.com/solo-io/skv2@v0.0.5 # TODO: Bump - This version of skv2 is quite old
+
 	go mod tidy
 
 
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
+SUBDIRS:=pkg test
 .PHONY: generated-code
 generated-code:
 	go generate ./...
+	goimports -w $(SUBDIRS)
 
 # Generate Operator Code & Chart
 .PHONY: operator-gen
