@@ -54,7 +54,7 @@ var _ = Describe("wasme deploy gloo", func() {
 
 		// expect header in response
 		// note that header key is capital case as this goes through Kube api
-		const addedHeader = "Hello: world"
+		const addedHeader = "Valuefromconfig:"
 		Eventually(testRequest, time.Minute*5).Should(ContainSubstring(addedHeader))
 
 		err = test.WasmeCli("undeploy", "gloo", "--id", "myfilter")
