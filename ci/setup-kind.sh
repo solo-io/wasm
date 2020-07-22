@@ -60,7 +60,7 @@ make wasme-image -B | sed -nE 's|Successfully tagged (.*$)|\1|p' | while read f;
 
 istioctl manifest apply --set profile=minimal
 kubectl create ns gloo-system-test
-helm install --namespace gloo-system-test --set global.wasm.enabled=true gloo https://storage.googleapis.com/solo-public-helm/charts/gloo-1.3.20.tgz
+helm install --namespace gloo-system-test --set global.wasm.enabled=true gloo https://storage.googleapis.com/solo-public-helm/charts/gloo-1.5.0-beta10.tgz
 
 kubectl apply -f https://raw.githubusercontent.com/solo-io/gloo/master/example/petstore/petstore.yaml
 cat <<EOF | kubectl apply -f -

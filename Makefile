@@ -51,9 +51,11 @@ install-deps: mod-download
 
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
+SUBDIRS:=pkg test
 .PHONY: generated-code
 generated-code:
 	go generate ./...
+	goimports -w $(SUBDIRS)
 
 # Generate Operator Code & Chart
 .PHONY: operator-gen

@@ -30,7 +30,7 @@ var _ = Describe("wasme deploy gloo", func() {
 	It("Deploys the filter via Gloo", func() {
 		imageName := test.GetImageTag()
 
-		err := test.WasmeCli("deploy", "gloo", imageName, "--id", "myfilter", "--config", "world")
+		err := test.WasmeCli("deploy", "gloo", imageName, "--id", "myfilter")
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())
