@@ -61,6 +61,6 @@ var _ = Describe("wasme deploy gloo", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
-		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring(addedHeader))
+		Eventually(testRequest, time.Minute*5).ShouldNot(ContainSubstring(addedHeader))
 	})
 })
