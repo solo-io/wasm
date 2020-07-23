@@ -30,7 +30,7 @@ var _ = Describe("wasme deploy gloo", func() {
 	It("Deploys the filter via Gloo", func() {
 		imageName := test.GetImageTagGloo()
 
-		err := test.WasmeCli("deploy", "gloo", imageName, "--id", "myfilter")
+		err := test.WasmeCli("deploy", "gloo", imageName, "--id", "myfilter", "--config", "testValue")
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -54,7 +54,7 @@ var _ = Describe("wasme deploy gloo", func() {
 
 		// expect header in response
 		// note that header key is capital case as this goes through Kube api
-		const addedHeader = "Valuefromconfig:"
+		const addedHeader = "Valuefromconfig: testValue"
 		Eventually(testRequest, time.Minute*5).Should(ContainSubstring(addedHeader))
 
 		err = test.WasmeCli("undeploy", "gloo", "--id", "myfilter")

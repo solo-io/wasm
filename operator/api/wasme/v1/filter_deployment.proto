@@ -4,6 +4,8 @@ package wasme.io;
 
 option go_package = "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1";
 
+import "google/protobuf/any.proto";
+
 // A FilterDeployment tells the Wasme Operator
 // to deploy a filter with the provided configuration
 // to the target workloads.
@@ -27,9 +29,12 @@ message FilterSpec {
     // name of image which houses the compiled wasm filter
     string image = 2;
 
-    // string of the config sent to the wasm filter
-    // Currently has to be json or will crash
-    string config = 3;
+    // Filter/service configuration used to configure or reconfigure a plugin
+    // (proxy_on_configuration).
+    // `google.protobuf.Struct` is serialized as JSON before
+    // passing it to the plugin. `google.protobuf.BytesValue` and
+    // `google.protobuf.StringValue` are passed directly without the wrapper.
+    google.protobuf.Any config = 3;
 
     // the root id must match the root id
     // defined inside the filter.

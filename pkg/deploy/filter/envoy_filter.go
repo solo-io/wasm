@@ -3,7 +3,11 @@ package filter
 import (
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/gogo/protobuf/types"
+
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/api/v2/config"
+	corev3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/config/core/v3"
+	wasmv3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/extensions/wasm/v3"
+
 	"github.com/solo-io/solo-kit/pkg/api/external/envoy/api/v2/core"
 	wasmev1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/util"
@@ -27,8 +31,8 @@ func MakeRemoteDataSource(uri, cluster string) *core.AsyncDataSource {
 	}
 }
 
-func MakeLocalDatasource(path string) *core.AsyncDataSource {
-	return &core.AsyncDataSource{
+func MakeLocalDatasource(path string) *corev3.AsyncDataSource {
+	return &corev3.AsyncDataSource{
 		Specifier: &core.AsyncDataSource_Local{
 			Local: &core.DataSource{
 				Specifier: &core.DataSource_Filename{
@@ -39,15 +43,17 @@ func MakeLocalDatasource(path string) *core.AsyncDataSource {
 	}
 }
 
-func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSource) *envoyhttp.HttpFilter {
-	filterCfg := &config.WasmService{
-		Config: &config.PluginConfig{
+func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource) *envoyhttp.HttpFilter {
+	filterCfg := &wasmv3.WasmService{
+		Config: &wasmv3.PluginConfig{
 			Name:          filter.Id,
 			RootId:        filter.RootID,
 			Configuration: filter.Config,
-			VmConfig: &config.VmConfig{
-				Runtime: "envoy.wasm.runtime.v8", // default to v8
-				Code:    dataSrc,
+			Vm: &wasmv3.PluginConfig_VmConfig{
+				VmConfig: &wasmv3.VmConfig{
+					Runtime: "envoy.wasm.runtime.v8", // default to v8
+					Code:    dataSrc,
+				},
 			},
 		},
 	}
@@ -72,7 +78,7 @@ func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSour
 		Config: &config.PluginConfig{
 			Name:          filter.Id,
 			RootId:        filter.RootID,
-			Configuration: filter.Config,
+			Configuration: string(filter.Config.Value),
 			VmConfig: &config.VmConfig{
 				Runtime: "envoy.wasm.runtime.v8", // default to v8
 				Code:    dataSrc,

@@ -8,6 +8,7 @@ import (
 	math "math"
 
 	proto "github.com/gogo/protobuf/proto"
+	types "github.com/gogo/protobuf/types"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -113,7 +114,7 @@ type FilterSpec struct {
 	Image string `protobuf:"bytes,2,opt,name=image,proto3" json:"image,omitempty"`
 	// string of the config sent to the wasm filter
 	// Currently has to be json or will crash
-	Config string `protobuf:"bytes,3,opt,name=config,proto3" json:"config,omitempty"`
+	Config *types.Any `protobuf:"bytes,3,opt,name=config,proto3" json:"config,omitempty"`
 	// the root id must match the root id
 	// defined inside the filter.
 	// if the user does not provide this field,
@@ -168,11 +169,8 @@ func (m *FilterSpec) GetImage() string {
 	return ""
 }
 
-func (m *FilterSpec) GetConfig() string {
-	if m != nil {
-		return m.Config
-	}
-	return ""
+func (m *FilterSpec) GetConfig() *types.Any {
+	return m.Config
 }
 
 func (m *FilterSpec) GetRootID() string {
