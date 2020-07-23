@@ -11,5 +11,4 @@ spec:
     istio:
       kind: Deployment
   filter:
-    config: '{"name":"hello","value":"world"}'
-    image: webassemblyhub.io/ilackarms/istio-test:1.4.2-0
+    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5

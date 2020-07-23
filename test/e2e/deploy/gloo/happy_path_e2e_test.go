@@ -28,7 +28,7 @@ var _ = AfterSuite(func() {
 // Do not randomize ginkgo specs when running, if the build & push test is enabled
 var _ = Describe("wasme deploy gloo", func() {
 	It("Deploys the filter via Gloo", func() {
-		imageName := test.GetImageTag()
+		imageName := test.GetImageTagGloo()
 
 		err := test.WasmeCli("deploy", "gloo", imageName, "--id", "myfilter")
 		Expect(err).NotTo(HaveOccurred())
