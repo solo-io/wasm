@@ -43,9 +43,8 @@ func generateCrdExample(filename, image, ns string) error {
 		},
 		Spec: v1.FilterDeploymentSpec{
 			Filter: &v1.FilterSpec{
-				Image: image,
-				// TODO: Why doesn't image ready if we pass it config?
-				// Config: "world",
+				Image:  image,
+				Config: "world",
 			},
 			Deployment: &v1.DeploymentSpec{
 				DeploymentType: &v1.DeploymentSpec_Istio{Istio: &v1.IstioDeploymentSpec{

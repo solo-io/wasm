@@ -11,4 +11,5 @@ spec:
     istio:
       kind: Deployment
   filter:
+    config: world
     image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
