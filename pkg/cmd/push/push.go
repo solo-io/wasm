@@ -47,7 +47,7 @@ func runPush(ctx context.Context, opts pushOptions) error {
 
 	image, err := store.NewStore(opts.storageDir).Get(opts.ref)
 	if err != nil {
-		return errors.Wrap(err, "image not found. run `wasme list` to see locally cahced images")
+		return errors.Wrap(err, "image not found. run `wasme list` to see locally cached images")
 	}
 
 	resolver, authorizer := resolver.NewResolver(opts.Username, opts.Password, opts.Insecure, opts.PlainHTTP, opts.CredentialsFiles...)
