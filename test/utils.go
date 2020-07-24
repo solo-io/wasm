@@ -60,9 +60,14 @@ func WithManifest(file, ns string, do func(manifest []byte, extraArgs ...string)
 	return do(b, extraArgs...)
 }
 
-func GetImageTag() string {
-	return GetEnv("FILTER_IMAGE_TAG")
+func GetImageTagGloo() string {
+	return GetEnv("FILTER_IMAGE_GLOO_TAG")
 }
+
+func GetImageTagIstio() string {
+	return GetEnv("FILTER_IMAGE_ISTIO_TAG")
+}
+
 func GetBuildImageTag() string {
 	return GetEnv("FILTER_BUILD_IMAGE_TAG")
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/solo-io/solo-kit/test/helpers"
 
 	. "github.com/onsi/ginkgo"
-	//. "github.com/onsi/gomega"
 )
 
 func TestOperator(t *testing.T) {
