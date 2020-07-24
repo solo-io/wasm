@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Fix user-facing typo - cahced.
+    issueLink: https://github.com/solo-io/wasme/issues/77
