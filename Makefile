@@ -45,7 +45,8 @@ install-deps: mod-download
 	go get -v github.com/golang/mock/mockgen@v1.4.3
 	go get -v golang.org/x/tools/cmd/goimports@v0.0.0-20200414131530-0037cb7812fa
 	go get -v github.com/cratonica/2goarray
-	go get -v github.com/solo-io/skv2@v0.0.5 # TODO: Bump - This version of skv2 is quite old
+	go get -v github.com/solo-io/gloo@v1.5.0-beta11
+	go get -v github.com/solo-io/skv2@v0.7.2 # TODO: Bump - This version of skv2 is quite old
 	go mod tidy
 
 
