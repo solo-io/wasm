@@ -28,9 +28,9 @@ var _ = AfterSuite(func() {
 // Do not randomize ginkgo specs when running, if the build & push test is enabled
 var _ = Describe("wasme deploy gloo", func() {
 	It("Deploys the filter via Gloo", func() {
-		imageName := test.GetImageTag()
+		imageName := test.GetImageTagGloo()
 
-		err := test.WasmeCli("deploy", "gloo", imageName, "--id", "myfilter", "--config", "world")
+		err := test.WasmeCli("deploy", "gloo", imageName, "--id", "myfilter")
 		Expect(err).NotTo(HaveOccurred())
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -54,13 +54,13 @@ var _ = Describe("wasme deploy gloo", func() {
 
 		// expect header in response
 		// note that header key is capital case as this goes through Kube api
-		const addedHeader = "Hello: world"
+		const addedHeader = "Valuefromconfig:"
 		Eventually(testRequest, time.Minute*5).Should(ContainSubstring(addedHeader))
 
 		err = test.WasmeCli("undeploy", "gloo", "--id", "myfilter")
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
-		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring(addedHeader))
+		Eventually(testRequest, time.Minute*5).ShouldNot(ContainSubstring(addedHeader))
 	})
 })

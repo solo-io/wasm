@@ -1,0 +1,7 @@
+changelog:
+  - type: NEW_FEATURE
+    description: 'Add support for gloo v1.5.x'
+    issueLink: https://github.com/solo-io/wasme/issues/130
+  - type: NON_USER_FACING
+    description: Fix broken build by pinning skv2 version and formatting imports
+    issueLink: https://github.com/solo-io/wasme/issues/124

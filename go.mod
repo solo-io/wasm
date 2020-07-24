@@ -28,7 +28,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/opencontainers/runc v1.0.0-rc9 // indirect
-	github.com/pkg/errors v0.8.1
+	github.com/pkg/errors v0.9.1
 	github.com/pseudomuto/protoc-gen-doc v1.3.0
 	github.com/pseudomuto/protokit v0.2.0
 	github.com/sirupsen/logrus v1.4.2
@@ -36,7 +36,7 @@ require (
 	github.com/solo-io/go-utils v0.15.2
 	github.com/solo-io/protoc-gen-ext v0.0.7
 	github.com/solo-io/skv2 v0.0.5
-	github.com/solo-io/solo-kit v0.13.5
+	github.com/solo-io/solo-kit v0.13.8
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
@@ -47,14 +47,14 @@ require (
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
 	istio.io/gogo-genproto v0.0.0-20191009201739-17d570f95998 // indirect
 	k8s.io/api v0.17.2
-	k8s.io/apimachinery v0.17.2
+	k8s.io/apimachinery v0.18.1
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/code-generator v0.17.2
 	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f // indirect
 	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a // indirect
 	k8s.io/kubectl v0.17.1 // indirect
 	k8s.io/utils v0.17.1 // indirect
-	sigs.k8s.io/controller-runtime v0.5.1
+	sigs.k8s.io/controller-runtime v0.5.6
 )
 
 // Pinned to kubernetes-1.16.2
