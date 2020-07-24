@@ -1,4 +1,0 @@
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-  args: ['version']
-  id: 'empty noop to pass CI & make the bots happy'
