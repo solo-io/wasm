@@ -1,4 +1,5 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
+load("//bazel/wasm:wasm.bzl", "wasm_cc_binary")
 
 proto_library(
     name = "filter_proto",
@@ -12,15 +13,10 @@ cc_proto_library(
     deps = [":filter_proto"],
 )
 
-cc_binary(
+wasm_cc_binary(
     name = "filter.wasm",
     srcs = [
         "filter.cc",
-    ],
-    additional_linker_inputs = ["@envoy_wasm_api//:jslib"],
-    linkopts = [
-        "--js-library",
-        "external/envoy_wasm_api/proxy_wasm_intrinsics.js",
     ],
     deps = [
         ":filter_cc_proto",

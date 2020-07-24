@@ -1,0 +1,3 @@
+changelog:
+  - type: NON_USER_FACING
+    description: Remove bazelrc and use proper WASM build rules for C++ example filters.
