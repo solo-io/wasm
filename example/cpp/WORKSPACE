@@ -67,3 +67,10 @@ http_archive(
 load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
 rules_proto_dependencies()
 rules_proto_toolchains()
+
+http_archive(
+        sha256 = "76f4d8e8a41b59668272e58e68ded1661a0f9c1672bdab8673a076ebf20d1fe5",
+        strip_prefix = "proxy-wasm-cpp-sdk-35163bbf32fccfbde7b95d909a392dc1dc562596",
+        urls = ["https://github.com/proxy-wasm/proxy-wasm-cpp-sdk/archive/35163bbf32fccfbde7b95d909a392dc1dc562596.tar.gz"],
+        name = "proxy_wasm_cpp_sdk",
+)

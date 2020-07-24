@@ -21,9 +21,9 @@ public:
   explicit AddHeaderContext(uint32_t id, RootContext* root) : Context(id, root), root_(static_cast<AddHeaderRootContext*>(static_cast<void*>(root))) {}
 
   void onCreate() override;
-  FilterHeadersStatus onRequestHeaders(uint32_t headers) override;
+  FilterHeadersStatus onRequestHeaders(uint32_t headers, bool end_of_stream) override;
   FilterDataStatus onRequestBody(size_t body_buffer_length, bool end_of_stream) override;
-  FilterHeadersStatus onResponseHeaders(uint32_t headers) override;
+  FilterHeadersStatus onResponseHeaders(uint32_t headers, bool end_of_stream) override;
   void onDone() override;
   void onLog() override;
   void onDelete() override;
@@ -35,17 +35,10 @@ static RegisterContextFactory register_AddHeaderContext(CONTEXT_FACTORY(AddHeade
                                                       ROOT_FACTORY(AddHeaderRootContext),
                                                       "add_header_root_id");
 
-bool AddHeaderRootContext::onConfigure(size_t) { 
-  auto conf = getConfiguration();
-  Config config;
-  
-  google::protobuf::util::JsonParseOptions options;
-  options.case_insensitive_enum_parsing = true;
-  options.ignore_unknown_fields = false;
-
-  google::protobuf::util::JsonStringToMessage(conf->toString(), &config, options);
-  LOG_DEBUG("onConfigure " + config.value());
-  header_value_ = config.value();
+bool AddHeaderRootContext::onConfigure(size_t config_buffer_length) {
+  auto conf = getBufferBytes(WasmBufferType::PluginConfiguration, 0, config_buffer_length);
+  LOG_DEBUG("onConfigure " + conf->toString());
+  header_value_ = conf->toString();
   return true; 
 }
 
@@ -53,12 +46,12 @@ bool AddHeaderRootContext::onStart(size_t) { LOG_DEBUG("onStart"); return true;}
 
 void AddHeaderContext::onCreate() { LOG_DEBUG(std::string("onCreate " + std::to_string(id()))); }
 
-FilterHeadersStatus AddHeaderContext::onRequestHeaders(uint32_t) {
+FilterHeadersStatus AddHeaderContext::onRequestHeaders(uint32_t, bool) {
   LOG_DEBUG(std::string("onRequestHeaders ") + std::to_string(id()));
   return FilterHeadersStatus::Continue;
 }
 
-FilterHeadersStatus AddHeaderContext::onResponseHeaders(uint32_t) {
+FilterHeadersStatus AddHeaderContext::onResponseHeaders(uint32_t, bool) {
   LOG_DEBUG(std::string("onResponseHeaders ") + std::to_string(id()));
   addResponseHeader("newheader", root_->header_value_);
   replaceResponseHeader("location", "envoy-wasm");
