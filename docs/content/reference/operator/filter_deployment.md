@@ -113,8 +113,11 @@ to remove the filter as well as for logging.
 if id is not set, it will be set automatically to be the name.namespace
 of the FilterDeployment resource |
 | image | [string](#string) |  | name of image which houses the compiled wasm filter |
-| config | [string](#string) |  | string of the config sent to the wasm filter
-Currently has to be json or will crash |
+| config | [google.protobuf.Any](#google.protobuf.Any) |  | Filter/service configuration used to configure or reconfigure a plugin
+(proxy_on_configuration).
+`google.protobuf.Struct` is serialized as JSON before
+passing it to the plugin. `google.protobuf.BytesValue` and
+`google.protobuf.StringValue` are passed directly without the wrapper. |
 | rootID | [string](#string) |  | the root id must match the root id
 defined inside the filter.
 if the user does not provide this field,

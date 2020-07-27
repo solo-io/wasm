@@ -22,7 +22,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.9.1
-	github.com/pseudomuto/protoc-gen-doc v1.0.0
+	github.com/pseudomuto/protoc-gen-doc v1.3.2
 	github.com/pseudomuto/protokit v0.2.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/solo-io/gloo v1.5.0-beta11
@@ -49,6 +49,9 @@ replace (
 	// copypaste from Gloo
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.0.0+incompatible
 	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
+
+	// Breaking changes pulled in by latest gloo need to use original repo instead of fork
+	github.com/ilackarms/protoc-gen-doc => github.com/pseudomuto/protoc-gen-doc v1.3.0
 
 	k8s.io/api => k8s.io/api v0.0.0-20191004120104-195af9ec3521
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20191204090712-e0e829f17bab
@@ -86,3 +89,6 @@ replace (
 replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309
 
 replace github.com/codegangsta/cli => github.com/urfave/cli v1.22.2
+
+// TODO: (shane) Remove after test
+replace github.com/solo-io/gloo => ../gloo

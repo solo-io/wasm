@@ -4,7 +4,6 @@ import (
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/gogo/protobuf/types"
 
-	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/api/v2/config"
 	corev3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/config/core/v3"
 	wasmv3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/extensions/wasm/v3"
 
@@ -33,9 +32,9 @@ func MakeRemoteDataSource(uri, cluster string) *core.AsyncDataSource {
 
 func MakeLocalDatasource(path string) *corev3.AsyncDataSource {
 	return &corev3.AsyncDataSource{
-		Specifier: &core.AsyncDataSource_Local{
-			Local: &core.DataSource{
-				Specifier: &core.DataSource_Filename{
+		Specifier: &corev3.AsyncDataSource_Local{
+			Local: &corev3.DataSource{
+				Specifier: &corev3.DataSource_Filename{
 					Filename: path,
 				},
 			},
@@ -73,16 +72,18 @@ func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource)
 	}
 }
 
-func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSource) *envoyhttp.HttpFilter {
-	filterCfg := &config.WasmService{
-		Config: &config.PluginConfig{
+func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource) *envoyhttp.HttpFilter {
+	filterCfg := &wasmv3.WasmService{
+		Config: &wasmv3.PluginConfig{
 			Name:          filter.Id,
 			RootId:        filter.RootID,
-			Configuration: string(filter.Config.Value),
-			VmConfig: &config.VmConfig{
-				Runtime: "envoy.wasm.runtime.v8", // default to v8
-				Code:    dataSrc,
-				VmId:    filter.Id,
+			Configuration: filter.Config,
+			Vm: &wasmv3.PluginConfig_VmConfig{
+				VmConfig: &wasmv3.VmConfig{
+					Runtime: "envoy.wasm.runtime.v8", // default to v8
+					Code:    dataSrc,
+					VmId:    filter.Id,
+				},
 			},
 		},
 	}

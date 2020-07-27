@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/gogo/protobuf/types"
 	"github.com/solo-io/wasme/pkg/deploy/local"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/store"
@@ -69,6 +70,20 @@ func makeDeployCommand(ctx *context.Context, opts *options, provider, use, short
 				return errors.Errorf("--id cannot be empty")
 			}
 			opts.providerType = provider
+			// If we were passed a config via CLI flag, default config type to StringValue
+			if opts.filterConfig != "" {
+				sv := &types.StringValue{
+					Value: opts.filterConfig,
+				}
+				val, err := sv.Marshal()
+				if err != nil {
+					return errors.Errorf("--config value could not be parsed")
+				}
+				opts.filter.Config = &types.Any{
+					TypeUrl: "type.googleapis.com/google.protobuf.StringValue",
+					Value:   val,
+				}
+			}
 			return runDeploy(*ctx, opts)
 		},
 	}

@@ -4,31 +4,38 @@ import (
 	"log"
 	"os"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/solo-io/skv2/codegen"
 	"github.com/solo-io/skv2/codegen/model"
 	"github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/version"
-	v1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func main() {
 	pushImage := os.Getenv("IMAGE_PUSH") == "1"
 
+	// Confirm these should be gone from model.Group:
+	//{
+	//	ProtoDir: "operator/api",
+	//	RenderProtos:     true,
+	//},
+
 	cmd := &codegen.Command{
 		AppName: "wasme",
 		Groups: []model.Group{
 			{
-				ProtoDir: "operator/api",
 				GroupVersion: schema.GroupVersion{
 					Group:   "wasme.io",
 					Version: "v1",
 				},
-				Module: "github.com/solo-io/wasme",
+				Module:  "github.com/solo-io/wasme",
+				ApiRoot: "pkg/operator/api",
 				Resources: []model.Resource{
 					{
 						Kind: "FilterDeployment",
@@ -44,12 +51,10 @@ func main() {
 						},
 					},
 				},
-				RenderProtos:     true,
 				RenderManifests:  true,
 				RenderTypes:      true,
 				RenderClients:    false,
 				RenderController: true,
-				ApiRoot:          "pkg/operator/api",
 			},
 		},
 
