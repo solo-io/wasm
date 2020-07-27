@@ -20,22 +20,16 @@ import (
 func main() {
 	pushImage := os.Getenv("IMAGE_PUSH") == "1"
 
-	// Confirm these should be gone from model.Group:
-	//{
-	//	ProtoDir: "operator/api",
-	//	RenderProtos:     true,
-	//},
-
 	cmd := &codegen.Command{
 		AppName: "wasme",
 		Groups: []model.Group{
 			{
+				ProtoDir: "operator/api",
 				GroupVersion: schema.GroupVersion{
 					Group:   "wasme.io",
 					Version: "v1",
 				},
-				Module:  "github.com/solo-io/wasme",
-				ApiRoot: "pkg/operator/api",
+				Module: "github.com/solo-io/wasme",
 				Resources: []model.Resource{
 					{
 						Kind: "FilterDeployment",
@@ -51,10 +45,12 @@ func main() {
 						},
 					},
 				},
+				RenderProtos:     true,
 				RenderManifests:  true,
 				RenderTypes:      true,
 				RenderClients:    false,
 				RenderController: true,
+				ApiRoot:          "pkg/operator/api",
 			},
 		},
 
