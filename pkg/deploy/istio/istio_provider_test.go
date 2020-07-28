@@ -44,7 +44,7 @@ var _ = Describe("IstioProvider", func() {
 		cache  Cache
 		filter = &wasmev1.FilterSpec{
 			Id:     "filter-id",
-			Config: `{"filter":"config"}`,
+			Config: nil,
 			Image:  "filter/image:v1",
 			RootID: "root_id",
 		}
@@ -53,21 +53,19 @@ var _ = Describe("IstioProvider", func() {
 		puller = &mockPuller{
 			image: mockImage{ref: filter.Image, digest: "sha256:e454cab754cf9234e8b41d7c5e30f53a4c125d7d9443cb3ef2b2eb1c4bd1ec14"},
 		}
-		cancel     = func() {}
 		deployment *appsv1.Deployment
 	)
 	BeforeEach(func() {
-		cfg := aptest.MustConfig()
+		cfg := aptest.MustConfig("")
 		kube = kubernetes.NewForConfigOrDie(cfg)
 
 		ns = "istio-provider-test-" + randutils.RandString(4)
 		err := kubeutils.CreateNamespacesInParallel(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
 
-		mgr, c := aptest.ManagerWithOpts(cfg, manager.Options{
+		mgr := aptest.ManagerWithOpts(context.TODO(), cfg, manager.Options{
 			Namespace: ns,
 		})
-		cancel = c
 
 		client = ezkube.NewEnsurer(ezkube.NewRestClient(mgr))
 
@@ -87,7 +85,6 @@ var _ = Describe("IstioProvider", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
-		cancel()
 		if kube != nil {
 			kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		}
@@ -229,7 +226,7 @@ var _ = Describe("IstioProvider", func() {
 		err := p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
 			Image:  glooImage,
-			Config: "{}",
+			Config: nil,
 		})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " not supported by istio version"))
@@ -239,7 +236,7 @@ var _ = Describe("IstioProvider", func() {
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
 			Image:  test.IstioAssemblyScriptImage,
-			Config: "{}",
+			Config: nil,
 		})
 		Expect(err).NotTo(HaveOccurred())
 	})
