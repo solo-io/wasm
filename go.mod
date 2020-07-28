@@ -89,6 +89,3 @@ replace (
 replace github.com/docker/docker => github.com/moby/moby v0.7.3-0.20190826074503-38ab9da00309
 
 replace github.com/codegangsta/cli => github.com/urfave/cli v1.22.2
-
-// TODO: (shane) Remove after test
-replace github.com/solo-io/gloo => ../gloo
