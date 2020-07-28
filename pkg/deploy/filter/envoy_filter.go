@@ -4,6 +4,7 @@ import (
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/gogo/protobuf/types"
 
+	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/api/v2/config"
 	corev3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/config/core/v3"
 	wasmv3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/extensions/wasm/v3"
 
@@ -42,6 +43,19 @@ func MakeLocalDatasource(path string) *corev3.AsyncDataSource {
 	}
 }
 
+// Uses the older datatypes needed by older versions of envoy-wasm, used by Istio
+func MakeLegacyLocalDatasource(path string) *core.AsyncDataSource {
+	return &core.AsyncDataSource{
+		Specifier: &core.AsyncDataSource_Local{
+			Local: &core.DataSource{
+				Specifier: &core.DataSource_Filename{
+					Filename: path,
+				},
+			},
+		},
+	}
+}
+
 func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource) *envoyhttp.HttpFilter {
 	filterCfg := &wasmv3.WasmService{
 		Config: &wasmv3.PluginConfig{
@@ -72,18 +86,22 @@ func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource)
 	}
 }
 
-func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource) *envoyhttp.HttpFilter {
-	filterCfg := &wasmv3.WasmService{
-		Config: &wasmv3.PluginConfig{
+func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSource) *envoyhttp.HttpFilter {
+	var cfgVal string
+	// Istio only takes a string for config, not a proto.Any.
+	if filter.Config != nil {
+		cfgVal = string(filter.Config.Value)
+	}
+
+	filterCfg := &config.WasmService{
+		Config: &config.PluginConfig{
 			Name:          filter.Id,
 			RootId:        filter.RootID,
-			Configuration: filter.Config,
-			Vm: &wasmv3.PluginConfig_VmConfig{
-				VmConfig: &wasmv3.VmConfig{
-					Runtime: "envoy.wasm.runtime.v8", // default to v8
-					Code:    dataSrc,
-					VmId:    filter.Id,
-				},
+			Configuration: cfgVal,
+			VmConfig: &config.VmConfig{
+				Runtime: "envoy.wasm.runtime.v8", // default to v8
+				Code:    dataSrc,
+				VmId:    filter.Id,
 			},
 		},
 	}

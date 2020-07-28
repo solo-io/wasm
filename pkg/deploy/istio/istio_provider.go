@@ -8,9 +8,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/labels"
 
-	"github.com/solo-io/wasme/pkg/abi"
-
 	"github.com/solo-io/skv2/pkg/ezkube"
+	"github.com/solo-io/wasme/pkg/abi"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 
 	"github.com/pkg/errors"
@@ -389,7 +388,7 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 	)
 
 	wasmFilterConfig := envoyfilter.MakeIstioWasmFilter(filter,
-		envoyfilter.MakeLocalDatasource(filename),
+		envoyfilter.MakeLegacyLocalDatasource(filename),
 	)
 
 	// here we need to use the gogo proto marshal
