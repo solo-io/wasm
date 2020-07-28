@@ -16,7 +16,7 @@ var _ = Describe("ABI Version Registry", func() {
 		err = DefaultRegistry.ValidateIstioVersion([]string{"invalid_abiversion"}, "1.5.32")
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("abi versions [invalid_abiversion] not found"))
-		err = DefaultRegistry.ValidateIstioVersion([]string{Version_541b2c1155fffb15ccde92b8324f3e38f7339ba6.Name}, "1.5.32")
+		err = DefaultRegistry.ValidateIstioVersion([]string{Version_edc016b1fa5adca3ebd3d7020eaed0ad7b8814ca.Name}, "1.5.32")
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("no versions of istio found which support abi versions"))
 	})
