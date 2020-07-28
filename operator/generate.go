@@ -6,6 +6,7 @@ import (
 
 	"github.com/solo-io/skv2/codegen"
 	"github.com/solo-io/skv2/codegen/model"
+	"github.com/solo-io/solo-kit/pkg/code-generator/sk_anyvendor"
 	"github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/version"
 
@@ -20,11 +21,16 @@ import (
 func main() {
 	pushImage := os.Getenv("IMAGE_PUSH") == "1"
 
+	protoImports := sk_anyvendor.CreateDefaultMatchOptions([]string{
+		"operator/api/**/*.proto",
+	})
+
 	cmd := &codegen.Command{
-		AppName: "wasme",
+		AppName:         "wasme",
+		AnyVendorConfig: protoImports,
+		RenderProtos:    true,
 		Groups: []model.Group{
 			{
-				ProtoDir: "operator/api",
 				GroupVersion: schema.GroupVersion{
 					Group:   "wasme.io",
 					Version: "v1",
@@ -45,7 +51,6 @@ func main() {
 						},
 					},
 				},
-				RenderProtos:     true,
 				RenderManifests:  true,
 				RenderTypes:      true,
 				RenderClients:    false,

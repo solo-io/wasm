@@ -8,3 +8,6 @@ target
 _output/
 
 *.wasm
+
+# generated protos
+vendor_any/
