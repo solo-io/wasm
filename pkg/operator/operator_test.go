@@ -2,24 +2,26 @@ package operator
 
 import (
 	"context"
-	"github.com/gogo/protobuf/types"
 	"time"
 
-	"github.com/solo-io/wasme/pkg/consts/test"
-
-	"github.com/golang/mock/gomock"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/solo-io/skv2/pkg/ezkube"
-	mock_ezkube "github.com/solo-io/skv2/pkg/ezkube/mocks"
+	"github.com/solo-io/wasme/pkg/consts/test"
 	"github.com/solo-io/wasme/pkg/deploy"
 	"github.com/solo-io/wasme/pkg/deploy/istio"
-	mock_deploy "github.com/solo-io/wasme/pkg/deploy/mocks"
-	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasme/pkg/pull"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/gogo/protobuf/types"
+	"github.com/golang/mock/gomock"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
+	mock_ezkube "github.com/solo-io/skv2/pkg/ezkube/mocks"
+	mock_deploy "github.com/solo-io/wasme/pkg/deploy/mocks"
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var _ = Describe("FilterDeploymentEventHandler", func() {
