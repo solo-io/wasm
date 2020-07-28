@@ -53,6 +53,7 @@ var _ = Describe("IstioProvider", func() {
 		puller = &mockPuller{
 			image: mockImage{ref: filter.Image, digest: "sha256:e454cab754cf9234e8b41d7c5e30f53a4c125d7d9443cb3ef2b2eb1c4bd1ec14"},
 		}
+		cancel     = func() {}
 		deployment *appsv1.Deployment
 	)
 	BeforeEach(func() {
@@ -63,9 +64,11 @@ var _ = Describe("IstioProvider", func() {
 		err := kubeutils.CreateNamespacesInParallel(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
 
-		mgr := aptest.ManagerWithOpts(context.TODO(), cfg, manager.Options{
+		ctx, c := context.WithCancel(context.Background())
+		mgr := aptest.ManagerWithOpts(ctx, cfg, manager.Options{
 			Namespace: ns,
 		})
+		cancel = c
 
 		client = ezkube.NewEnsurer(ezkube.NewRestClient(mgr))
 
@@ -85,6 +88,7 @@ var _ = Describe("IstioProvider", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
+		cancel()
 		if kube != nil {
 			kubeutils.DeleteNamespacesInParallelBlocking(kube, ns)
 		}
