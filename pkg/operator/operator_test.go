@@ -2,6 +2,7 @@ package operator
 
 import (
 	"context"
+	"github.com/gogo/protobuf/types"
 	"time"
 
 	"github.com/solo-io/wasme/pkg/consts/test"
@@ -66,8 +67,11 @@ var _ = Describe("FilterDeploymentEventHandler", func() {
 			},
 			Spec: v1.FilterDeploymentSpec{
 				Filter: &v1.FilterSpec{
-					Image:  test.IstioAssemblyScriptImage,
-					Config: `{"name":"hello","value":"world"}`,
+					Image: test.IstioAssemblyScriptImage,
+					Config: &types.Any{
+						TypeUrl: "type.googleapis.com/google.protobuf.StringValue",
+						Value:   []byte(`{"name":"hello","value":"world"}`),
+					},
 				},
 				Deployment: &v1.DeploymentSpec{
 					DeploymentType: &v1.DeploymentSpec_Istio{Istio: &v1.IstioDeploymentSpec{
