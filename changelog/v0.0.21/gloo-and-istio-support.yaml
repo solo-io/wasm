@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Allows using --config param in CLI deploy command for both Istio and Gloo again
+    issueLink: https://github.com/solo-io/wasme/issues/130
