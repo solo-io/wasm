@@ -212,7 +212,7 @@ func forEachHcm(listeners []*envoy_api_v2.Listener, fn func(networkFilter *envoy
 
 func addFilterToListeners(filter *v1.FilterSpec, listeners []*envoy_api_v2.Listener, filterPath string) error {
 
-	wasmFilter := envoyfilter.MakeWasmFilter(filter, envoyfilter.MakeLocalDatasource(filterPath))
+	wasmFilter := envoyfilter.MakeIstioWasmFilter(filter, envoyfilter.MakeLocalDatasource(filterPath))
 
 	return forEachHcm(listeners, func(networkFilter *envoy_api_v2_listener.Filter, cfg *envoy_config_filter_network_hcm_v2.HttpConnectionManager) error {
 		for i, httpFilter := range cfg.GetHttpFilters() {

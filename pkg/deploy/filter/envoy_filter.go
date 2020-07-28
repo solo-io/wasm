@@ -31,11 +31,11 @@ func MakeRemoteDataSource(uri, cluster string) *core.AsyncDataSource {
 	}
 }
 
-func MakeLocalDatasource(path string) *corev3.AsyncDataSource {
-	return &corev3.AsyncDataSource{
-		Specifier: &corev3.AsyncDataSource_Local{
-			Local: &corev3.DataSource{
-				Specifier: &corev3.DataSource_Filename{
+func MakeLocalDatasource(path string) *core.AsyncDataSource {
+	return &core.AsyncDataSource{
+		Specifier: &core.AsyncDataSource_Local{
+			Local: &core.DataSource{
+				Specifier: &core.DataSource_Filename{
 					Filename: path,
 				},
 			},

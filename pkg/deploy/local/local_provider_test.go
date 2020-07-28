@@ -10,26 +10,30 @@ import (
 	"sync"
 	"time"
 
-	testvars "github.com/solo-io/wasme/pkg/consts/test"
-
 	"github.com/solo-io/wasme/pkg/consts"
+	"github.com/solo-io/wasme/pkg/store"
+	"github.com/solo-io/wasme/pkg/util"
 	"github.com/solo-io/wasme/test"
+
+	"github.com/gogo/protobuf/types"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
-	"github.com/solo-io/wasme/pkg/store"
-	"github.com/solo-io/wasme/pkg/util"
-
 	. "github.com/solo-io/wasme/pkg/deploy/local"
+
+	testvars "github.com/solo-io/wasme/pkg/consts/test"
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
 )
 
 var _ = Describe("LocalProvider", func() {
 	var (
 		filter = &v1.FilterSpec{
-			Id:     "my_filter",
-			Image:  consts.HubDomain + "/ilackarms/assemblyscript-test:" + testvars.Istio15Tag,
-			Config: "wurld",
+			Id:    "my_filter",
+			Image: consts.HubDomain + "/ilackarms/assemblyscript-test:" + testvars.Istio15Tag,
+			Config: &types.Any{
+				TypeUrl: "type.googleapis.com/google.protobuf.StringValue",
+				Value:   []byte("wurld"),
+			},
 		}
 		storeDir string
 
@@ -164,6 +168,7 @@ staticResources:
                     local:
                       filename: %v/filter.wasm
                   runtime: envoy.wasm.runtime.v8
+                  vmId: my_filter
             name: envoy.filters.http.wasm
           - name: envoy.router
           routeConfig:
