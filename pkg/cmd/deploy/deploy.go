@@ -72,9 +72,16 @@ func makeDeployCommand(ctx *context.Context, opts *options, provider, use, short
 			opts.providerType = provider
 			// If we were passed a config via CLI flag, default config type to StringValue
 			if opts.filterConfig != "" {
+				sv := &types.StringValue{
+					Value: opts.filterConfig,
+				}
+				val, err := sv.Marshal()
+				if err != nil {
+					return errors.Errorf("--config value could not be parsed")
+				}
 				opts.filter.Config = &types.Any{
 					TypeUrl: "type.googleapis.com/google.protobuf.StringValue",
-					Value:   []byte(opts.filterConfig),
+					Value:   val,
 				}
 			}
 			return runDeploy(*ctx, opts)
