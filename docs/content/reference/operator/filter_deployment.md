@@ -1,6 +1,6 @@
 
 ---
-title: "wasme.iofilter_deployment.proto"
+title: "wasme.iogithub.com/solo-io/wasme/operator/api/wasme/v1/filter_deployment.proto"
 ---
 
 ## Package : `wasme.io`
@@ -9,10 +9,10 @@ title: "wasme.iofilter_deployment.proto"
 
 <a name="top"></a>
 
-<a name="API Reference for filter_deployment.proto"></a>
+<a name="API Reference for github.com/solo-io/wasme/operator/api/wasme/v1/filter_deployment.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## filter_deployment.proto
+## github.com/solo-io/wasme/operator/api/wasme/v1/filter_deployment.proto
 
 
 ## Table of Contents

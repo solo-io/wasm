@@ -1,6 +1,6 @@
 
 ---
-title: "google.protobufgoogle/protobuf/any.proto"
+title: "google.protobufgithub.com/solo-io/solo-kit/api/external/google/protobuf/any.proto"
 ---
 
 ## Package : `google.protobuf`
@@ -9,10 +9,10 @@ title: "google.protobufgoogle/protobuf/any.proto"
 
 <a name="top"></a>
 
-<a name="API Reference for google/protobuf/any.proto"></a>
+<a name="API Reference for github.com/solo-io/solo-kit/api/external/google/protobuf/any.proto"></a>
 <p align="right"><a href="#top">Top</a></p>
 
-## google/protobuf/any.proto
+## github.com/solo-io/solo-kit/api/external/google/protobuf/any.proto
 
 
 ## Table of Contents

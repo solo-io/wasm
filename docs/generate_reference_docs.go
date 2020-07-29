@@ -82,6 +82,7 @@ for an example runtime configuration.
 {{% children description="true" %}}
 
 `
+	vendorAnyDir = filepath.Join(moduleRoot, "vendor_any")
 )
 
 func main() {
@@ -122,7 +123,7 @@ func generateOperatorReference() error {
 	os.RemoveAll(operatorDocsDir)
 	os.MkdirAll(operatorDocsDir, 0755)
 
-	return generateProtoDocs(operatorApiDir, operatorDocsTemplate, operatorDocsDir, operatorIndex)
+	return generateProtoDocs(vendorAnyDir, operatorDocsTemplate, operatorDocsDir, operatorIndex)
 }
 
 func generateImageConfigReference() error {
