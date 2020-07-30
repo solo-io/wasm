@@ -35,7 +35,10 @@ func generateCrdExample(filename, image, ns string) error {
 	sv := &types.StringValue{
 		Value: "world",
 	}
-	val, _ := sv.Marshal()
+	val, err := sv.Marshal()
+	if err != nil {
+		return err
+	}
 
 	filterDeployment := &v1.FilterDeployment{
 		TypeMeta: metav1.TypeMeta{

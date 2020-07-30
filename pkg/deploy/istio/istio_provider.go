@@ -387,9 +387,12 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 		cache.Digest2filename(descriptor.Digest),
 	)
 
-	wasmFilterConfig := envoyfilter.MakeIstioWasmFilter(filter,
+	wasmFilterConfig, err := envoyfilter.MakeIstioWasmFilter(filter,
 		envoyfilter.MakeLegacyLocalDatasource(filename),
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	// here we need to use the gogo proto marshal
 	patchValue, err := protoutils.MarshalStruct(wasmFilterConfig)

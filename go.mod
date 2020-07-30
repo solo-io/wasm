@@ -35,6 +35,7 @@ require (
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
 	k8s.io/api v0.17.4

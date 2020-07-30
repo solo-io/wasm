@@ -1,16 +1,17 @@
 package filter
 
 import (
-	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
-	"github.com/gogo/protobuf/types"
-
 	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/api/v2/config"
+	"github.com/solo-io/solo-kit/pkg/api/external/envoy/api/v2/core"
+	"github.com/solo-io/wasme/pkg/util"
+
+	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
+
+	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	corev3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/config/core/v3"
 	wasmv3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/extensions/wasm/v3"
-
-	"github.com/solo-io/solo-kit/pkg/api/external/envoy/api/v2/core"
 	wasmev1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
-	"github.com/solo-io/wasme/pkg/util"
 )
 
 func MakeRemoteDataSource(uri, cluster string) *core.AsyncDataSource {
@@ -86,18 +87,22 @@ func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource)
 	}
 }
 
-func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSource) *envoyhttp.HttpFilter {
-	var cfgVal string
-	// Istio only takes a string for config, not a proto.Any.
-	if filter.Config != nil {
-		cfgVal = string(filter.Config.Value)
+func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSource) (*envoyhttp.HttpFilter, error) {
+	var da types.DynamicAny
+	if err := types.UnmarshalAny(filter.Config, &da); err != nil {
+		return nil, err
+	}
+
+	cfgVal, ok := da.Message.(*types.StringValue)
+	if !ok {
+		return nil, errors.Errorf("wasm filter configuration has an invalid type")
 	}
 
 	filterCfg := &config.WasmService{
 		Config: &config.PluginConfig{
 			Name:          filter.Id,
 			RootId:        filter.RootID,
-			Configuration: cfgVal,
+			Configuration: cfgVal.GetValue(),
 			VmConfig: &config.VmConfig{
 				Runtime: "envoy.wasm.runtime.v8", // default to v8
 				Code:    dataSrc,
@@ -109,8 +114,7 @@ func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSour
 	// here we need to use the golang proto marshal
 	marshalledConf, err := util.MarshalStruct(filterCfg)
 	if err != nil {
-		// this should NEVER HAPPEN!
-		panic(err)
+		return nil, err
 	}
 
 	return &envoyhttp.HttpFilter{
@@ -118,5 +122,5 @@ func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSour
 		ConfigType: &envoyhttp.HttpFilter_Config{
 			Config: marshalledConf,
 		},
-	}
+	}, nil
 }
