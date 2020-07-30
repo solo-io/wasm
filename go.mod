@@ -12,7 +12,7 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v0.4.0
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/mock v1.4.4-0.20200406172829-6d816de489c1
+	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.3.5
 	github.com/google/go-cmp v0.5.0 // indirect
 	github.com/hashicorp/go-multierror v1.0.0

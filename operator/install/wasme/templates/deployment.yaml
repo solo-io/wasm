@@ -73,22 +73,6 @@ metadata:
 
 
 
----
-# Service for wasme-operator
-
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: wasme-operator
-  name: wasme-operator
-  namespace: {{ $.Release.Namespace }}
-spec:
-  selector:
-    app: wasme-operator
-  type: 
-  ports:
-
 
 ---
 
@@ -183,22 +167,6 @@ metadata:
   namespace: {{ $.Release.Namespace }}
 
 
-
----
-# Service for wasme-cache
-
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: wasme-cache
-  name: wasme-cache
-  namespace: {{ $.Release.Namespace }}
-spec:
-  selector:
-    app: wasme-cache
-  type: 
-  ports:
 
 
 
