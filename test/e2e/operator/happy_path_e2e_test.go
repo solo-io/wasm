@@ -32,6 +32,11 @@ import (
 var filterDeploymentName = "myfilter"
 
 func generateCrdExample(filename, image, ns string) error {
+	sv := &types.StringValue{
+		Value: "world",
+	}
+	val, _ := sv.Marshal()
+
 	filterDeployment := &v1.FilterDeployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "FilterDeployment",
@@ -46,7 +51,7 @@ func generateCrdExample(filename, image, ns string) error {
 				Image: image,
 				Config: &types.Any{
 					TypeUrl: "type.googleapis.com/google.protobuf.StringValue",
-					Value:   []byte("world"),
+					Value:   val,
 				},
 			},
 			Deployment: &v1.DeploymentSpec{
