@@ -28,7 +28,7 @@ require (
 	github.com/solo-io/gloo v1.5.0-beta11
 	github.com/solo-io/go-utils v0.16.4
 	github.com/solo-io/protoc-gen-ext v0.0.9
-	github.com/solo-io/skv2 v0.7.2
+	github.com/solo-io/skv2 v0.8.0
 	github.com/solo-io/solo-kit v0.13.10
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
