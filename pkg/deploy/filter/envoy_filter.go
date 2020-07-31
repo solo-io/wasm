@@ -88,21 +88,27 @@ func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource)
 }
 
 func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSource) (*envoyhttp.HttpFilter, error) {
-	var da types.DynamicAny
-	if err := types.UnmarshalAny(filter.Config, &da); err != nil {
-		return nil, err
-	}
+	var cfgVal string
+	if filter.Config != nil {
+		// As the config's value is a StringValue, we need to unmarshall it,
+		// typecheck it, then get the value out of the result.
+		var da types.DynamicAny
+		if err := types.UnmarshalAny(filter.Config, &da); err != nil {
+			return nil, err
+		}
 
-	cfgVal, ok := da.Message.(*types.StringValue)
-	if !ok {
-		return nil, errors.Errorf("wasm filter configuration has an invalid type")
+		cfg, ok := da.Message.(*types.StringValue)
+		if !ok {
+			return nil, errors.Errorf("wasm filter configuration has an invalid type, should be StringValue")
+		}
+		cfgVal = cfg.GetValue()
 	}
 
 	filterCfg := &config.WasmService{
 		Config: &config.PluginConfig{
 			Name:          filter.Id,
 			RootId:        filter.RootID,
-			Configuration: cfgVal.GetValue(),
+			Configuration: cfgVal,
 			VmConfig: &config.VmConfig{
 				Runtime: "envoy.wasm.runtime.v8", // default to v8
 				Code:    dataSrc,
