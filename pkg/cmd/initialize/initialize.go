@@ -75,6 +75,7 @@ var availableBases = map[string][]filterBase{
 			// cpp for istio 1.5
 			compatiblePlatforms: compatiblePlatforms{
 				abi.Istio15,
+				abi.Istio16,
 			},
 			archiveBytes: cppIstio1_5TarBytes,
 		},
@@ -90,6 +91,7 @@ var availableBases = map[string][]filterBase{
 			compatiblePlatforms: compatiblePlatforms{
 				abi.Gloo13,
 				abi.Istio15,
+				abi.Istio16,
 			},
 			archiveBytes: assemblyscriptTarBytes,
 		},
@@ -166,7 +168,7 @@ If --language, --platform, or --platform-version are not provided, the CLI will 
 		fmt.Sprintf("The name of the target platform against which to build. Supported platforms are: %v", []string{"gloo", "istio"}))
 
 	cmd.PersistentFlags().StringVar(&opts.platform.Version, "platform-version", "",
-		fmt.Sprintf("The version of the target platform against which to build. Supported Istio versions are: %v. Supported Gloo versions are: %v", []string{abi.Version15x}, []string{abi.Version13x, abi.Version15x}))
+		fmt.Sprintf("The version of the target platform against which to build. Supported Istio versions are: %v. Supported Gloo versions are: %v", []string{abi.Version15x, abi.Version16x}, []string{abi.Version13x, abi.Version15x}))
 
 	cmd.PersistentFlags().BoolVar(&opts.disablePrompt, "disable-prompt", false,
 		"Disable the interactive prompt if a required parameter is not passed. If set to true and one of the required flags is not provided, wasme CLI will return an error.")

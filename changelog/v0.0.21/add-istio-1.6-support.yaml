@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    description: 'Add support for Istio v1.6.x'
+    issueLink: https://github.com/solo-io/wasme/issues/126

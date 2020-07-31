@@ -6,22 +6,21 @@ import (
 	"strings"
 	"time"
 
-	"k8s.io/apimachinery/pkg/labels"
-
+	"github.com/solo-io/go-utils/protoutils"
 	"github.com/solo-io/skv2/pkg/ezkube"
 	"github.com/solo-io/wasme/pkg/abi"
+	"github.com/solo-io/wasme/pkg/cache"
+	envoyfilter "github.com/solo-io/wasme/pkg/deploy/filter"
 	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
+	"github.com/solo-io/wasme/pkg/pull"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/go-utils/protoutils"
-	"github.com/solo-io/wasme/pkg/cache"
-	envoyfilter "github.com/solo-io/wasme/pkg/deploy/filter"
-	"github.com/solo-io/wasme/pkg/pull"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	"istio.io/client-go/pkg/apis/networking/v1alpha3"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/client-go/kubernetes"
 )
 
