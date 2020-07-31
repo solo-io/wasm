@@ -26,13 +26,17 @@ import (
 )
 
 var _ = Describe("LocalProvider", func() {
+	sv := &types.StringValue{
+		Value: "wurld",
+	}
+	val, _ := sv.Marshal()
 	var (
 		filter = &v1.FilterSpec{
 			Id:    "my_filter",
 			Image: consts.HubDomain + "/ilackarms/assemblyscript-test:" + testvars.Istio15Tag,
 			Config: &types.Any{
 				TypeUrl: "type.googleapis.com/google.protobuf.StringValue",
-				Value:   []byte("wurld"),
+				Value:   val,
 			},
 		}
 		storeDir string
