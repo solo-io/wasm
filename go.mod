@@ -4,56 +4,44 @@ go 1.13
 
 require (
 	github.com/avast/retry-go v2.4.3+incompatible
-	github.com/containerd/containerd v1.3.0
-	github.com/deislabs/oras v0.7.0
-	github.com/docker/cli v0.0.0-20191017083524-a8ff7f821017
+	github.com/containerd/containerd v1.3.2
+	github.com/deislabs/oras v0.8.1
+	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
 	github.com/docker/distribution v2.7.1+incompatible
-	github.com/docker/docker v1.13.1 // indirect
-	github.com/elazarl/goproxy v0.0.0-20190421051319-9d40249d3c2f // indirect
-	github.com/elazarl/goproxy/ext v0.0.0-20190421051319-9d40249d3c2f // indirect
-	github.com/envoyproxy/go-control-plane v0.9.6-0.20200401235947-be7fefdaf0df
-	github.com/envoyproxy/protoc-gen-validate v0.1.0
+	github.com/envoyproxy/go-control-plane v0.9.6-0.20200529035633-fc42e08917e9
+	github.com/envoyproxy/protoc-gen-validate v0.4.0
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
-	github.com/go-openapi/validate v0.19.5 // indirect
 	github.com/gogo/protobuf v1.3.1
-	github.com/golang/mock v1.4.4-0.20200406172829-6d816de489c1
+	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.3.5
-	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect
+	github.com/google/go-cmp v0.5.0 // indirect
 	github.com/hashicorp/go-multierror v1.0.0
-	github.com/json-iterator/go v1.1.8 // indirect
 	github.com/manifoldco/promptui v0.7.0
-	github.com/mitchellh/reflectwalk v1.0.1 // indirect
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.8.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
-	github.com/opencontainers/runc v1.0.0-rc9 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/pseudomuto/protoc-gen-doc v1.3.0
+	github.com/pseudomuto/protoc-gen-doc v1.3.2
 	github.com/pseudomuto/protokit v0.2.0
-	github.com/sirupsen/logrus v1.4.2
-	github.com/solo-io/gloo v1.3.5
-	github.com/solo-io/go-utils v0.15.2
-	github.com/solo-io/protoc-gen-ext v0.0.7
-	github.com/solo-io/skv2 v0.0.5
-	github.com/solo-io/solo-kit v0.13.8
+	github.com/sirupsen/logrus v1.6.0
+	github.com/solo-io/gloo v1.5.0-beta11
+	github.com/solo-io/go-utils v0.16.4
+	github.com/solo-io/protoc-gen-ext v0.0.9
+	github.com/solo-io/skv2 v0.8.0
+	github.com/solo-io/solo-kit v0.13.10
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
 	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
-	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
+	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
-	istio.io/gogo-genproto v0.0.0-20191009201739-17d570f95998 // indirect
-	k8s.io/api v0.17.2
-	k8s.io/apimachinery v0.18.1
+	k8s.io/api v0.17.4
+	k8s.io/apimachinery v0.18.3
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/code-generator v0.17.2
-	k8s.io/gengo v0.0.0-20191010091904-7fa3014cb28f // indirect
-	k8s.io/kube-openapi v0.0.0-20191107075043-30be4d16710a // indirect
-	k8s.io/kubectl v0.17.1 // indirect
-	k8s.io/utils v0.17.1 // indirect
 	sigs.k8s.io/controller-runtime v0.5.6
 )
 
@@ -62,6 +50,9 @@ replace (
 	// copypaste from Gloo
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.0.0+incompatible
 	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
+
+	// Breaking changes pulled in by latest gloo need to use original repo instead of fork
+	github.com/ilackarms/protoc-gen-doc => github.com/pseudomuto/protoc-gen-doc v1.3.0
 
 	k8s.io/api => k8s.io/api v0.0.0-20191004120104-195af9ec3521
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20191204090712-e0e829f17bab

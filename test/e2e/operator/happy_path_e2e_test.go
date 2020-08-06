@@ -9,29 +9,37 @@ import (
 	"strings"
 	"time"
 
+	"github.com/solo-io/skv2/codegen/model"
+	"github.com/solo-io/skv2/codegen/render"
+	"github.com/solo-io/skv2/codegen/util"
 	"github.com/solo-io/wasme/pkg/cache"
-	appsv1 "k8s.io/api/apps/v1"
+	"github.com/solo-io/wasme/test"
+
+	"github.com/gogo/protobuf/types"
+	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes/scheme"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	"github.com/solo-io/skv2/codegen/util"
-
-	"github.com/solo-io/wasme/test"
-
-	"github.com/pkg/errors"
-	"github.com/solo-io/skv2/codegen/model"
-	"github.com/solo-io/skv2/codegen/render"
-	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+
+	v1 "github.com/solo-io/wasme/pkg/operator/api/wasme.io/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 var filterDeploymentName = "myfilter"
 
 func generateCrdExample(filename, image, ns string) error {
+	sv := &types.StringValue{
+		Value: "world",
+	}
+	val, err := sv.Marshal()
+	if err != nil {
+		return err
+	}
+
 	filterDeployment := &v1.FilterDeployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "FilterDeployment",
@@ -43,8 +51,11 @@ func generateCrdExample(filename, image, ns string) error {
 		},
 		Spec: v1.FilterDeploymentSpec{
 			Filter: &v1.FilterSpec{
-				Image:  image,
-				Config: "world",
+				Image: image,
+				Config: &types.Any{
+					TypeUrl: "type.googleapis.com/google.protobuf.StringValue",
+					Value:   val,
+				},
 			},
 			Deployment: &v1.DeploymentSpec{
 				DeploymentType: &v1.DeploymentSpec_Istio{Istio: &v1.IstioDeploymentSpec{

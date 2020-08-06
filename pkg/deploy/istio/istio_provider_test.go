@@ -44,7 +44,7 @@ var _ = Describe("IstioProvider", func() {
 		cache  Cache
 		filter = &wasmev1.FilterSpec{
 			Id:     "filter-id",
-			Config: `{"filter":"config"}`,
+			Config: nil,
 			Image:  "filter/image:v1",
 			RootID: "root_id",
 		}
@@ -57,14 +57,15 @@ var _ = Describe("IstioProvider", func() {
 		deployment *appsv1.Deployment
 	)
 	BeforeEach(func() {
-		cfg := aptest.MustConfig()
+		cfg := aptest.MustConfig("")
 		kube = kubernetes.NewForConfigOrDie(cfg)
 
 		ns = "istio-provider-test-" + randutils.RandString(4)
 		err := kubeutils.CreateNamespacesInParallel(kube, ns)
 		Expect(err).NotTo(HaveOccurred())
 
-		mgr, c := aptest.ManagerWithOpts(cfg, manager.Options{
+		ctx, c := context.WithCancel(context.Background())
+		mgr := aptest.ManagerWithOpts(ctx, cfg, manager.Options{
 			Namespace: ns,
 		})
 		cancel = c
@@ -229,7 +230,7 @@ var _ = Describe("IstioProvider", func() {
 		err := p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
 			Image:  glooImage,
-			Config: "{}",
+			Config: nil,
 		})
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("image " + glooImage + " not supported by istio version"))
@@ -239,7 +240,7 @@ var _ = Describe("IstioProvider", func() {
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
 			Image:  test.IstioAssemblyScriptImage,
-			Config: "{}",
+			Config: nil,
 		})
 		Expect(err).NotTo(HaveOccurred())
 	})

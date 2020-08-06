@@ -80,15 +80,9 @@ var availableBases = map[string][]filterBase{
 		},
 		{
 			compatiblePlatforms: compatiblePlatforms{
-				abi.Gloo13,
-			},
-			archiveBytes: cppTarBytes,
-		},
-		{
-			compatiblePlatforms: compatiblePlatforms{
 				abi.Gloo15,
 			},
-			archiveBytes: cppGloo1_5TarBytes,
+			archiveBytes: cppTarBytes,
 		},
 	},
 	languageAssemblyScript: {

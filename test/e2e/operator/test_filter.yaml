@@ -11,5 +11,7 @@ spec:
     istio:
       kind: Deployment
   filter:
-    config: world
-    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
+    config:
+      '@type': type.googleapis.com/google.protobuf.StringValue
+      value: world
+    image: webassemblyhub.io/sodman/assemblyscript-example:v0.4

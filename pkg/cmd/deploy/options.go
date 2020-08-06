@@ -31,6 +31,9 @@ type options struct {
 	// filter to deploy
 	filter v1.FilterSpec
 
+	// configuration string for filter
+	filterConfig string
+
 	// deployment implementation
 	providerOptions
 
@@ -45,7 +48,7 @@ type options struct {
 }
 
 func (opts *options) addToFlags(flags *pflag.FlagSet) {
-	flags.StringVarP(&opts.filter.Config, "config", "", "", "optional config that will be passed to the filter. accepts an inline string.")
+	flags.StringVarP(&opts.filterConfig, "config", "", "", "optional config that will be passed to the filter. accepts an inline string.")
 	flags.StringVarP(&opts.filter.RootID, "root-id", "", "", "optional root ID used to bind the filter at the Envoy level. this value is normally read from the filter image directly.")
 	opts.addIdToFlags(flags)
 }

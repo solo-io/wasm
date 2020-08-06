@@ -26,12 +26,12 @@ type FilterDeploymentReconciler interface {
 // before being deleted.
 // implemented by the user
 type FilterDeploymentDeletionReconciler interface {
-	ReconcileFilterDeploymentDeletion(req reconcile.Request)
+	ReconcileFilterDeploymentDeletion(req reconcile.Request) error
 }
 
 type FilterDeploymentReconcilerFuncs struct {
 	OnReconcileFilterDeployment         func(obj *wasme_io_v1.FilterDeployment) (reconcile.Result, error)
-	OnReconcileFilterDeploymentDeletion func(req reconcile.Request)
+	OnReconcileFilterDeploymentDeletion func(req reconcile.Request) error
 }
 
 func (f *FilterDeploymentReconcilerFuncs) ReconcileFilterDeployment(obj *wasme_io_v1.FilterDeployment) (reconcile.Result, error) {
@@ -41,11 +41,11 @@ func (f *FilterDeploymentReconcilerFuncs) ReconcileFilterDeployment(obj *wasme_i
 	return f.OnReconcileFilterDeployment(obj)
 }
 
-func (f *FilterDeploymentReconcilerFuncs) ReconcileFilterDeploymentDeletion(req reconcile.Request) {
+func (f *FilterDeploymentReconcilerFuncs) ReconcileFilterDeploymentDeletion(req reconcile.Request) error {
 	if f.OnReconcileFilterDeploymentDeletion == nil {
-		return
+		return nil
 	}
-	f.OnReconcileFilterDeploymentDeletion(req)
+	return f.OnReconcileFilterDeploymentDeletion(req)
 }
 
 // Reconcile and finalize the FilterDeployment Resource
@@ -70,9 +70,9 @@ type filterDeploymentReconcileLoop struct {
 	loop reconcile.Loop
 }
 
-func NewFilterDeploymentReconcileLoop(name string, mgr manager.Manager) FilterDeploymentReconcileLoop {
+func NewFilterDeploymentReconcileLoop(name string, mgr manager.Manager, options reconcile.Options) FilterDeploymentReconcileLoop {
 	return &filterDeploymentReconcileLoop{
-		loop: reconcile.NewLoop(name, mgr, &wasme_io_v1.FilterDeployment{}),
+		loop: reconcile.NewLoop(name, mgr, &wasme_io_v1.FilterDeployment{}, options),
 	}
 }
 
@@ -106,10 +106,11 @@ func (r genericFilterDeploymentReconciler) Reconcile(object ezkube.Object) (reco
 	return r.reconciler.ReconcileFilterDeployment(obj)
 }
 
-func (r genericFilterDeploymentReconciler) ReconcileDeletion(request reconcile.Request) {
+func (r genericFilterDeploymentReconciler) ReconcileDeletion(request reconcile.Request) error {
 	if deletionReconciler, ok := r.reconciler.(FilterDeploymentDeletionReconciler); ok {
-		deletionReconciler.ReconcileFilterDeploymentDeletion(request)
+		return deletionReconciler.ReconcileFilterDeploymentDeletion(request)
 	}
+	return nil
 }
 
 // genericFilterDeploymentFinalizer implements a generic reconcile.FinalizingReconciler

@@ -4,26 +4,33 @@ import (
 	"log"
 	"os"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/solo-io/skv2/codegen"
 	"github.com/solo-io/skv2/codegen/model"
+	"github.com/solo-io/solo-kit/pkg/code-generator/sk_anyvendor"
 	"github.com/solo-io/wasme/pkg/cache"
 	"github.com/solo-io/wasme/pkg/version"
-	v1 "k8s.io/api/core/v1"
-	rbacv1 "k8s.io/api/rbac/v1"
+
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+
+	v1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func main() {
 	pushImage := os.Getenv("IMAGE_PUSH") == "1"
 
+	protoImports := sk_anyvendor.CreateDefaultMatchOptions([]string{
+		"operator/api/**/*.proto",
+	})
+
 	cmd := &codegen.Command{
-		AppName: "wasme",
+		AppName:         "wasme",
+		AnyVendorConfig: protoImports,
+		RenderProtos:    true,
 		Groups: []model.Group{
 			{
-				ProtoDir: "operator/api",
 				GroupVersion: schema.GroupVersion{
 					Group:   "wasme.io",
 					Version: "v1",
@@ -44,7 +51,6 @@ func main() {
 						},
 					},
 				},
-				RenderProtos:     true,
 				RenderManifests:  true,
 				RenderTypes:      true,
 				RenderClients:    false,

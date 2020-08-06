@@ -41,17 +41,19 @@ install-deps: mod-download
 	go get -v github.com/gogo/protobuf/protoc-gen-gogo@v1.3.1
 	# github.com/golang/protobuf pinned to 1.3.5 else docs/generate_reference_docs.go proto.Unmarshal panics
 	go get -v github.com/golang/protobuf/protoc-gen-go@v1.3.5
-	go get -v github.com/solo-io/protoc-gen-ext@v0.0.7
+	go get -v github.com/solo-io/protoc-gen-ext@v0.0.9
 	go get -v github.com/golang/mock/mockgen@v1.4.3
 	go get -v golang.org/x/tools/cmd/goimports@v0.0.0-20200414131530-0037cb7812fa
 	go get -v github.com/cratonica/2goarray
-	go get -v github.com/solo-io/skv2@v0.0.5 # TODO: Bump - This version of skv2 is quite old
+	go get -v github.com/solo-io/gloo@v1.5.0-beta11
+	go get -v github.com/solo-io/skv2@v0.8.0
+
 	go mod tidy
 
 
 
 # Generated Static assets for CLI & Docs, plus Operator/API Code
-SUBDIRS:=pkg test
+SUBDIRS:=pkg test operator
 .PHONY: generated-code
 generated-code:
 	go generate ./...
@@ -61,6 +63,7 @@ generated-code:
 .PHONY: operator-gen
 operator-gen:
 	go run -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) operator/generate.go
+	goimports -w $(SUBDIRS)
 
 # Generate Manifests from Chart
 .PHONY: manifest-gen
