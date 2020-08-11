@@ -44,19 +44,6 @@ func MakeLocalDatasource(path string) *core.AsyncDataSource {
 	}
 }
 
-// Uses the older datatypes needed by older versions of envoy-wasm, used by Istio
-func MakeLegacyLocalDatasource(path string) *core.AsyncDataSource {
-	return &core.AsyncDataSource{
-		Specifier: &core.AsyncDataSource_Local{
-			Local: &core.DataSource{
-				Specifier: &core.DataSource_Filename{
-					Filename: path,
-				},
-			},
-		},
-	}
-}
-
 func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource) *envoyhttp.HttpFilter {
 	filterCfg := &wasmv3.WasmService{
 		Config: &wasmv3.PluginConfig{
