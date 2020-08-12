@@ -199,7 +199,7 @@ var _ = Describe("skv2Generate", func() {
 				return 0, err
 			}
 			return fd.Status.ObservedGeneration, nil
-		}).Should(Equal(int64(1)))
+		}).Should(Equal(int64(2)))
 
 		err = test.DeleteFile(filterFile, ns)
 		Expect(err).NotTo(HaveOccurred())
