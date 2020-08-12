@@ -1,15 +1,6 @@
 name: pull_request
 
-on:
-  push:
-    branches:
-    - 'master'
-  pull_request: {}
-  release:
-    types: [published]
-
-env:
-  TAGGED_VERSION: ${{github.event.release.tag_name || '' }}
+on: pull_request
 
 jobs:
   test:
@@ -57,14 +48,6 @@ jobs:
         export FILTER_IMAGE_ISTIO_TAG=webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
         export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
         make run-tests
-    - name: Release
-      if: github.event.release.tag_name
-      env:
-        KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
-        QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
-      run: |
-        docker login quay.io --username "solo-io+solobot" --password $QUAY_IO_PASSWORD
-        make build-images operator-gen manifest-gen publish-images upload-github-release-assets publish-docs
     - name: Debug Info
       if: failure()
       env:

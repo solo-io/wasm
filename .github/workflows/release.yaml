@@ -1,0 +1,41 @@
+name: release
+
+on:
+  release:
+    types: [published]
+
+env:
+  TAGGED_VERSION: ${{github.event.release.tag_name || '' }}
+
+jobs:
+  build-and-release:
+    name: Build & Release
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Go 1.14
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.14
+    - name: Install Protoc
+      uses: solo-io/setup-protoc@master
+      with:
+        version: '3.6.1'
+    - uses: azure/setup-kubectl@v1
+      id: kubectl
+      with:
+        version: 'v1.18.0'
+    - uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Release
+      if: github.event.release.tag_name
+      env:
+        KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
+        QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
+      run: |
+        docker login quay.io --username "solo-io+solobot" --password $QUAY_IO_PASSWORD
+        make build-images operator-gen manifest-gen publish-images upload-github-release-assets publish-docs
