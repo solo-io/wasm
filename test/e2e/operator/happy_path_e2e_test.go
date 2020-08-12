@@ -205,7 +205,7 @@ var _ = Describe("skv2Generate", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
-		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring("hello: world"))
+		Eventually(testRequest, time.Minute*5).ShouldNot(ContainSubstring("hello: world"))
 
 	})
 })
