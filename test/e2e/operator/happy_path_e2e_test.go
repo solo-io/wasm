@@ -31,9 +31,9 @@ import (
 
 var filterDeploymentName = "myfilter"
 
-func generateCrdExample(filename, image, ns string) error {
+func generateCrdExample(filename, image, ns, headerValue string) error {
 	sv := &types.StringValue{
-		Value: "world",
+		Value: headerValue,
 	}
 	val, err := sv.Marshal()
 	if err != nil {
@@ -151,7 +151,16 @@ var _ = Describe("skv2Generate", func() {
 	It("runs the wasme operator", func() {
 		filterFile := "test/e2e/operator/test_filter.yaml"
 
-		err := generateCrdExample(filterFile, test.GetImageTagIstio(), ns)
+		err := generateCrdExample(filterFile, test.GetImageTagIstio(), ns, "init-jitter")
+		Expect(err).NotTo(HaveOccurred())
+
+		err = test.ApplyFile(filterFile, ns)
+		Expect(err).NotTo(HaveOccurred())
+
+		// Give Envoy a few secs to pull down the image from wasmhub
+		time.Sleep(3 * time.Second)
+
+		err = generateCrdExample(filterFile, test.GetImageTagIstio(), ns, "world")
 		Expect(err).NotTo(HaveOccurred())
 
 		err = test.ApplyFile(filterFile, ns)
@@ -190,13 +199,13 @@ var _ = Describe("skv2Generate", func() {
 				return 0, err
 			}
 			return fd.Status.ObservedGeneration, nil
-		}).Should(Equal(int64(1)))
+		}).Should(Equal(int64(2)))
 
 		err = test.DeleteFile(filterFile, ns)
 		Expect(err).NotTo(HaveOccurred())
 
 		// expect header not in response
-		Eventually(testRequest, time.Minute*3).ShouldNot(ContainSubstring("hello: world"))
+		Eventually(testRequest, time.Minute*5).ShouldNot(ContainSubstring("hello: world"))
 
 	})
 })
