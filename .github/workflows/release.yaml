@@ -41,6 +41,7 @@ jobs:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
         QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAGGED_VERSION: ${{ github.event.release.tag_name }}
       run: |
         docker login quay.io --username "solo-io+solobot" --password $QUAY_IO_PASSWORD
         make install-deps build-images operator-gen manifest-gen publish-images upload-github-release-assets publish-docs
