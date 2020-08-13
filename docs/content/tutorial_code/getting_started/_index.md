@@ -37,7 +37,7 @@ wasme --version
 ```
 
 ```
-wasme version 0.0.16
+wasme version 0.0.25
 ```
 
 ### Initialize a new filter project
@@ -48,14 +48,14 @@ Let's create a new project called `new-filter`:
 $  wasme init ./new-filter
 ```
 
-You'll be asked with an interactive prompt which language platform you are building for. At time of writing, the AssemblyScript Filter base is compatible with both Istio 1.5.x and Gloo 1.3.x:
+You'll be asked with an interactive prompt which language platform you are building for. At time of writing, the AssemblyScript Filter base is compatible with Istio 1.5.x, 1.6.x and Gloo 1.3.x:
 
 ```shell script
 ? What language do you wish to use for the filter:
     cpp
   ▸ assemblyscript
 ? With which platforms do you wish to use the filter?:
-  ▸ gloo:1.3.x, istio:1.5.x
+  ▸ gloo:1.3.x, istio:1.5.x, istio:1.6.x
 ```
 
 ```
