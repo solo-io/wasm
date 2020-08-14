@@ -1,6 +1,13 @@
 package version
 
-var DevVersion = "dev"
-
 // This will be set by the linker on release builds
-var Version = DevVersion
+var (
+	Version    string
+	DevVersion = "dev"
+)
+
+func init() {
+	if Version == "" {
+		Version = DevVersion
+	}
+}

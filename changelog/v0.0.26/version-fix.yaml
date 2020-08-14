@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Fix a bug in version linking which caused the version to be 'dev' on release.
+    issueLink: https://github.com/solo-io/wasme/issues/158
