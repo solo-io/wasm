@@ -81,6 +81,7 @@ SERVE_AS_LATEST_TAG:=$(VERSION)-latest
 ## don't bother generating manifest, just copy/modify from docs-prod repo
 # docker-push-docs: site-release manifest
 docker-push-docs: site-release
+	@echo "${GCR_PASSWORD}" | docker login -u ${GCR_USERNAME} --password-stdin gcr.io
 	docker build \
 		--build-arg VERSION=latest \
 		--build-arg PRODUCT_SCOPE=$(PRODUCT_SCOPE) \
