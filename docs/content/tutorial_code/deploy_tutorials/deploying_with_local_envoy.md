@@ -20,7 +20,7 @@ First we'll pull the filter with `wasme`. For this example we'll use the `webass
 which appends a header to HTTP responses. 
 
 {{% notice note %}}
-The `webassemblyhub.io/ilackarms/add-header:v0.1` filter image is compatible with the versions of Envoy packaged with Gloo `1.3.x` and Istio `1.5.x`. 
+The `webassemblyhub.io/ilackarms/add-header:v0.1` filter image is compatible with the versions of Envoy packaged with Gloo `1.3.x`, Istio `1.5.x`, and Istio `1.6.x`. 
 {{% /notice %}}
 
 
