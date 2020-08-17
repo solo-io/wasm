@@ -35,6 +35,11 @@ jobs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
+    - name: Login to gcloud registry
+      id: gcloud
+      uses: elgohr/gcloud-login-action@0.2
+      with:
+        account_key: ${{ secrets.GCLOUD_KEY }}
     - name: Release
       if: github.event.release.tag_name
       env:
@@ -42,6 +47,8 @@ jobs:
         QUAY_IO_PASSWORD: ${{ secrets.QUAY_IO_PASSWORD }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TAGGED_VERSION: ${{ github.event.release.tag_name }}
+        GCR_USERNAME: ${{ steps.gcloud.outputs.username }}
+        GCR_PASSWORD: ${{ steps.gcloud.outputs.password }}
       run: |
         docker login quay.io --username "solo-io+solobot" --password $QUAY_IO_PASSWORD
         make install-deps build-images operator-gen manifest-gen publish-images upload-github-release-assets publish-docs
