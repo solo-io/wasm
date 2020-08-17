@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Use HTTP cache instead of a file cache; this should solve file races and pod restart issues.
+    issueLink: https://github.com/solo-io/wasme/issues/104
