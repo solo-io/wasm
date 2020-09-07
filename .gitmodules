@@ -1,0 +1,3 @@
+[submodule "sdks/assemblyscript"]
+	path = sdks/assemblyscript
+	url = https://github.com/solo-io/proxy-runtime
