@@ -3,47 +3,57 @@ module github.com/solo-io/wasm/tools/wasme/cli
 go 1.13
 
 require (
-	github.com/avast/retry-go v2.4.3+incompatible
-	github.com/containerd/containerd v1.3.2
+	github.com/Masterminds/sprig/v3 v3.1.0 // indirect
+	github.com/cratonica/2goarray v0.0.0-20190331194516-514510793eaa
 	github.com/deislabs/oras v0.8.1
 	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
-	github.com/docker/distribution v2.7.1+incompatible
 	github.com/envoyproxy/go-control-plane v0.9.6-0.20200529035633-fc42e08917e9
 	github.com/envoyproxy/protoc-gen-validate v0.4.0
+	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.3.5
-	github.com/google/go-cmp v0.5.0 // indirect
 	github.com/hashicorp/go-multierror v1.0.0
+	github.com/imdario/mergo v0.3.9 // indirect
+	github.com/json-iterator/go v1.1.10 // indirect
+	github.com/lyft/protoc-gen-star v0.4.15 // indirect
 	github.com/manifoldco/promptui v0.7.0
-	github.com/onsi/ginkgo v1.12.0
-	github.com/onsi/gomega v1.8.1
+	github.com/mattn/go-zglob v0.0.3 // indirect
+	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/gomega v1.10.0
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.9.1
+	github.com/prometheus/procfs v0.0.11 // indirect
 	github.com/pseudomuto/protoc-gen-doc v1.3.2
 	github.com/pseudomuto/protokit v0.2.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/solo-io/gloo v1.5.0-beta11
-	github.com/solo-io/go-utils v0.16.4
+	github.com/solo-io/go-utils v0.16.6
 	github.com/solo-io/protoc-gen-ext v0.0.9
 	github.com/solo-io/skv2 v0.8.0
 	github.com/solo-io/solo-kit v0.13.10
 	github.com/solo-io/wasm/tools/wasme/pkg v0.0.0
-	github.com/solo-io/wasme v0.0.13-rc1
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/afero v1.3.4 // indirect
+	github.com/spf13/cobra v1.0.0
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
-	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5 // indirect
-	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
+	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
+	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208
 	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375
-	istio.io/api v0.0.0-20191109011911-e51134872853
+	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	helm.sh/helm/v3 v3.1.3 // indirect
+	istio.io/api v0.0.0-20200723170824-3c2193e74947
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
+	istio.io/tools v0.0.0-20200414140130-90db7d74fac2
 	k8s.io/api v0.17.4
+	k8s.io/apiextensions-apiserver v0.18.6 // indirect
 	k8s.io/apimachinery v0.18.3
+	k8s.io/cli-runtime v0.18.0 // indirect
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/code-generator v0.17.2
+	k8s.io/kubectl v0.18.0 // indirect
 	sigs.k8s.io/controller-runtime v0.5.6
 )
 

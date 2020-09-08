@@ -19,7 +19,7 @@ import (
 	"github.com/solo-io/skv2/codegen/util"
 	"github.com/solo-io/solo-kit/pkg/code-generator/collector"
 
-	"github.com/solo-io/wasm/tools/wasme/pkg/cmd"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd"
 
 	"github.com/solo-io/go-utils/clidoc"
 )

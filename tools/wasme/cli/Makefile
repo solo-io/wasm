@@ -22,7 +22,7 @@ LDFLAGS := "-X github.com/solo-io/wasm/tools/wasme/cli/pkg/version.Version=$(VER
 GCFLAGS := all="-N -l"
 
 # Passed by cloudbuild
-GCLOUD_PROJECT_ID := $(GCLOUD_PROJECT_ID)
+GCLOUD_PROJECT_ID?=solo-public
 BUILD_ID := $(BUILD_ID)
 
 #----------------------------------------------------------------------------------
@@ -37,16 +37,14 @@ mod-download:
 
 .PHONY: install-deps
 install-deps: mod-download
-	go get -v istio.io/tools/cmd/protoc-gen-jsonshim@v0.0.0-20200414140130-90db7d74fac2
-	go get -v github.com/gogo/protobuf/protoc-gen-gogo@v1.3.1
+	go install -v istio.io/tools/cmd/protoc-gen-jsonshim
+	go install -v github.com/gogo/protobuf/protoc-gen-gogo
 	# github.com/golang/protobuf pinned to 1.3.5 else docs/generate_reference_docs.go proto.Unmarshal panics
-	go get -v github.com/golang/protobuf/protoc-gen-go@v1.3.5
-	go get -v github.com/solo-io/protoc-gen-ext@v0.0.9
-	go get -v github.com/golang/mock/mockgen@v1.4.3
-	go get -v golang.org/x/tools/cmd/goimports@v0.0.0-20200414131530-0037cb7812fa
-	go get -v github.com/cratonica/2goarray
-	go get -v github.com/solo-io/gloo@v1.5.0-beta11
-	go get -v github.com/solo-io/skv2@v0.8.0
+	go install -v github.com/golang/protobuf/protoc-gen-go
+	go install -v github.com/solo-io/protoc-gen-ext
+	go install github.com/golang/mock/mockgen
+	go install -v golang.org/x/tools/cmd/goimports
+	go install -v github.com/cratonica/2goarray
 
 	go mod tidy
 

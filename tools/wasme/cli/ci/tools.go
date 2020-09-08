@@ -19,6 +19,15 @@ package tools
 import (
 	_ "github.com/envoyproxy/protoc-gen-validate"
 	_ "github.com/gogo/protobuf/gogoproto"
+	_ "github.com/gogo/protobuf/protoc-gen-gogo"
 	_ "github.com/solo-io/protoc-gen-ext"
+	_ "istio.io/tools/cmd/protoc-gen-jsonshim"
 	_ "k8s.io/code-generator"
+
+	// github.com/golang/protobuf pinned to 1.3.5 else docs/generate_reference_docs.go proto.Unmarshal panics
+	_ "github.com/cratonica/2goarray"
+	_ "github.com/golang/mock/mockgen"
+	_ "github.com/golang/protobuf/protoc-gen-go"
+	_ "github.com/solo-io/gloo"
+	_ "golang.org/x/tools/cmd/goimports"
 )
