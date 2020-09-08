@@ -4,7 +4,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/go-utils/kubeerrutils"
-	"github.com/solo-io/wasm/tools/wasme/pkg/version"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/version"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"

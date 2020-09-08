@@ -17,7 +17,7 @@ import (
 	"github.com/solo-io/wasm/tools/wasme/pkg/store"
 
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/wasm/tools/wasme/pkg/version"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/version"
 
 	"github.com/spf13/cobra"
 )

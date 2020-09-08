@@ -11,7 +11,7 @@ import (
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/operator"
 	v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1/controller"
-	"github.com/solo-io/wasm/tools/wasme/pkg/version"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/version"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/sync/errgroup"

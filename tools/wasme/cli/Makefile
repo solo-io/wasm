@@ -18,7 +18,7 @@ ifeq ($(TAGGED_VERSION),)
 endif
 VERSION ?= $(shell echo $(TAGGED_VERSION) | cut -c 2-)
 
-LDFLAGS := "-X github.com/solo-io/$(PROJECT)/pkg/version.Version=$(VERSION)"
+LDFLAGS := "-X github.com/solo-io/wasm/tools/wasme/cli/pkg/version.Version=$(VERSION)"
 GCFLAGS := all="-N -l"
 
 # Passed by cloudbuild

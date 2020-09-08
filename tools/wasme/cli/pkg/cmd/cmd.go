@@ -16,7 +16,7 @@ import (
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/deploy"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/initialize"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/list"
-	"github.com/solo-io/wasm/tools/wasme/pkg/version"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/version"
 
 	ctxo "github.com/deislabs/oras/pkg/context"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/cache"
