@@ -10,7 +10,7 @@
 # remove the "v" prefix
 VERSION ?= $(shell echo $(TAGGED_VERSION) | cut -c 2-)
 
-GCLOUD_PROJECT_ID ?= "solo-public"
+GCLOUD_PROJECT_ID ?= solo-public
 
 GCR_REPO_PREFIX ?= gcr.io/$(GCLOUD_PROJECT_ID)
 ### REPLACE with product name
