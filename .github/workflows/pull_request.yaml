@@ -36,7 +36,7 @@ jobs:
     - name: Setup env
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
-      working-directory: tools/wasme/cli
+      working-directory: ./tools/wasme/cli
       run: |
         curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
         curl -sSL https://github.com/istio/istio/releases/download/1.5.1/istio-1.5.1-linux.tar.gz | tar -xzf - istio-1.5.1/bin/istioctl
@@ -45,7 +45,7 @@ jobs:
         make install-deps
         ./cli/ci/setup-kind.sh
     - name: Testing
-      working-directory: tools/wasme/cli
+      working-directory: ./tools/wasme/cli
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
       run: |
@@ -91,7 +91,7 @@ jobs:
     - name: Setup env
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
-      working-directory: tools/wasme/cli
+      working-directory: ./tools/wasme/cli
       run: |
         curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
         curl -sSL https://github.com/istio/istio/releases/download/1.6.6/istio-1.6.6-linux-amd64.tar.gz | tar -xzf - istio-1.6.6/bin/istioctl
@@ -102,7 +102,7 @@ jobs:
     - name: Testing
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
-      working-directory: tools/wasme/cli
+      working-directory: ./tools/wasme/cli
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
         export FILTER_IMAGE_ISTIO_TAG=webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
