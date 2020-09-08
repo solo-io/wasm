@@ -35,7 +35,7 @@ func main() {
 					Group:   "wasme.io",
 					Version: "v1",
 				},
-				Module: "github.com/solo-io/wasme",
+				Module: "github.com/solo-io/wasm/tools/wasme/cli",
 				Resources: []model.Resource{
 					{
 						Kind: "FilterDeployment",

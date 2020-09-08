@@ -8,8 +8,8 @@ import (
 	"time"
 
 	skutil "github.com/solo-io/skv2/codegen/util"
+	"github.com/solo-io/wasm/tools/wasme/cli/test"
 	"github.com/solo-io/wasm/tools/wasme/pkg/util"
-	"github.com/solo-io/wasme/test"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

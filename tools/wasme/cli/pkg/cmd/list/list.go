@@ -12,7 +12,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/solo-io/wasm/tools/wasme/pkg/defaults"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/defaults"
 
 	"github.com/solo-io/wasm/tools/wasme/pkg/consts"
 

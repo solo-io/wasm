@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"time"
 
+	testutils "github.com/solo-io/wasm/tools/wasme/cli/test"
 	"github.com/solo-io/wasm/tools/wasme/pkg/consts/test"
-	testutils "github.com/solo-io/wasme/test"
 
 	corev1 "k8s.io/api/core/v1"
 
@@ -19,7 +19,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/fake"
 
-	. "github.com/solo-io/wasm/tools/wasme/pkg/cache"
+	. "github.com/solo-io/wasm/tools/wasme/cli/pkg/cache"
 )
 
 var _ = Describe("Deploy", func() {

@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/solo-io/wasm/tools/wasme/cli/test"
 	"github.com/solo-io/wasm/tools/wasme/pkg/consts"
 	"github.com/solo-io/wasm/tools/wasme/pkg/store"
 	"github.com/solo-io/wasm/tools/wasme/pkg/util"
-	"github.com/solo-io/wasme/test"
 
 	"github.com/gogo/protobuf/types"
 

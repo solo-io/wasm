@@ -8,8 +8,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/solo-io/wasm/tools/wasme/cli/test"
 	"github.com/solo-io/wasm/tools/wasme/pkg/consts"
-	"github.com/solo-io/wasme/test"
 )
 
 var _ = Describe("Build", func() {

@@ -30,6 +30,8 @@ require (
 	github.com/solo-io/protoc-gen-ext v0.0.9
 	github.com/solo-io/skv2 v0.8.0
 	github.com/solo-io/solo-kit v0.13.10
+	github.com/solo-io/wasm/tools/wasme/pkg v0.0.0
+	github.com/solo-io/wasme v0.0.13-rc1
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.13.0
@@ -43,18 +45,17 @@ require (
 	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/code-generator v0.17.2
 	sigs.k8s.io/controller-runtime v0.5.6
-	github.com/solo-io/wasm/tools/wasme/pkg v0.0.0
 )
 
 // Pinned to kubernetes-1.16.2
 replace (
-	github.com/solo-io/wasm/tools/wasme/pkg => ../pkg
 	// copypaste from Gloo
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.0.0+incompatible
 	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
 
 	// Breaking changes pulled in by latest gloo need to use original repo instead of fork
 	github.com/ilackarms/protoc-gen-doc => github.com/pseudomuto/protoc-gen-doc v1.3.0
+	github.com/solo-io/wasm/tools/wasme/pkg => ../pkg
 
 	k8s.io/api => k8s.io/api v0.0.0-20191004120104-195af9ec3521
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.0.0-20191204090712-e0e829f17bab

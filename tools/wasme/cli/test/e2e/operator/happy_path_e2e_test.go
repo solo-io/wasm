@@ -12,8 +12,8 @@ import (
 	"github.com/solo-io/skv2/codegen/model"
 	"github.com/solo-io/skv2/codegen/render"
 	"github.com/solo-io/skv2/codegen/util"
+	"github.com/solo-io/wasm/tools/wasme/cli/test"
 	"github.com/solo-io/wasm/tools/wasme/pkg/cache"
-	"github.com/solo-io/wasme/test"
 
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"

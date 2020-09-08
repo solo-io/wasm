@@ -4,7 +4,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "github.com/solo-io/wasm/tools/wasme/pkg/abi"
+	. "github.com/solo-io/wasm/tools/wasme/cli/pkg/abi"
 )
 
 var _ = Describe("ABI Version Registry", func() {

@@ -11,7 +11,7 @@ import (
 	"github.com/onsi/ginkgo"
 
 	"github.com/solo-io/skv2/codegen/util"
-	"github.com/solo-io/wasm/tools/wasme/pkg/cmd"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd"
 )
 
 // split the args from a single line by whitespace

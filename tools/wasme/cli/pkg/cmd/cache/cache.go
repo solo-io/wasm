@@ -17,7 +17,7 @@ import (
 	pkgcache "github.com/solo-io/wasm/tools/wasme/pkg/cache"
 
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/opts"
-	"github.com/solo-io/wasm/tools/wasme/pkg/defaults"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/defaults"
 	"github.com/spf13/cobra"
 	"golang.org/x/sync/errgroup"
 )
