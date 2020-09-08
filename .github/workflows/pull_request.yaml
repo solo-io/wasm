@@ -2,9 +2,13 @@ name: pull_request
 
 on:
   push:
+    paths:
+    - "tools/wasme/**"
     branches:
     - 'master'
-  pull_request: {}
+  pull_request:
+    paths:
+    - "tools/wasme/**"
 
 jobs:
   test:
