@@ -8,10 +8,10 @@ import (
 
 	"github.com/solo-io/go-utils/protoutils"
 	"github.com/solo-io/skv2/pkg/ezkube"
+	v1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/abi"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cache"
 	envoyfilter "github.com/solo-io/wasm/tools/wasme/cli/pkg/deploy/filter"
-	v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
 	pkgcache "github.com/solo-io/wasm/tools/wasme/pkg/cache"
 	"github.com/solo-io/wasm/tools/wasme/pkg/pull"
 

@@ -9,9 +9,9 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/skv2/pkg/ezkube"
+	v1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
+	"github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1/controller"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/deploy/istio"
-	v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1/controller"
 	"github.com/solo-io/wasm/tools/wasme/pkg/pull"
 	"github.com/solo-io/wasm/tools/wasme/pkg/resolver"
 	kubev1 "k8s.io/api/core/v1"

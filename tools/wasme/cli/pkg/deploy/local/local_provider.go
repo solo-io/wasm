@@ -12,7 +12,7 @@ import (
 	"github.com/solo-io/wasm/tools/wasme/pkg/model"
 	"github.com/solo-io/wasm/tools/wasme/pkg/store"
 
-	v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
+	v1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
 
 	envoy_api_v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	envoy_api_v2_listener "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"

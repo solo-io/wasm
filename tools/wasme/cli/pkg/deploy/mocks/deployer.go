@@ -5,9 +5,10 @@
 package mock_deploy
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
+	v1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
 )
 
 // MockProvider is a mock of Provider interface

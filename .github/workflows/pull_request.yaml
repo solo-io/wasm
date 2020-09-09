@@ -6,9 +6,7 @@ on:
     - "tools/wasme/**"
     branches:
     - 'master'
-  pull_request:
-    paths:
-    - "tools/wasme/**"
+  pull_request: {}
 
 jobs:
   test:

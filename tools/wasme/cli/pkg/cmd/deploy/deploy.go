@@ -10,8 +10,8 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/types"
+	v1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/deploy/local"
-	v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
 	"github.com/solo-io/wasm/tools/wasme/pkg/store"
 
 	corev1 "k8s.io/api/core/v1"

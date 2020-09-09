@@ -21,7 +21,7 @@ import (
 	. "github.com/onsi/gomega"
 	. "github.com/solo-io/wasm/tools/wasme/cli/pkg/deploy/local"
 
-	v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
+	v1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
 	testvars "github.com/solo-io/wasm/tools/wasme/pkg/consts/test"
 )
 

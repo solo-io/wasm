@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package wasme.io;
 
-option go_package = "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1";
+option go_package = "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1";
 
 import "google/protobuf/any.proto";
 

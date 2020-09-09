@@ -21,7 +21,7 @@ import (
 	"github.com/solo-io/go-utils/randutils"
 	"github.com/solo-io/skv2/pkg/ezkube"
 	aptest "github.com/solo-io/skv2/test"
-	wasmev1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
+	wasmev1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
 	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 

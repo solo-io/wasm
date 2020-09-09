@@ -11,7 +11,7 @@ import (
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	corev3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/config/core/v3"
 	wasmv3 "github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/extensions/wasm/v3"
-	wasmev1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
+	wasmev1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
 )
 
 func MakeRemoteDataSource(uri, cluster string) *core.AsyncDataSource {

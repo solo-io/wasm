@@ -19,8 +19,8 @@ import (
 	. "github.com/onsi/gomega"
 
 	mock_ezkube "github.com/solo-io/skv2/pkg/ezkube/mocks"
+	v1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
 	mock_deploy "github.com/solo-io/wasm/tools/wasme/cli/pkg/deploy/mocks"
-	v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

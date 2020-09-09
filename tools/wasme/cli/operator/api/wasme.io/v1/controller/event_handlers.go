@@ -6,7 +6,7 @@ package controller
 import (
 	"context"
 
-	wasme_io_v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
+	wasme_io_v1 "github.com/solo-io/wasm/tools/wasme/cli/operator/api/wasme.io/v1"
 
 	"github.com/pkg/errors"
 	"github.com/solo-io/skv2/pkg/events"
