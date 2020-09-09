@@ -120,3 +120,4 @@ jobs:
         # see what's in the cluster if we failed
         kubectl get all -A
         kubectl get configmaps -A
+        git diff
