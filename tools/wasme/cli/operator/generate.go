@@ -71,9 +71,9 @@ func main() {
 				Name:        "Wasme Operator",
 				Version:     "v" + version.Version,
 				Home:        "https://docs.solo.io/web-assembly-hub/latest",
-				Icon:        "https://raw.githubusercontent.com/solo-io/wasme/master/docs/content/img/logo.png",
+				Icon:        "https://raw.githubusercontent.com/solo-io/wasm/master/tools/wasme/cli/docs/content/img/logo.png",
 				Sources: []string{
-					"https://github.com/solo-io/wasme",
+					"https://github.com/solo-io/wasm",
 				},
 			},
 		},
