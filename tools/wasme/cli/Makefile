@@ -132,7 +132,7 @@ builder-image-push:
 # set TEST_PKG to run a specific test package
 .PHONY: run-tests
 run-tests:
-	ginkgo -v -r -failFast -trace -progress \
+	PATH=$(DEPSGOBIN):$$PATH ginkgo -v -r -failFast -trace -progress \
 		-ldflags=$(LDFLAGS) \
 		-gcflags=$(GCFLAGS) \
 		-progress \
