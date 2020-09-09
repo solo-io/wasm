@@ -18,8 +18,6 @@ var _ = Describe("Build", func() {
 		username := os.Getenv("WASME_LOGIN_USERNAME")
 		password := os.Getenv("WASME_LOGIN_PASSWORD")
 
-		err := test.RunMake("generated-code")
-		Expect(err).NotTo(HaveOccurred())
 		if password != "" {
 			err = test.WasmeCliSplit("login -u " + username + " -p " + password + " -s " + consts.HubDomain)
 			Expect(err).NotTo(HaveOccurred())
