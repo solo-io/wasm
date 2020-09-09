@@ -44,7 +44,6 @@ jobs:
         curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
         curl -sSL https://github.com/istio/istio/releases/download/1.5.1/istio-1.5.1-linux.tar.gz | tar -xzf - istio-1.5.1/bin/istioctl
         export PATH=$PWD/istio-1.5.1/bin:$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
-        go get -u github.com/onsi/ginkgo/ginkgo
         make install-deps operator-gen generated-code
         ./ci/setup-kind.sh
     - name: Testing
@@ -99,7 +98,6 @@ jobs:
         curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
         curl -sSL https://github.com/istio/istio/releases/download/1.6.6/istio-1.6.6-linux-amd64.tar.gz | tar -xzf - istio-1.6.6/bin/istioctl
         export PATH=$PWD/istio-1.6.6/bin:$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
-        go get -u github.com/onsi/ginkgo/ginkgo
         make install-deps operator-gen generated-code
         ./ci/setup-kind.sh
     - name: Testing
@@ -118,6 +116,6 @@ jobs:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
       run: |
         # see what's in the cluster if we failed
+        git diff
         kubectl get all -A
         kubectl get configmaps -A
-        git diff

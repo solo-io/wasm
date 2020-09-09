@@ -28,6 +28,7 @@ import (
 	_ "github.com/cratonica/2goarray"
 	_ "github.com/golang/mock/mockgen"
 	_ "github.com/golang/protobuf/protoc-gen-go"
+	_ "github.com/onsi/ginkgo/ginkgo"
 	_ "github.com/solo-io/gloo"
 	_ "golang.org/x/tools/cmd/goimports"
 )

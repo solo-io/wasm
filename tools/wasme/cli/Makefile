@@ -47,6 +47,7 @@ install-deps: mod-download
 	GOBIN=$(DEPSGOBIN) go install github.com/golang/mock/mockgen
 	GOBIN=$(DEPSGOBIN) go install -v golang.org/x/tools/cmd/goimports
 	GOBIN=$(DEPSGOBIN) go install -v github.com/cratonica/2goarray
+	GOBIN=$(DEPSGOBIN) go install -v github.com/onsi/ginkgo/ginkgo
 
 	go mod tidy
 
@@ -132,7 +133,7 @@ builder-image-push:
 # set TEST_PKG to run a specific test package
 .PHONY: run-tests
 run-tests:
-	PATH=$(DEPSGOBIN):$$PATH ginkgo -v -r -failFast -trace -progress \
+	PATH=$(DEPSGOBIN):$$PATH $(DEPSGOBIN)/ginkgo -v -r -failFast -trace -progress \
 		-ldflags=$(LDFLAGS) \
 		-gcflags=$(GCFLAGS) \
 		-progress \
