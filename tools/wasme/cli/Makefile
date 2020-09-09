@@ -57,13 +57,13 @@ SUBDIRS:=pkg test operator
 .PHONY: generated-code
 generated-code:
 	PATH=$(DEPSGOBIN):$$PATH go generate ./...
-	goimports -w $(SUBDIRS)
+	PATH=$(DEPSGOBIN):$$PATH goimports -w $(SUBDIRS)
 
 # Generate Operator Code & Chart
 .PHONY: operator-gen
 operator-gen:
 	PATH=$(DEPSGOBIN):$$PATH go run -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) operator/generate.go
-	goimports -w $(SUBDIRS)
+	PATH=$(DEPSGOBIN):$$PATH goimports -w $(SUBDIRS)
 
 # Generate Manifests from Chart
 .PHONY: manifest-gen
