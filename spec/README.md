@@ -18,11 +18,9 @@ The WASM OCI Image Specification defines how to bundle WASM modules as OCI image
 
 The spec is intended to be generic, allowing for any type of WASM module whether it is used to extend any Envoy, OPA, or the browser.
 
-
 The spec can be considered an extension of the OCI Image Spec designed specifically for use by applications which produce and consume WASM modules (as opposed to application containers). It is intended to provide a standard mechanism to manage the building and running of WASM modules. 
 
 This document considers primarily the use case of storing WASM Envoy Filters as OCI Images.
-
 
 ### Terminology:
 
@@ -48,7 +46,7 @@ Because each execution environment (runtime) for a WASM module may have runtime-
 
 The content layer always consists of the WASM module binary. 
 
-The config layer consists of a JSON-formatted string, which contains metadata for the target runtime. The runtime and ABI versions of an image can be deduced by parsing the config layer. 
+The config layer consists of a JSON-formatted string, which contains metadata for the target runtime. The runtime and ABI (Application Binary Interface) versions of an image can be deduced by parsing the config layer. 
 
 The config layer may also contain additional data, depending on the target runtime. For example, the config for a WASM Envoy Filter contains root_ids available on the filter. 
 
@@ -88,9 +86,12 @@ Each layer is associated with its own Media Type, which is stored in the OCI Des
 ### Envoy WASM Filter Specification
 
 The runtime config for Envoy WASM Filter OCI Images has the following format:
-type is set to envoy_proxy
-abiVersion is set to a recognized version of the Envoy Proxy WASM Filter ABI 
-config is a JSON Object containing a list of Filter root_ids that can be used with the provided filter. 
+
+- *type* is set to `envoy_proxy`
+- *abiVersion* is set to a recognized version of the Envoy Proxy WASM Filter ABI 
+- *config* is a JSON Object containing a list of Filter root_ids that can be used with the provided filter. 
+
+The `root_ids` key in the *config* JSON Object will have a list of strings as a value. Each string in the list corresponds to the name of a registered Root Context Helper defined in the module.
 
 #### Example:
 
@@ -116,7 +117,7 @@ The following descriptors provide an example of the OCI Image descriptors for an
 ]
 ```
 
-The following is the runtime config is stored as the `application/vnd.module.wasm.config.v1+json` layer:
+The following is the runtime config stored as the `application/vnd.module.wasm.config.v1+json` layer:
 
 ```{
   "type": "envoy_proxy",
@@ -128,3 +129,5 @@ The following is the runtime config is stored as the `application/vnd.module.was
   }
 }
 ```
+
+You can use the `wasme` tool to take new or existing module code and package it according to the WASM OCI Spec.
