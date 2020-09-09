@@ -10,7 +10,7 @@ This section contains generated reference documentation for the `wasme` Filter I
 
 A config file is packaged at build time with all Envoy WASM Filter Images with metadata and runtime configuration for Wasme.
 
-These docs describe the contents of the Image Config. See https://github.com/solo-io/wasme/blob/master/example/cpp/runtime-config.json
+These docs describe the contents of the Image Config. See https://github.com/solo-io/wasm/blob/master/tools/wasme/example/cpp/runtime-config.json
 for an example runtime configuration.
 
 {{% children description="true" %}}

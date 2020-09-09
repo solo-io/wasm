@@ -31,20 +31,22 @@ BUILD_ID := $(BUILD_ID)
 
 # Build dependencies
 
+DEPSGOBIN=$(shell pwd)/$(OUTDIR)/.bin
+
 .PHONY: mod-download
 mod-download:
 	go mod download
 
 .PHONY: install-deps
 install-deps: mod-download
-	go install -v istio.io/tools/cmd/protoc-gen-jsonshim
-	go install -v github.com/gogo/protobuf/protoc-gen-gogo
+	GOBIN=$(DEPSGOBIN) go install -v istio.io/tools/cmd/protoc-gen-jsonshim
+	GOBIN=$(DEPSGOBIN) go install -v github.com/gogo/protobuf/protoc-gen-gogo
 	# github.com/golang/protobuf pinned to 1.3.5 else docs/generate_reference_docs.go proto.Unmarshal panics
-	go install -v github.com/golang/protobuf/protoc-gen-go
-	go install -v github.com/solo-io/protoc-gen-ext
-	go install github.com/golang/mock/mockgen
-	go install -v golang.org/x/tools/cmd/goimports
-	go install -v github.com/cratonica/2goarray
+	GOBIN=$(DEPSGOBIN) go install -v github.com/golang/protobuf/protoc-gen-go
+	GOBIN=$(DEPSGOBIN) go install -v github.com/solo-io/protoc-gen-ext
+	GOBIN=$(DEPSGOBIN) go install github.com/golang/mock/mockgen
+	GOBIN=$(DEPSGOBIN) go install -v golang.org/x/tools/cmd/goimports
+	GOBIN=$(DEPSGOBIN) go install -v github.com/cratonica/2goarray
 
 	go mod tidy
 
@@ -54,13 +56,13 @@ install-deps: mod-download
 SUBDIRS:=pkg test operator
 .PHONY: generated-code
 generated-code:
-	go generate ./...
+	PATH=$(DEPSGOBIN):$$PATH go generate ./...
 	goimports -w $(SUBDIRS)
 
 # Generate Operator Code & Chart
 .PHONY: operator-gen
 operator-gen:
-	go run -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) operator/generate.go
+	PATH=$(DEPSGOBIN):$$PATH go run -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) operator/generate.go
 	goimports -w $(SUBDIRS)
 
 # Generate Manifests from Chart
@@ -144,7 +146,7 @@ run-tests:
 # The code does the proper checking for a TAGGED_VERSION
 .PHONY: upload-github-release-assets
 upload-github-release-assets: build-cli
-	go run ci/upload_github_release_assets.go
+	PATH=$(DEPSGOBIN):$$PATH go run ci/upload_github_release_assets.go
 
 .PHONY: publish-docs
 publish-docs:
@@ -175,4 +177,4 @@ clean:
 
 .PHONY: build-example
 build-example:
-	go run cmd/main.go build example/cpp
+	PATH=$(DEPSGOBIN):$$PATH go run cmd/main.go build example/cpp
