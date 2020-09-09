@@ -8,8 +8,8 @@ import (
 
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/cli/cli/config/types"
-	"github.com/solo-io/wasm/tools/wasme/pkg/consts"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/defaults"
+	"github.com/solo-io/wasm/tools/wasme/pkg/consts"
 )
 
 func SaveCredentials(username, password, serverAddress, path string) error {

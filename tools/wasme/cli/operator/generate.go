@@ -7,8 +7,8 @@ import (
 	"github.com/solo-io/skv2/codegen"
 	"github.com/solo-io/skv2/codegen/model"
 	"github.com/solo-io/solo-kit/pkg/code-generator/sk_anyvendor"
-	"github.com/solo-io/wasm/tools/wasme/pkg/cache"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/version"
+	"github.com/solo-io/wasm/tools/wasme/pkg/cache"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
