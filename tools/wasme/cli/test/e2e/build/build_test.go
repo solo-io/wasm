@@ -17,7 +17,7 @@ var _ = Describe("Build", func() {
 		imageName := test.GetBuildImageTag()
 		username := os.Getenv("WASME_LOGIN_USERNAME")
 		password := os.Getenv("WASME_LOGIN_PASSWORD")
-
+		var err error
 		if password != "" {
 			err = test.WasmeCliSplit("login -u " + username + " -p " + password + " -s " + consts.HubDomain)
 			Expect(err).NotTo(HaveOccurred())
