@@ -1,4 +1,4 @@
-name: pull_request
+name: hello-world
 
 on:
   pull_request: {}
