@@ -2,7 +2,7 @@
 
 apiVersion: v1
 home: https://docs.solo.io/web-assembly-hub/latest
-icon: https://raw.githubusercontent.com/solo-io/wasme/master/docs/content/img/logo.png
+icon: https://raw.githubusercontent.com/solo-io/wasm/master/tools/wasme/cli/docs/content/img/logo.png
 name: Wasme Operator
 sources:
 - https://github.com/solo-io/wasm

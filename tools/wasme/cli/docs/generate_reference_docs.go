@@ -61,7 +61,7 @@ These docs describe the ` + "`" + `spec` + "`" + ` and ` + "`" + `status` + "`" 
 
 `
 
-	imageConfigApiDir       = filepath.Join(moduleRoot, "pkg", "config")
+	imageConfigApiDir       = filepath.Join(moduleRoot, "..", "pkg", "config")
 	imageConfigDocsTemplate = protoDocTemplate
 	imageConfigDocsDir      = filepath.Join(referenceDir, "image_config")
 	imageConfigIndex        = `

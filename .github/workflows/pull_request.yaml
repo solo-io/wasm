@@ -45,7 +45,7 @@ jobs:
         curl -sSL https://github.com/istio/istio/releases/download/1.5.1/istio-1.5.1-linux.tar.gz | tar -xzf - istio-1.5.1/bin/istioctl
         export PATH=$PWD/istio-1.5.1/bin:$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
         go get -u github.com/onsi/ginkgo/ginkgo
-        make install-deps
+        make install-deps operator-gen
         ./ci/setup-kind.sh
     - name: Testing
       env:
