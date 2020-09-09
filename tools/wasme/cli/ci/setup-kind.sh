@@ -7,8 +7,6 @@ if [ "$1" == "cleanup" ]; then
   exit 0
 fi
 
-make clean
-
 # generate names: $1 allows to make several envs in parallel
 cluster=wasme-$1
 
