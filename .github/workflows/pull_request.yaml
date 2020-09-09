@@ -56,7 +56,7 @@ jobs:
         export FILTER_IMAGE_GLOO_TAG=webassemblyhub.io/sodman/example-filter:v0.3
         export FILTER_IMAGE_ISTIO_TAG=webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
         export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
-        make run-tests
+        make install-deps run-tests
     - name: Debug Info
       if: failure()
       env:
@@ -111,7 +111,7 @@ jobs:
         export FILTER_IMAGE_ISTIO_TAG=webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
         export FILTER_IMAGE_GLOO_TAG=webassemblyhub.io/sodman/example-filter:v0.3
         export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
-        make run-tests
+        make install-deps run-tests
     - name: Debug Info
       if: failure()
       env:
