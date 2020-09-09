@@ -54,7 +54,7 @@ In the [/tools](./tools) folder, you'll find a set of tools for working with WAS
 
 The WASM projects in this repository are made up of a collaboration between Solo.io and the wider Web Assembly community. 
 
-Please join the [Solo.io Slack @ #web-assembly-hub](https://slack.solo.io/) to participate!
+Please join the [Solo.io Slack @ #wasm](https://slack.solo.io/) to participate!
 
 [wasm]: http://webassembly.org
 [envoy]: http://envoyproxy.io
