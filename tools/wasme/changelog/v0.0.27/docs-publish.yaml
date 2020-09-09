@@ -1,4 +1,3 @@
-
 changelog:
   - type: NON_USER_FACING
     description: CI/CD default project ID to solo-public.
