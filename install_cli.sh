@@ -18,7 +18,7 @@ for WASME_VERSION in $WASME_VERSIONS; do
 
   tmp=$(mktemp -d /tmp/wasme.XXXXXX)
   filename="wasme-${OS}-amd64"
-  url="https://github.com/solo-io/wasme/releases/download/${WASME_VERSION}/${filename}"
+  url="https://github.com/solo-io/wasm/releases/download/${WASME_VERSION}/${filename}"
 
   if curl -f ${url} -v > /dev/null 2>&1; then
     echo "Attempting to download Wasme CLI version ${WASME_VERSION}"
