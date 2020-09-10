@@ -1,6 +1,6 @@
-# Web Assembly
+![logo](images/solo-wasm.png "logo")
 
-[Web Assembly][wasm] (WASM) is the future of cloud-native infrastructure extensibility. 
+[Web Assembly][wasm] (WASM) is the future of cloud-native infrastructure extensibility.
 
 WASM is a safe, secure, and dynamic way of extending infrastructure with the language of your choice. [WASM tool chains][wasm-toolchain] compile your code from any of the [supported languages][supported-lang] into a type-safe, binary format that can be loaded dynamically in a WASM sandbox/VM. 
 
@@ -8,9 +8,7 @@ In this repo, you will find [tooling](./tools), [SDKs](./sdks), an [OCI-compatib
 
 One of those projects for working with WASM and Envoy proxy is [Web Assembly Hub][web-assembly-hub].
 
-<h1 align="center">
-    <img src="https://github.com/solo-io/wasme/blob/master/docs/content/img/logo.png?raw=true" alt="WebAssembly Hub" width="371" height="242">
-</h1>
+![webassemblyhub](images/logo.png "webassembly hub")
 
 [WebAssembly Hub][web-assembly-hub] is a meeting place for the community to share and consume WebAssembly Envoy extensions. Easily search and find extensions that meet the functionality you want to add and give them a try.
 
