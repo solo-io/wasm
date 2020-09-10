@@ -1,14 +1,14 @@
 ![logo](images/solo-wasm.png "logo")
 
-[Web Assembly][wasm] (WASM) is the future of cloud-native infrastructure extensibility.
+[WebAssembly][wasm] (WASM) is the future of cloud-native infrastructure extensibility.
 
 WASM is a safe, secure, and dynamic way of extending infrastructure with the language of your choice. [WASM tool chains][wasm-toolchain] compile your code from any of the [supported languages][supported-lang] into a type-safe, binary format that can be loaded dynamically in a WASM sandbox/VM. 
 
-In this repo, you will find [tooling](./tools), [SDKs](./sdks), an [OCI-compatible](./spec) specification, and examples for working with WASM and specifically WASM on [Envoy Proxy][envoy] based frameworks (like [Gloo API Gateway][gloo] or [Istio Service Mesh][istio] -- but not limited to those)
+In this repo, you will find [tooling](./tools), [SDKs](./sdks), an [OCI-compatible](./spec) specification, and examples for working with WASM and specifically WASM on [Envoy Proxy][envoy] based frameworks (like [Gloo API Gateway][gloo] or [Istio Service Mesh][istio] -- but not limited to those).
 
-One of those projects for working with WASM and Envoy proxy is [Web Assembly Hub][web-assembly-hub].
+One of the projects for working with WASM and Envoy proxy is [WebAssembly Hub][web-assembly-hub].
 
-[WebAssembly Hub][web-assembly-hub] is a meeting place for the community to share and consume WebAssembly Envoy extensions. Easily search and find extensions that meet the functionality you want to add and give them a try.
+[WebAssembly Hub][web-assembly-hub] is a meeting place for the community to share and consume WebAssembly Envoy extensions. You can easily search and find extensions that meet the functionality you want to add and give them a try.
 
 Please see the [announcement blog][announcement] that goes into more detail on the motivation for WebAssembly Hub and how we see it driving the future direction of Envoy-based networking projects/products including API Gateways and Service Mesh.
 
@@ -16,11 +16,11 @@ Please see the [announcement blog][announcement] that goes into more detail on t
 
 ## Specification
 
-In the [/spec](./spec) folder of this repo, you'll find an [OCI image][oci] specification for Web Assembly modules. This specification is an extension to OCI and describes how a WASM module is packaged with the appropriate metadata so that it can be distributed and loaded into Envoy-based frameworks/service meshes. For example, some of the metadata include the root-id of the module, the ABI versions that are targeted in Envoy, and basic name of the module. Please see the [spec](./spec) for more details.
+In the [/spec](./spec) folder of this repo, you'll find an [OCI image][oci] specification for WebAssembly modules. This specification is an extension to OCI and describes how a WASM module is packaged with the appropriate metadata so that it can be distributed and loaded into Envoy-based frameworks/service meshes. For example, some of the metadata include the root-id of the module, the ABI versions that are targeted in Envoy, and basic name of the module. Please see the [spec](./spec) for more details.
 
 ## SDKs
 
-In the [/sdks](./sdks) folder of this repo, you'll find a listing of the available SDKs for building Envoy Proxy based WASM modules. These SDKs implement the Envoy hooks for Envoy extension points in a language-specific way. The following exist today (with more on the way)
+In the [/sdks](./sdks) folder of this repo, you'll find a listing of the available SDKs for building Envoy Proxy based WASM modules. These SDKs implement the Envoy hooks for Envoy extension points in a language-specific way. The following exist today (with more on the way):
 
 * C++
 * Rust
@@ -31,11 +31,11 @@ In the [/sdks](./sdks) folder of this repo, you'll find a listing of the availab
 
 In the [/tools](./tools) folder, you'll find a set of tools for working with WASM modules. Specifically, tools to do the following:
 
-* bootstrap a new WASM project with boilerplate/version alignment/tool chain 
-* test that a WASM module can correctly be loaded into Envoy
-* build your project with the specific tool chain
-* publish your WASM module as a WASM OCI image to an OCI-compatible registry or [WebAssembly Hub][web-assembly-hub]
-* load your WASM module into an Envoy-based framework like [Gloo][gloo] or [Istio][istio]
+* Bootstrap a new WASM project with boilerplate/version alignment/tool chain 
+* Test that a WASM module can correctly be loaded into Envoy
+* Build your project with the specific tool chain
+* Publish your WASM module as a WASM OCI image to an OCI-compatible registry or [WebAssembly Hub][web-assembly-hub]
+* Load your WASM module into an Envoy-based framework like [Gloo][gloo] or [Istio][istio]
 
 # Other Resources
 
@@ -48,7 +48,7 @@ In the [/tools](./tools) folder, you'll find a set of tools for working with WAS
 
 # Community
 
-The WASM projects in this repository are made up of a collaboration between Solo.io and the wider Web Assembly community. 
+The WASM projects in this repository are made up of a collaboration between Solo.io and the wider WebAssembly community. 
 
 Please join the [Solo.io Slack @ #wasm](https://slack.solo.io/) to participate!
 

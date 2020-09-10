@@ -64,8 +64,8 @@ Control planes then configure the Envoy instances to load the filter via the loc
 ### Format:
 
 The WASM OCI Image Spec consists of two layers bundled together:
-- A layer specifying configuration for the target runtime.
-- A layer containing the compiled WASM module itself.
+- A layer specifying configuration for the target runtime
+- A layer containing the compiled WASM module itself
 
 Each layer is associated with its own Media Type, which is stored in the OCI Descriptor for that layer:
 
@@ -89,7 +89,7 @@ The runtime config for Envoy WASM Filter OCI Images has the following format:
 
 - *type* is set to `envoy_proxy`
 - *abiVersion* is set to a recognized version of the Envoy Proxy WASM Filter ABI 
-- *config* is a JSON Object containing a list of Filter root_ids that can be used with the provided filter. 
+- *config* is a JSON Object containing a list of Filter root_ids that can be used with the provided filter
 
 The `root_ids` key in the *config* JSON Object will have a list of strings as a value. Each string in the list corresponds to the name of a registered Root Context Helper defined in the module.
 
