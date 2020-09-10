@@ -1,0 +1,9 @@
+[submodule "sdks/assemblyscript"]
+	path = sdks/assemblyscript
+	url = https://github.com/solo-io/proxy-runtime
+[submodule "sdks/proxy-wasm-cpp-sdk"]
+	path = sdks/proxy-wasm-cpp-sdk
+	url = https://github.com/proxy-wasm/proxy-wasm-cpp-sdk
+[submodule "sdks/proxy-wasm-rust-sdk"]
+	path = sdks/proxy-wasm-rust-sdk
+	url = https://github.com/proxy-wasm/proxy-wasm-rust-sdk
