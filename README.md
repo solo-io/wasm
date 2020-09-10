@@ -8,8 +8,6 @@ In this repo, you will find [tooling](./tools), [SDKs](./sdks), an [OCI-compatib
 
 One of those projects for working with WASM and Envoy proxy is [Web Assembly Hub][web-assembly-hub].
 
-![webassemblyhub](images/logo.png "webassembly hub")
-
 [WebAssembly Hub][web-assembly-hub] is a meeting place for the community to share and consume WebAssembly Envoy extensions. Easily search and find extensions that meet the functionality you want to add and give them a try.
 
 Please see the [announcement blog][announcement] that goes into more detail on the motivation for WebAssembly Hub and how we see it driving the future direction of Envoy-based networking projects/products including API Gateways and Service Mesh.
