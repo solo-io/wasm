@@ -3,7 +3,7 @@
 set -eu
 
 if [ -z "${WASME_VERSION:-}" ]; then
-  WASME_VERSIONS=$(curl -sH"Accept: application/vnd.github.v3+json" https://api.github.com/repos/solo-io/wasme/releases | python -c "import sys; from distutils.version import LooseVersion; from json import loads as l; releases = l(sys.stdin.read()); releases = [release['tag_name'] for release in releases if not release['prerelease'] ];  releases.sort(key=LooseVersion, reverse=True); print('\n'.join(releases))")
+  WASME_VERSIONS=$(curl -sH"Accept: application/vnd.github.v3+json" https://api.github.com/repos/solo-io/wasm/releases | python -c "import sys; from distutils.version import LooseVersion; from json import loads as l; releases = l(sys.stdin.read()); releases = [release['tag_name'] for release in releases if not release['prerelease'] ];  releases.sort(key=LooseVersion, reverse=True); print('\n'.join(releases))")
 else
   WASME_VERSIONS="${WASME_VERSION}"
 fi

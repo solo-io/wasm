@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Fix a bug in the install script caused by the repo rename.
+    issueLink: https://github.com/solo-io/wasm/issues/174
