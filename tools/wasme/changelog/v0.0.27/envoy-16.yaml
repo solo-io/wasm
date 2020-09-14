@@ -1,0 +1,6 @@
+changelog:
+  - type: FIX
+    description: >
+      Update the proxy wasm cpp sdk to the latest to work with the
+      latestenvoy v1.16.x based envoy-wasm build. (Used by Gloo 1.5.x)
+    issueLink: https://github.com/solo-io/wasm/issues/177
