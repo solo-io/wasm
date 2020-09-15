@@ -244,6 +244,41 @@ var _ = Describe("IstioProvider", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 	})
+	// note: this test assumes istio 1.5 installed to cluster
+	It("returns no errors when the image abi version does not explicitly support the istio version, but --ignore-version-check is set", func() {
+		workload := Workload{
+			//all workloads
+			Namespace: ns,
+			Kind:      WorkloadTypeDeployment,
+		}
+		resolver, _ := resolver.NewResolver("", "", false, false)
+		puller := pull.NewPuller(resolver)
+		client := mock_ezkube.NewMockEnsurer(gomock.NewController(GinkgoT()))
+
+		p := &Provider{
+			Ctx:                context.TODO(),
+			KubeClient:         kube,
+			Client:             client,
+			Puller:             puller,
+			Workload:           workload,
+			Cache:              cache,
+			IngoreVersionCheck: true,
+		}
+		glooImage := consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0"
+		err := p.ApplyFilter(&wasmev1.FilterSpec{
+			Id:     "incompatible-filter",
+			Image:  glooImage,
+			Config: nil,
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		err = p.ApplyFilter(&wasmev1.FilterSpec{
+			Id:     "compatible-filter",
+			Image:  test.IstioAssemblyScriptImage,
+			Config: nil,
+		})
+		Expect(err).NotTo(HaveOccurred())
+	})
 })
 
 func makeDeployment(workloadName, ns string) *appsv1.Deployment {
