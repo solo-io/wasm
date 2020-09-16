@@ -269,12 +269,17 @@ var _ = Describe("IstioProvider", func() {
 		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
 
 		glooImage := consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0"
-		err := p.ApplyFilter(&wasmev1.FilterSpec{
+		incompatibleFilter := &wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
 			Image:  glooImage,
 			Config: nil,
-		})
+		}
+		err := p.ApplyFilter(incompatibleFilter)
 		Expect(err).NotTo(HaveOccurred())
+
+		// Since this filter won't actually work (it's not compatible),
+		// we need to remove it again so we're not messing up the cluster
+		p.RemoveFilter(incompatibleFilter)
 
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
