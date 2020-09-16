@@ -279,6 +279,7 @@ var _ = Describe("IstioProvider", func() {
 
 		// Since this filter won't actually work (it's not compatible),
 		// we need to remove it again so we're not messing up the cluster
+		client.EXPECT().Delete(gomock.Any(), gomock.Any()).Times(1)
 		p.RemoveFilter(incompatibleFilter)
 
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
