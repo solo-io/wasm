@@ -116,6 +116,7 @@ var _ = Describe("IstioProvider", func() {
 			},
 			"",
 			0,
+			false,
 		)
 		Expect(err).NotTo(HaveOccurred())
 
