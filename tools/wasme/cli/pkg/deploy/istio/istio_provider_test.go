@@ -265,6 +265,9 @@ var _ = Describe("IstioProvider", func() {
 			Cache:              cache,
 			IngoreVersionCheck: true,
 		}
+
+		client.EXPECT().Ensure(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+
 		glooImage := consts.HubDomain + "/ilackarms/gloo-test:1.3.3-0"
 		err := p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "incompatible-filter",
