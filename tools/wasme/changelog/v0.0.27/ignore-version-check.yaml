@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    description: Adds a --ignore-version-check flag to allow using wasme to deploy an image to an unsupported platform/version combo.
+    issueLink: https://github.com/solo-io/wasm/issues/68

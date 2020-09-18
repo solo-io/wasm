@@ -78,13 +78,18 @@ type Provider struct {
 	// defaults to istio-system
 	IstioNamespace string
 
+	// if set to true, will attempt to deploy wasm filters
+	// to Istio even if the version check doesn't match known
+	// compatible versions for that filter.
+	IngoreVersionCheck bool
+
 	// if non-zero, wait for cache events to be populated with this timeout before
 	// creating istio EnvoyFilters.
 	// set to zero to skip the check
 	WaitForCacheTimeout time.Duration
 }
 
-func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error), istioNamespace string, cacheTimeout time.Duration) (*Provider, error) {
+func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error), istioNamespace string, cacheTimeout time.Duration, ignoreVersionCheck bool) (*Provider, error) {
 
 	// ensure istio types are added to scheme
 	if err := v1alpha3.AddToScheme(client.Manager().GetScheme()); err != nil {
@@ -102,6 +107,7 @@ func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ez
 		OnWorkload:          onWorkload,
 		IstioNamespace:      istioNamespace,
 		WaitForCacheTimeout: cacheTimeout,
+		IngoreVersionCheck:  ignoreVersionCheck,
 	}, nil
 }
 
@@ -128,7 +134,11 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 
 	abiVersions := cfg.AbiVersions
 
-	if len(abiVersions) > 0 {
+	if p.IngoreVersionCheck {
+		logrus.WithFields(logrus.Fields{
+			"image": image.Ref(),
+		}).Warnf("ignoreVersionCheck is set, skipping ABI version check")
+	} else if len(abiVersions) > 0 {
 		istioVersion, err := p.getIstioVersion()
 		if err != nil {
 			return err
