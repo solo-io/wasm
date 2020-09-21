@@ -202,6 +202,7 @@ func (f *filterDeploymentHandler) makeProvider(obj *v1.FilterDeployment, puller 
 			onWorkload,
 			dep.Istio.IstioNamespace,
 			f.cacheTimeout,
+			false,
 		)
 		if err != nil {
 			return nil, err

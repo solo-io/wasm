@@ -81,9 +81,10 @@ func (opts *glooOpts) addToFlags(flags *pflag.FlagSet) {
 }
 
 type istioOpts struct {
-	workload       istio.Workload
-	istioNamespace string
-	cacheTimeout   time.Duration
+	workload           istio.Workload
+	istioNamespace     string
+	cacheTimeout       time.Duration
+	ignoreVersionCheck bool
 
 	puller pull.ImagePuller // set by load
 }
@@ -94,6 +95,7 @@ func (opts *istioOpts) addToFlags(flags *pflag.FlagSet) {
 	flags.StringVarP(&opts.workload.Kind, "workload-type", "t", istio.WorkloadTypeDeployment, "type of workload into which the filter should be injected. possible values are "+istio.WorkloadTypeDeployment+" or "+istio.WorkloadTypeDaemonSet)
 	flags.StringVarP(&opts.istioNamespace, "istio-namespace", "", "istio-system", "the namespace where the Istio control plane is installed")
 	flags.DurationVar(&opts.cacheTimeout, "cache-timeout", time.Minute, "the length of time to wait for the server-side filter cache to pull the filter image before giving up with an error. set to 0 to skip the check entirely (note, this may produce a known race condition).")
+	flags.BoolVar(&opts.ignoreVersionCheck, "ignore-version-check", false, "set to disable abi version compatability check.")
 }
 
 type cacheOpts struct {
@@ -200,6 +202,7 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			nil, // no callback when using CLI
 			opts.istioOpts.istioNamespace,
 			opts.istioOpts.cacheTimeout,
+			opts.istioOpts.ignoreVersionCheck,
 		)
 	}
 
