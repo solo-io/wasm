@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/solo-io/go-utils/protoutils"
 	"github.com/solo-io/skv2/pkg/ezkube"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/abi"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cache"
@@ -14,7 +13,11 @@ import (
 	v1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
 	pkgcache "github.com/solo-io/wasm/tools/wasme/pkg/cache"
 	"github.com/solo-io/wasm/tools/wasme/pkg/pull"
+	"github.com/solo-io/wasm/tools/wasme/pkg/util"
 
+	"github.com/solo-io/gloo/pkg/utils/protoutils"
+
+	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
@@ -387,18 +390,33 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 		pkgcache.Digest2filename(descriptor.Digest),
 	)
 
-	wasmFilterConfig, err := envoyfilter.MakeIstioWasmFilter(filter,
-		envoyfilter.MakeLocalDatasource(filename),
-	)
+	isOlderIstio := false
+
+	var wasmFilterConfig *envoyhttp.HttpFilter
+	if isOlderIstio {
+		wasmFilterConfig, err = envoyfilter.MakeIstioWasmFilter(filter,
+			envoyfilter.MakeLocalDatasource(filename),
+		)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		wasmFilterConfig, err = envoyfilter.MakeTypedIstioWasmFilter(filter,
+			envoyfilter.MakeV3LocalDatasource(filename),
+		)
+
+	}
+
+	// We need to marshal to a structpb because of udpa,
+	// but then we need to convert to a gogostruct for Istio
+	patchValue, err := util.MarshalStruct(wasmFilterConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	// here we need to use the gogo proto marshal
-	patchValue, err := protoutils.MarshalStruct(wasmFilterConfig)
+	typeStruct, err := protoutils.StructPbToGogo(patchValue)
 	if err != nil {
-		// this should NEVER HAPPEN!
-		panic(err)
+		return nil, err
 	}
 
 	makeMatch := func() *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch {
@@ -427,7 +445,7 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 			Match:   match,
 			Patch: &networkingv1alpha3.EnvoyFilter_Patch{
 				Operation: networkingv1alpha3.EnvoyFilter_Patch_INSERT_BEFORE,
-				Value:     patchValue,
+				Value:     typeStruct,
 			},
 		}
 	}

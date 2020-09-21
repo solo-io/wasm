@@ -14,6 +14,7 @@ const (
 	Version13x = "1.3.x"
 	Version15x = "1.5.x"
 	Version16x = "1.6.x"
+	Version17x = "1.7.x"
 )
 
 // an abi provider
@@ -98,6 +99,10 @@ var (
 		Name:    PlatformNameIstio,
 		Version: Version16x,
 	}
+	Istio17 = Platform{
+		Name:    PlatformNameIstio,
+		Version: Version17x,
+	}
 	Gloo13 = Platform{
 		Name:    PlatformNameGloo,
 		Version: Version13x,
@@ -119,6 +124,12 @@ var (
 		Repository: "https://github.com/envoyproxy/envoy-wasm",
 		Commit:     "edc016b1fa5adca3ebd3d7020eaed0ad7b8814ca",
 	}
+	Version_4689a30309abf31aee9ae36e73d34b1bb182685f = Version{
+		// August 4th 2020
+		Name:       "v0-4689a30309abf31aee9ae36e73d34b1bb182685f",
+		Repository: "https://github.com/envoyproxy/envoy-wasm",
+		Commit:     "4689a30309abf31aee9ae36e73d34b1bb182685f",
+	}
 
 	DefaultRegistry = Registry{
 		Version_edc016b1fa5adca3ebd3d7020eaed0ad7b8814ca: {
@@ -127,6 +138,9 @@ var (
 		Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f: {
 			Istio15,
 			Istio16,
+		},
+		Version_4689a30309abf31aee9ae36e73d34b1bb182685f: {
+			Istio17,
 		},
 	}
 )

@@ -1,0 +1,9 @@
+{
+  "type": "envoy_proxy",
+  "abiVersions": ["v0-4689a30309abf31aee9ae36e73d34b1bb182685f"],
+  "config": {
+    "rootIds": [
+      "add_header_root_id"
+    ]
+  }
+}
