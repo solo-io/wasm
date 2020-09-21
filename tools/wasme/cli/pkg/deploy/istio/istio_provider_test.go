@@ -4,36 +4,35 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/solo-io/wasm/tools/wasme/pkg/consts/test"
-
+	"github.com/solo-io/wasm/tools/wasme/pkg/config"
 	"github.com/solo-io/wasm/tools/wasme/pkg/consts"
+	"github.com/solo-io/wasm/tools/wasme/pkg/model"
+	"github.com/solo-io/wasm/tools/wasme/pkg/pull"
+	"github.com/solo-io/wasm/tools/wasme/pkg/resolver"
 
 	"github.com/golang/mock/gomock"
 	mock_ezkube "github.com/solo-io/skv2/pkg/ezkube/mocks"
 
-	"github.com/solo-io/wasm/tools/wasme/pkg/resolver"
-
-	"github.com/solo-io/wasm/tools/wasme/pkg/config"
-	"github.com/solo-io/wasm/tools/wasme/pkg/model"
-	"github.com/solo-io/wasm/tools/wasme/pkg/pull"
-
 	"github.com/solo-io/go-utils/kubeutils"
 	"github.com/solo-io/go-utils/randutils"
 	"github.com/solo-io/skv2/pkg/ezkube"
+
 	aptest "github.com/solo-io/skv2/test"
 	wasmev1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
-	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
+	testutils "github.com/solo-io/wasm/tools/wasme/cli/test"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/opencontainers/go-digest"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
-	"istio.io/api/networking/v1alpha3"
+	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
 	appsv1 "k8s.io/api/apps/v1"
 	kubev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"istio.io/api/networking/v1alpha3"
 	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
 var _ = Describe("IstioProvider", func() {
@@ -240,7 +239,7 @@ var _ = Describe("IstioProvider", func() {
 
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
-			Image:  test.IstioAssemblyScriptImage,
+			Image:  testutils.GetImageTagIstio(),
 			Config: nil,
 		})
 		Expect(err).NotTo(HaveOccurred())
@@ -284,7 +283,7 @@ var _ = Describe("IstioProvider", func() {
 
 		err = p.ApplyFilter(&wasmev1.FilterSpec{
 			Id:     "compatible-filter",
-			Image:  test.IstioAssemblyScriptImage,
+			Image:  testutils.GetImageTagIstio(),
 			Config: nil,
 		})
 		Expect(err).NotTo(HaveOccurred())
