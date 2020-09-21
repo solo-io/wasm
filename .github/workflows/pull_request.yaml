@@ -106,9 +106,7 @@ jobs:
       working-directory: ./tools/wasme/cli
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
-        export FILTER_IMAGE_GLOO_TAG=webassemblyhub.io/sodman/example-filter:v0.3
         export FILTER_IMAGE_ISTIO_TAG=webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
-        export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
         make install-deps run-tests
     - name: Debug Info
       if: failure()
@@ -161,9 +159,7 @@ jobs:
       working-directory: ./tools/wasme/cli
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
-        export FILTER_IMAGE_GLOO_TAG=webassemblyhub.io/sodman/example-filter:v0.3
         export FILTER_IMAGE_ISTIO_TAG=webassemblyhub.io/sodman/istio-1-7:v0.3
-        export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
         make install-deps run-tests
     - name: Debug Info
       if: failure()

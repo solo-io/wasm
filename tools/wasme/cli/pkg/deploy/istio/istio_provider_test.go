@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/deploy/istio"
 	"github.com/solo-io/wasm/tools/wasme/pkg/config"
 	"github.com/solo-io/wasm/tools/wasme/pkg/consts"
 	"github.com/solo-io/wasm/tools/wasme/pkg/model"
@@ -18,7 +19,6 @@ import (
 	"github.com/solo-io/skv2/pkg/ezkube"
 
 	aptest "github.com/solo-io/skv2/test"
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/deploy/istio"
 	wasmev1 "github.com/solo-io/wasm/tools/wasme/cli/pkg/operator/api/wasme.io/v1"
 	testutils "github.com/solo-io/wasm/tools/wasme/cli/test"
 
