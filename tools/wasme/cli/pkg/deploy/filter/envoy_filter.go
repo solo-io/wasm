@@ -61,7 +61,7 @@ func MakeV3LocalDatasource(path string) *corev3.AsyncDataSource {
 }
 
 // MakeWasmFilter creates wasm filters to be used with Envoy.
-//This will also work with Gloo (but not Istio).
+// This will also work with Gloo (but not Istio).
 func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource) *envoyhttp.HttpFilter {
 	filterCfg := &wasmv3.WasmService{
 		Config: &wasmv3.PluginConfig{
