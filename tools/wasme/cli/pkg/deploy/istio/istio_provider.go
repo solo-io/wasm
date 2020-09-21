@@ -3,6 +3,7 @@ package istio
 import (
 	"context"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -131,12 +132,11 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 
 	abiVersions := cfg.AbiVersions
 
+	istioVersion, err := p.getIstioVersion()
+	if err != nil {
+		return err
+	}
 	if len(abiVersions) > 0 {
-		istioVersion, err := p.getIstioVersion()
-		if err != nil {
-			return err
-		}
-
 		if err := abi.DefaultRegistry.ValidateIstioVersion(abiVersions, istioVersion); err != nil {
 			return errors.Errorf("image %v not supported by istio version %v", image.Ref(), istioVersion)
 		}
@@ -151,7 +151,7 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 	}
 
 	err = p.forEachWorkload(func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
-		err := p.applyFilterToWorkload(filter, image, meta, spec)
+		err := p.applyFilterToWorkload(filter, image, meta, spec, istioVersion)
 		if p.OnWorkload != nil {
 			p.OnWorkload(meta, err)
 		}
@@ -165,7 +165,7 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 }
 
 // applies the filter to the target workload: adds annotations and creates the EnvoyFilter CR
-func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
+func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec, istioVersion string) error {
 	p.setAnnotations(spec)
 	labels := spec.Labels
 	workloadName := meta.Name
@@ -182,6 +182,7 @@ func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image
 		image,
 		workloadName,
 		labels,
+		istioVersion,
 	)
 	if err != nil {
 		return err
@@ -377,7 +378,7 @@ func (p *Provider) setAnnotations(template *corev1.PodTemplateSpec) {
 }
 
 // construct Istio EnvoyFilter Custom Resource
-func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image, workloadName string, labels map[string]string) (*v1alpha3.EnvoyFilter, error) {
+func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image, workloadName string, labels map[string]string, istioVersion string) (*v1alpha3.EnvoyFilter, error) {
 	descriptor, err := image.Descriptor()
 	if err != nil {
 		return nil, err
@@ -390,10 +391,8 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 		pkgcache.Digest2filename(descriptor.Digest),
 	)
 
-	isOlderIstio := false
-
 	var wasmFilterConfig *envoyhttp.HttpFilter
-	if isOlderIstio {
+	if isOlderIstio(istioVersion) {
 		wasmFilterConfig, err = envoyfilter.MakeIstioWasmFilter(filter,
 			envoyfilter.MakeLocalDatasource(filename),
 		)
@@ -469,6 +468,22 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 		},
 		Spec: spec,
 	}, nil
+}
+
+// Returns true if istio version is 1.6.x or older
+func isOlderIstio(istioVersion string) bool {
+	parts := strings.Split(istioVersion, ".")
+
+	// check minor version
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		logrus.WithField("istioVersion", istioVersion).Warn("unable to determine istio version, assuming 1.7+")
+		return false
+	}
+	if minor >= 7 {
+		return false
+	}
+	return true
 }
 
 func istioEnvoyFilterName(workloadName, filterId string) string {
