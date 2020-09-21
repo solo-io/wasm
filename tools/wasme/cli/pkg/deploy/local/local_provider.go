@@ -216,8 +216,6 @@ func addFilterToListeners(filter *v1.FilterSpec, listeners []*envoy_api_v2.Liste
 	if err != nil {
 		return err
 	}
-	logrus.WithField("wasmFilter", wasmFilter).Warn("FILTER in addFilterToListeners:")
-
 	return forEachHcm(listeners, func(networkFilter *envoy_api_v2_listener.Filter, cfg *envoy_config_filter_network_hcm_v2.HttpConnectionManager) error {
 		for i, httpFilter := range cfg.GetHttpFilters() {
 			if httpFilter.GetName() == wasmeutil.WasmFilterName {

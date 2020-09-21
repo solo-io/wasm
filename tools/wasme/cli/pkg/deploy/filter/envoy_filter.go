@@ -3,7 +3,6 @@ package filter
 import (
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"github.com/solo-io/solo-apis/pkg/api/gloo.solo.io/external/envoy/api/v2/config"
 	"github.com/solo-io/solo-kit/pkg/api/external/envoy/api/v2/core"
 	"github.com/solo-io/wasm/tools/wasme/pkg/util"
@@ -61,6 +60,8 @@ func MakeV3LocalDatasource(path string) *corev3.AsyncDataSource {
 	}
 }
 
+// MakeWasmFilter creates wasm filters to be used with Envoy.
+//This will also work with Gloo (but not Istio).
 func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource) *envoyhttp.HttpFilter {
 	filterCfg := &wasmv3.WasmService{
 		Config: &wasmv3.PluginConfig{
@@ -91,6 +92,8 @@ func MakeWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource)
 	}
 }
 
+// MakeTypedIstioWasmFilter returns a wasm filter for use with Istio.
+// This method works for versions of Istio 1.7+
 func MakeTypedIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncDataSource) (*envoyhttp.HttpFilter, error) {
 	filterCfg := &wasmfiltersv3.Wasm{
 		Config: &wasmv3.PluginConfig{
@@ -130,10 +133,11 @@ func MakeTypedIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncD
 			TypedConfig: anyTypedConf,
 		},
 	}
-	logrus.WithField("envoyFilter", envoyFilter).Warn("MakeIstioWasmFilter returns")
 	return envoyFilter, nil
 }
 
+// MakeIstioWasmFilter returns a wasm filter for use with Istio. This method only
+// works for versions of Istio up to and including 1.6. It will soon be deprecated
 func MakeIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *core.AsyncDataSource) (*envoyhttp.HttpFilter, error) {
 	var cfgVal string
 	if filter.Config != nil {
