@@ -493,7 +493,7 @@ func isOlderIstio(istioVersion string) bool {
 	// check minor version
 	minor, err := strconv.Atoi(parts[1])
 	if err != nil {
-		logrus.WithField("istioVersion", istioVersion).Warn("unable to determine istio version, assuming 1.7+")
+		logrus.WithField("istioVersion", istioVersion).WithError(err).Warn("unable to determine istio version, assuming 1.7+")
 		return false
 	}
 	if minor >= 7 {
