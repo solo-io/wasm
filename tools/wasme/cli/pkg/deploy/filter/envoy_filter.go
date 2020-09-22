@@ -3,12 +3,12 @@ package filter
 import (
 	"github.com/gogo/protobuf/types"
 	"github.com/pkg/errors"
-	"github.com/solo-io/solo-apis/pkg/api/gloo.solo.io/external/envoy/api/v2/config"
+	"github.com/solo-io/gloo/projects/gloo/pkg/api/external/envoy/api/v2/config"
 	"github.com/solo-io/solo-kit/pkg/api/external/envoy/api/v2/core"
 	"github.com/solo-io/wasm/tools/wasme/pkg/util"
 
-	udpa_type_v1 "github.com/cncf/udpa/go/udpa/type/v1"
-	proto "github.com/golang/protobuf/proto"
+	udpav1 "github.com/cncf/udpa/go/udpa/type/v1"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes/any"
 
 	envoyhttp "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
@@ -116,7 +116,7 @@ func MakeTypedIstioWasmFilter(filter *wasmev1.FilterSpec, dataSrc *corev3.AsyncD
 	if err != nil {
 		return nil, err
 	}
-	typedStructConf := &udpa_type_v1.TypedStruct{
+	typedStructConf := &udpav1.TypedStruct{
 		TypeUrl: "type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm",
 		Value:   marshalledConf,
 	}
