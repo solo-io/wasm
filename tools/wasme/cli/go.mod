@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/Masterminds/sprig/v3 v3.1.0 // indirect
+	github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354
 	github.com/cratonica/2goarray v0.0.0-20190331194516-514510793eaa
 	github.com/deislabs/oras v0.8.1
 	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
@@ -13,32 +14,30 @@ require (
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.3.5
+	github.com/golang/protobuf v1.4.2
 	github.com/hashicorp/go-multierror v1.0.0
-	github.com/imdario/mergo v0.3.9 // indirect
-	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/lyft/protoc-gen-star v0.4.15 // indirect
 	github.com/manifoldco/promptui v0.7.0
 	github.com/mattn/go-zglob v0.0.3 // indirect
-	github.com/onsi/ginkgo v1.12.0
-	github.com/onsi/gomega v1.8.1
+	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/gomega v1.10.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
 	github.com/opencontainers/image-spec v1.0.1
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/procfs v0.0.11 // indirect
 	github.com/pseudomuto/protoc-gen-doc v1.3.2
 	github.com/pseudomuto/protokit v0.2.0
 	github.com/sirupsen/logrus v1.6.0
-	github.com/solo-io/gloo v1.5.0-beta11
-	github.com/solo-io/go-utils v0.16.4
+	github.com/solo-io/gloo v1.5.0-beta24
+	github.com/solo-io/go-utils v0.16.5
 	github.com/solo-io/protoc-gen-ext v0.0.9
-	github.com/solo-io/skv2 v0.8.0
-	github.com/solo-io/solo-kit v0.13.10
+	github.com/solo-io/skv2 v0.8.1
+	github.com/solo-io/solo-apis v0.0.0-20200904153621-1545bb158329
+	github.com/solo-io/solo-kit v0.13.13
 	github.com/solo-io/wasm/tools/wasme/pkg v0.0.0
 	github.com/spf13/afero v1.3.4 // indirect
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/pflag v1.0.5
-	go.uber.org/zap v1.13.0
+	go.uber.org/zap v1.15.0
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e
 	golang.org/x/tools v0.0.0-20200522201501-cb1345f3a375
@@ -47,14 +46,14 @@ require (
 	istio.io/api v0.0.0-20191109011911-e51134872853
 	istio.io/client-go v0.0.0-20191206191348-5c576a7ecef0
 	istio.io/tools v0.0.0-20200414140130-90db7d74fac2
-	k8s.io/api v0.17.4
+	k8s.io/api v0.18.5
 	k8s.io/apiextensions-apiserver v0.18.6 // indirect
-	k8s.io/apimachinery v0.18.3
+	k8s.io/apimachinery v0.18.5
 	k8s.io/cli-runtime v0.18.0 // indirect
 	k8s.io/client-go v11.0.0+incompatible
-	k8s.io/code-generator v0.17.2
+	k8s.io/code-generator v0.18.2
 	k8s.io/kubectl v0.18.0 // indirect
-	sigs.k8s.io/controller-runtime v0.5.6
+	sigs.k8s.io/controller-runtime v0.5.8
 )
 
 // Pinned to kubernetes-1.16.2
@@ -62,6 +61,9 @@ replace (
 	// copypaste from Gloo
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.0.0+incompatible
 	github.com/Sirupsen/logrus => github.com/sirupsen/logrus v1.4.2
+
+	// github.com/golang/protobuf pinned to 1.3.5 else docs/generate_reference_docs.go proto.Unmarshal panics
+	github.com/golang/protobuf => github.com/golang/protobuf v1.3.5
 
 	// Breaking changes pulled in by latest gloo need to use original repo instead of fork
 	github.com/ilackarms/protoc-gen-doc => github.com/pseudomuto/protoc-gen-doc v1.3.0

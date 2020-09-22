@@ -47,6 +47,7 @@ func getCallerDirectory(skip ...int) (string, error) {
 var examples = map[string]string{
 	"cpp":            "cpp",
 	"cppIstio1_5":    "cpp-istio-1.5",
+	"cppIstio1_7":    "cpp-istio-1.7",
 	"assemblyscript": "assemblyscript",
 }
 

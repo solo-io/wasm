@@ -80,6 +80,13 @@ var availableBases = map[string][]filterBase{
 			archiveBytes: cppIstio1_5TarBytes,
 		},
 		{
+			// cpp for istio 1.7
+			compatiblePlatforms: compatiblePlatforms{
+				abi.Istio17,
+			},
+			archiveBytes: cppIstio1_7TarBytes,
+		},
+		{
 			compatiblePlatforms: compatiblePlatforms{
 				abi.Gloo15,
 			},

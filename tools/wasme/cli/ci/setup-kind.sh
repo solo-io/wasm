@@ -56,7 +56,14 @@ make wasme-image -B
 # grab the image names out of the `make docker` output
 make wasme-image -B | sed -nE 's|Successfully tagged (.*$)|\1|p' | while read f; do kind load docker-image --name $cluster $f; done
 
-istioctl manifest apply --set profile=minimal
+# manifest apply depreciated after Istio 1.5, use install for later versions of istioctl
+istioVersionOut=$(istioctl version)
+if [[ "$istioVersionOut" == *"1.5"* ]]; then
+  istioctl manifest apply --set profile=minimal
+else
+  istioctl install --set profile=minimal
+fi
+
 kubectl create ns gloo-system-test
 helm install --namespace gloo-system-test --set global.wasm.enabled=true gloo https://storage.googleapis.com/solo-public-helm/charts/gloo-1.5.0-beta11.tgz
 
