@@ -27,6 +27,7 @@ import (
 
 const (
 	languageCpp            = "cpp"
+	languageRust           = "rust"
 	languageAssemblyScript = "assemblyscript"
 )
 
@@ -103,11 +104,21 @@ var availableBases = map[string][]filterBase{
 			archiveBytes: assemblyscriptTarBytes,
 		},
 	},
+	languageRust: {
+		{
+			// rust for istio 1.7
+			compatiblePlatforms: compatiblePlatforms{
+				abi.Istio17,
+			},
+			archiveBytes: rustIstio1_7TarBytes,
+		},
+	},
 }
 
 // map of language name to description
 var supportedLanguages = []string{
 	languageCpp,
+	languageRust,
 	languageAssemblyScript,
 }
 
