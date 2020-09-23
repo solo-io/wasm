@@ -36,7 +36,7 @@ To install istio, follow the [Istio installation Guide](https://istio.io/docs/se
 First, install the Wasme CRDs:
 
 ```bash
-kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme.io_v1_crds.yaml
+kubectl apply -f https://github.com/solo-io/wasm/releases/latest/download/wasme.io_v1_crds.yaml
 ```
 
 Output:
@@ -48,7 +48,7 @@ customresourcedefinition.apiextensions.k8s.io/filterdeployments.wasme.io created
 Next install the Operator components:
 
 ```bash
-kubectl apply -f https://github.com/solo-io/wasme/releases/latest/download/wasme-default.yaml
+kubectl apply -f https://github.com/solo-io/wasm/releases/latest/download/wasme-default.yaml
 ```
 
 Output:
@@ -65,7 +65,7 @@ deployment.apps/wasme-operator created
 ```
 
 {{% notice note %}}
-To install an older version of wasme, use the url `kubectl apply -f https://github.com/solo-io/wasme/releases/download/<VERSION>/wasme-default.yaml`
+To install an older version of wasme, use the url `kubectl apply -f https://github.com/solo-io/wasm/releases/download/<VERSION>/wasme-default.yaml`
 {{% /notice %}}
 
 Finally, confirm that the wasme operator is has started successfully:
@@ -90,7 +90,7 @@ See the next section to learn how to get started with the Operator.
 
 Interacting with the Wasme Operator happens through the `FilterDeployment`  Custom Resource.
 
-The full spec for this CRD can be read at https://github.com/solo-io/wasme/blob/master/operator/api/wasme/v1/filter_deployment.proto#L11
+The full spec for this CRD can be read at https://github.com/solo-io/wasm/blob/master/tools/wasme/cli/operator/api/wasme/v1/filter_deployment.proto#L13
 
 Let's try the following example to see it in action:
 
@@ -112,7 +112,7 @@ kubectl create ns bookinfo
 kubectl label namespace bookinfo istio-injection=enabled --overwrite
 
 # install the bookinfo application
-kubectl apply -n bookinfo -f https://raw.githubusercontent.com/solo-io/wasme/master/test/e2e/operator/bookinfo.yaml
+kubectl apply -n bookinfo -f https://raw.githubusercontent.com/solo-io/wasm/master/tools/wasme/cli/test/e2e/operator/bookinfo.yaml
 ```
 
 {{% notice note %}}

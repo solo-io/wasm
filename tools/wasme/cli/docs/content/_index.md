@@ -4,7 +4,7 @@ weight: 1
 ---
 
 <h1 align="center">
-    <img src="https://github.com/solo-io/wasme/blob/master/docs/content/img/logo.png?raw=true" alt="WebAssembly Hub" width="371" height="242">
+    <img src="https://github.com/solo-io/wasm/blob/master/tools/wasme/cli/docs/content/img/logo.png?raw=true" alt="WebAssembly Hub" width="371" height="242">
   <br>
   The WebAssembly Hub
 </h1>
@@ -40,4 +40,4 @@ See the [Getting Started tutorial]({{< versioned_link_path fromRoot="/tutorial_c
 - Join us on our Slack channel: [https://slack.solo.io/](https://slack.solo.io/)
 - Follow us on Twitter: [https://twitter.com/soloio_inc](https://twitter.com/soloio_inc)
 - Check out the docs: [https://docs.solo.io/web-assembly-hub/latest](https://docs.solo.io/web-assembly-hub/latest)
-- Contribute to the [Docs](https://github.com/solo-io/wasme)
+- Contribute to the [Docs](https://github.com/solo-io/wasm)

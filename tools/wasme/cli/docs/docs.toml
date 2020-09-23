@@ -50,7 +50,7 @@ version="dev"
 [[menu.shortcuts]]
 name = "<i class='fa fa-github'></i> Github Repo"
 identifier = "ds"
-url = "https://github.com/solo-io/wasme"
+url = "https://github.com/solo-io/wasm"
 weight = 10
 
 # [[menu.shortcuts]]
