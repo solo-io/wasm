@@ -24,19 +24,36 @@ pub fn _start() {
 
 struct HttpAuth;
 
+impl HttpAuth {
+    fn fail(&mut self) {
+      debug!("auth: allowed");
+      self.send_http_response(403, vec![], Some(b"not authorized"));
+    }
+}
+
 impl HttpContext for HttpAuth {
     fn on_http_request_headers(&mut self, _: usize) -> Action {
         let headers = self.get_http_request_headers();
         let ref_headers : Vec<(&str,&str)> = headers.iter().map(|(ref k,ref v)|(k.as_str(),v.as_str())).collect();
-        self.dispatch_http_call(
+        let res = self.dispatch_http_call(
             "auth-cluster",
             ref_headers,
             None,
             vec![],
             Duration::from_secs(1),
-        )
-        .unwrap();
+        );
+        match res{
+            Err(_) =>{
+                self.fail();
+            }
+            Ok(_)  => {}
+        }
         Action::Pause
+    }
+
+    fn on_http_response_headers(&mut self, _: usize) -> Action {
+        self.set_http_response_header("Hello", Some("world"));
+        Action::Continue
     }
 }
 
@@ -44,12 +61,11 @@ impl Context for HttpAuth {
     fn on_http_call_response(&mut self, _: u32, _: usize, _: usize, _: usize) {
         match self.get_http_request_header(":status") {
             Some(ref status) if status == "200"  => {
-                debug!("auth: allowed");
                 self.resume_http_request();
             }
             _ => {
                 debug!("auth: not authorized");
-                self.send_http_response(403, vec![], Some(b"not authorized"));
+                self.fail();
             }
         }
     }
