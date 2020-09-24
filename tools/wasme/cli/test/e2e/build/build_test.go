@@ -58,6 +58,18 @@ var _ = Describe("Build", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
+	quitenvoy := func() error {
+		return util.ExecCmd(
+			GinkgoWriter,
+			GinkgoWriter,
+			nil,
+			"curl",
+			"-X",
+			"POST",
+			"-v",
+			"http://localhost:19000/quitquitquit")
+	}
+
 	ExpectRustExampleToWorkInIstioVersion := func(version string) {
 		err := test.WasmeCliSplit("init test-filter --platform istio --platform-version " + version + ".x --language rust")
 		Expect(err).NotTo(HaveOccurred())
@@ -82,7 +94,7 @@ var _ = Describe("Build", func() {
 				"envoy",
 				imagename,
 				"--envoy-image="+envoyimage,
-				"--envoy-run-args=-l trace",
+				"--envoy-run-args=-l debug",
 				"--id=myfilter",
 			)
 			Expect(err).NotTo(HaveOccurred())
@@ -107,10 +119,17 @@ var _ = Describe("Build", func() {
 		const addedHeader = "hello: world"
 		Eventually(testRequest, 10*time.Second, time.Second).Should(ContainSubstring(addedHeader))
 
-		util.Docker(GinkgoWriter, GinkgoWriter, nil, "stop", "myfilter")
+		err = quitenvoy()
+		Expect(err).NotTo(HaveOccurred())
+
 	}
 
 	Context("istio-rust", func() {
+		AfterEach(func() {
+			// do cleanup incase test failed
+			quitenvoy()
+		})
+
 		It("builds a valid image", func() {
 			By("istio 1.5")
 			ExpectRustExampleToWorkInIstioVersion("1.5")
