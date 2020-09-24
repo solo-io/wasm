@@ -108,6 +108,8 @@ var availableBases = map[string][]filterBase{
 		{
 			// rust for istio 1.7
 			compatiblePlatforms: compatiblePlatforms{
+				abi.Istio15,
+				abi.Istio16,
 				abi.Istio17,
 			},
 			archiveBytes: rustIstio1_7TarBytes,

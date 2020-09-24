@@ -11,3 +11,4 @@ _output/
 
 # generated protos
 vendor_any/
+bazel-*
