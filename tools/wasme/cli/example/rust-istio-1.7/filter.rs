@@ -80,7 +80,7 @@ impl Context for HttpAuth {
         // We have a response to the http call!
 
         // if we have no headers, it means the http call failed. Fail the incoming request as well.
-        if (header_size == 0) {
+        if header_size == 0 {
             self.fail();
             return;
         }

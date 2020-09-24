@@ -87,6 +87,10 @@ var _ = Describe("Build", func() {
 		)
 		Expect(err).NotTo(HaveOccurred())
 
+		// pull image synchronously to make sure the timeout for curl is enough
+		err = util.Docker(GinkgoWriter, GinkgoWriter, nil, "pull", envoyimage)
+		Expect(err).NotTo(HaveOccurred())
+
 		go func() {
 			defer GinkgoRecover()
 			err := test.WasmeCli(
@@ -115,9 +119,8 @@ var _ = Describe("Build", func() {
 		}
 
 		// expect header in response
-		// note that header key is capital case as this goes through Kube api
 		const addedHeader = "hello: world"
-		Eventually(testRequest, 10*time.Second, time.Second).Should(ContainSubstring(addedHeader))
+		Eventually(testRequest, 30*time.Second, time.Second).Should(ContainSubstring(addedHeader))
 
 		err = quitenvoy()
 		Expect(err).NotTo(HaveOccurred())
