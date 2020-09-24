@@ -8,6 +8,8 @@ RUN curl -sL https://deb.nodesource.com/setup_13.x | bash - && \
 
 RUN apt install expect-dev -y
 
+RUN npm install -g @bazel/bazelisk
+
 COPY build-filter.sh /build-filter.sh
 
 ENTRYPOINT /build-filter.sh

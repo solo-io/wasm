@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"io"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -11,15 +12,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func container() string {
+	if os.Getenv("WASME_USE_PODMAN") != "" {
+		return "podman"
+	}
+	return "docker"
+}
+
 func DockerRun(stdout, stderr io.Writer, stdin io.Reader, image string, runArgs, imageArgs []string) error {
 	args := append([]string{"run"}, runArgs...)
 	args = append(args, image)
 	args = append(args, imageArgs...)
-	return ExecCmd(stdout, stderr, stdin, "docker", args...)
+	return ExecCmd(stdout, stderr, stdin, container(), args...)
 }
 
 func Docker(stdout, stderr io.Writer, stdin io.Reader, args ...string) error {
-	return ExecCmd(stdout, stderr, stdin, "docker", args...)
+	return ExecCmd(stdout, stderr, stdin, container(), args...)
 }
 
 func ExecOutput(stdin io.Reader, cmd string, args ...string) (string, error) {

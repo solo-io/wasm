@@ -13,6 +13,11 @@ import (
 )
 
 var _ = Describe("Build", func() {
+
+	AfterEach(func() {
+		os.RemoveAll("test-filter")
+	})
+
 	It("builds and pushes the image", func() {
 		imageName := test.GetBuildImageTag()
 		username := os.Getenv("WASME_LOGIN_USERNAME")
@@ -45,6 +50,23 @@ var _ = Describe("Build", func() {
 		}
 
 		err = test.WasmeCliSplit("push " + imageName)
+		Expect(err).NotTo(HaveOccurred())
+	})
+	FIt("builds rust image", func() {
+
+		err := test.WasmeCliSplit("init test-filter --platform istio --platform-version 1.7.x --language rust")
+		Expect(err).NotTo(HaveOccurred())
+
+		err = test.RunMake("builder-image")
+		Expect(err).NotTo(HaveOccurred())
+		err = test.WasmeCli(
+			"build",
+			"rust",
+			// need to run with --tmp-dir=. in CI due to docker mount concerns
+			"--tmp-dir=.",
+			"-t=testimage",
+			"test-filter",
+		)
 		Expect(err).NotTo(HaveOccurred())
 	})
 })

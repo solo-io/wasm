@@ -25,6 +25,12 @@ GCFLAGS := all="-N -l"
 GCLOUD_PROJECT_ID?=solo-public
 BUILD_ID := $(BUILD_ID)
 
+ifdef WASME_USE_PODMAN
+	CONTAINERCLI := podman
+else
+	CONTAINERCLI := docker
+endif
+
 #----------------------------------------------------------------------------------
 # Build
 #----------------------------------------------------------------------------------
@@ -104,26 +110,28 @@ install-cli:
 .PHONY: build-images
 build-images: wasme-image builder-image
 
+
+
 # build image with Wasme binary
 .PHONY: wasme-image
 wasme-image: wasme-linux-amd64
 	cp $(OUTDIR)/wasme-linux-amd64 operator/build/wasme/ && \
-	docker build -t $(OPERATOR_IMAGE):$(VERSION) operator/build/wasme/
+	$(CONTAINERCLI) build -t $(OPERATOR_IMAGE):$(VERSION) operator/build/wasme/
 	rm operator/build/wasme/wasme-linux-amd64
 
 .PHONY: wasme-image-push
 wasme-image-push:
-	docker push $(OPERATOR_IMAGE):$(VERSION)
+	$(CONTAINERCLI) push $(OPERATOR_IMAGE):$(VERSION)
 
 # build Builder image
 .PHONY: builder-image
 builder-image:
 	cd builder && \
-	docker build -t $(BUILDER_IMAGE):$(VERSION) .
+	$(CONTAINERCLI) build -t $(BUILDER_IMAGE):$(VERSION) .
 
 .PHONY: builder-image-push
 builder-image-push:
-	docker push $(BUILDER_IMAGE):$(VERSION)
+	$(CONTAINERCLI) push $(BUILDER_IMAGE):$(VERSION)
 
 #----------------------------------------------------------------------------------
 # Test

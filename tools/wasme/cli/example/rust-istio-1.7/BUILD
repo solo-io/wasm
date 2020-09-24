@@ -2,7 +2,7 @@ load("@io_bazel_rules_rust//rust:rust.bzl", "rust_binary")
 
 rust_binary(
     name = "filter",
-    srcs = ["http_auth_random.rs"],
+    srcs = ["filter.rs"],
     crate_type = "cdylib",
     edition = "2018",
     out_binary = True,
