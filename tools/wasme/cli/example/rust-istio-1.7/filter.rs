@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use log::trace;
+use log::debug;
 use proxy_wasm::traits::*;
 use proxy_wasm::types::*;
 use std::time::Duration;
@@ -26,9 +26,11 @@ struct HttpAuth;
 
 impl HttpContext for HttpAuth {
     fn on_http_request_headers(&mut self, _: usize) -> Action {
+        let headers = self.get_http_request_headers();
+        let ref_headers : Vec<(&str,&str)> = headers.iter().map(|(ref k,ref v)|(k.as_str(),v.as_str())).collect();
         self.dispatch_http_call(
             "auth-cluster",
-            get_http_request_headers(),
+            ref_headers,
             None,
             vec![],
             Duration::from_secs(1),
@@ -40,12 +42,15 @@ impl HttpContext for HttpAuth {
 
 impl Context for HttpAuth {
     fn on_http_call_response(&mut self, _: u32, _: usize, _: usize, _: usize) {
-        if get_http_request_header(":status") == "200" {
-            debug!("auth: allowed");
-            self.resume_http_request();
-            return;
+        match self.get_http_request_header(":status") {
+            Some(ref status) if status == "200"  => {
+                debug!("auth: allowed");
+                self.resume_http_request();
+            }
+            _ => {
+                debug!("auth: not authorized");
+                self.send_http_response(403, vec![], Some(b"not authorized"));
+            }
         }
-        debug!("auth: not authorized");
-        self.send_http_response(403, vec![], Some(b"not authorized"));
     }
 }

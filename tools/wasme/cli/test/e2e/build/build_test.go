@@ -52,7 +52,7 @@ var _ = Describe("Build", func() {
 		err = test.WasmeCliSplit("push " + imageName)
 		Expect(err).NotTo(HaveOccurred())
 	})
-	FIt("builds rust image", func() {
+	It("builds rust image", func() {
 
 		err := test.WasmeCliSplit("init test-filter --platform istio --platform-version 1.7.x --language rust")
 		Expect(err).NotTo(HaveOccurred())
