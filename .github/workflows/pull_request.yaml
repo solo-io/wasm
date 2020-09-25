@@ -70,7 +70,9 @@ jobs:
       fail-fast: false
       matrix:
         istio-version: [
-          '1.5.1'
+          '1.5.1',
+          '1.6.6',
+          '1.7.1'
         ]
         include:
           - istio-version: '1.5.1'
