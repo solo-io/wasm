@@ -42,8 +42,7 @@ jobs:
       working-directory: ./tools/wasme/cli
       run: |
         curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
-        curl -sSL https://github.com/istio/istio/releases/download/1.5.1/istio-1.5.1-linux.tar.gz | tar -xzf - istio-1.5.1/bin/istioctl
-        export PATH=$PWD/istio-1.5.1/bin:$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
+        export PATH=$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
         make install-deps operator-gen generated-code
         ./ci/setup-kind.sh
     - name: Testing
@@ -53,8 +52,8 @@ jobs:
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
         export FILTER_IMAGE_GLOO_TAG=webassemblyhub.io/sodman/example-filter:v0.3
-        export FILTER_IMAGE_ISTIO_TAG=webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
         export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
+        export SKIP_PACKAGES=istio,operator
         make install-deps run-tests
     - name: Debug Info
       if: failure()
@@ -64,9 +63,25 @@ jobs:
         # see what's in the cluster if we failed
         kubectl get all -A
         kubectl get configmaps -A
-  e2e-istio-1_6:
-    name: e2e-test-istio 1.6
+  e2e-istio:
+    name: end-to-end-istio
     runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        istio-version: [
+          '1.5.1'
+        ]
+        include:
+          - istio-version: '1.5.1'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.5.1/istio-1.5.1-linux.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5'
+          - istio-version: '1.6.6'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.6.6/istio-1.6.6-linux-amd64.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5'
+          - istio-version: '1.7.1'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.7.1/istio-1.7.1-linux-amd64.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
     steps:
     - uses: actions/checkout@v2
     - name: Set up Go 1.15
@@ -93,77 +108,25 @@ jobs:
     - name: Setup env
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
+        ISTIO_VERSION: ${{ matrix.istio-version }}
       working-directory: ./tools/wasme/cli
       run: |
         curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
-        curl -sSL https://github.com/istio/istio/releases/download/1.6.6/istio-1.6.6-linux-amd64.tar.gz | tar -xzf - istio-1.6.6/bin/istioctl
-        export PATH=$PWD/istio-1.6.6/bin:$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
+        curl -sSL ${{ matrix.istio-binary }} | tar -xzf - istio-${{ matrix.istio-version }}/bin/istioctl
+        export PATH=$PWD/istio-${{ matrix.istio-version }}/bin:$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
         make install-deps operator-gen generated-code
-        ./ci/setup-kind.sh
+        ./ci/setup-kind-istio.sh
     - name: Testing
       env:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
       working-directory: ./tools/wasme/cli
       run: |
         export PATH=$(dirname $KUBECTL):$PATH
-        export FILTER_IMAGE_GLOO_TAG=webassemblyhub.io/sodman/example-filter:v0.3
-        export FILTER_IMAGE_ISTIO_TAG=webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
-        export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
+        export FILTER_IMAGE_ISTIO_TAG=${{ matrix.istio-filter-image }}
+        export ISTIO_VERSION=${{ matrix.istio-version }}
+        export TEST_PKG=pkg/deploy/istio/
         make install-deps run-tests
-    - name: Debug Info
-      if: failure()
-      env:
-        KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
-      run: |
-        # see what's in the cluster if we failed
-        git diff
-        kubectl get all -A
-        kubectl get configmaps -A
-  e2e-istio-1_7:
-    name: e2e-test-istio 1.7
-    runs-on: ubuntu-18.04
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Go 1.15
-      uses: actions/setup-go@v2
-      with:
-        go-version: '1.15.2'
-    - uses: engineerd/setup-kind@v0.3.0
-      with:
-        skipClusterCreation: "true"
-    - name: Install Protoc
-      uses: solo-io/setup-protoc@master
-      with:
-        version: '3.6.1'
-    - uses: azure/setup-kubectl@v1
-      id: kubectl
-      with:
-        version: 'v1.18.0'
-    - uses: actions/cache@v1
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Setup env
-      env:
-        KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
-      working-directory: ./tools/wasme/cli
-      run: |
-        curl -sSL https://get.helm.sh/helm-v3.2.0-linux-amd64.tar.gz | tar -xzf - linux-amd64/helm
-        curl -sSL https://github.com/istio/istio/releases/download/1.7.1/istio-1.7.1-linux-amd64.tar.gz | tar -xzf - istio-1.7.1/bin/istioctl
-        export PATH=$PWD/istio-1.7.1/bin:$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
-        make install-deps operator-gen generated-code
-        ./ci/setup-kind.sh
-    - name: Testing
-      env:
-        KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
-      working-directory: ./tools/wasme/cli
-      run: |
-        export PATH=$(dirname $KUBECTL):$PATH
-        export FILTER_IMAGE_GLOO_TAG=webassemblyhub.io/sodman/example-filter:v0.3
-        export FILTER_IMAGE_ISTIO_TAG=webassemblyhub.io/sodman/istio-1-7:v0.3
-        export FILTER_BUILD_IMAGE_TAG=localhost:5000/test:v1
+        export TEST_PKG=test/e2e/operator/
         make install-deps run-tests
     - name: Debug Info
       if: failure()

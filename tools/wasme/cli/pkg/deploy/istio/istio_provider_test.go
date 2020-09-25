@@ -37,6 +37,8 @@ import (
 )
 
 var _ = Describe("IstioProvider", func() {
+	// TODO (shane) remove arbitrary change to trigger CI
+
 	var (
 		kube   kubernetes.Interface
 		client ezkube.Ensurer
