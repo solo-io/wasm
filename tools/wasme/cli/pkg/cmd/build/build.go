@@ -49,6 +49,7 @@ func BuildCmd(ctx *context.Context) *cobra.Command {
 
 	cmd.AddCommand(
 		cppCmd(ctx, &opts),
+		rustCmd(ctx, &opts),
 		assemblyscriptCmd(ctx, &opts),
 		precompiledCmd(ctx, &opts),
 	)

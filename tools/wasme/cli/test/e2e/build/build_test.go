@@ -1,10 +1,15 @@
 package build_test
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"path/filepath"
+	"time"
 
-	"github.com/solo-io/skv2/codegen/util"
+	"github.com/pkg/errors"
+	skutil "github.com/solo-io/skv2/codegen/util"
+	"github.com/solo-io/wasm/tools/wasme/pkg/util"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,6 +18,11 @@ import (
 )
 
 var _ = Describe("Build", func() {
+
+	AfterEach(func() {
+		os.RemoveAll("test-filter")
+	})
+
 	It("builds and pushes the image", func() {
 		imageName := test.GetBuildImageTag()
 		username := os.Getenv("WASME_LOGIN_USERNAME")
@@ -27,7 +37,7 @@ var _ = Describe("Build", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		if precompiledFilter := os.Getenv("PRECOMPILED_FILTER_PATH"); precompiledFilter != "" {
-			err = test.WasmeCliSplit("build precompiled -t " + imageName + " test-filter " + filepath.Dir(util.GoModPath()) + "/" + precompiledFilter)
+			err = test.WasmeCliSplit("build precompiled -t " + imageName + " test-filter " + filepath.Dir(skutil.GoModPath()) + "/" + precompiledFilter)
 			Expect(err).NotTo(HaveOccurred())
 		} else {
 			err = test.RunMake("builder-image")
@@ -46,5 +56,92 @@ var _ = Describe("Build", func() {
 
 		err = test.WasmeCliSplit("push " + imageName)
 		Expect(err).NotTo(HaveOccurred())
+	})
+
+	quitenvoy := func() error {
+		return util.ExecCmd(
+			GinkgoWriter,
+			GinkgoWriter,
+			nil,
+			"curl",
+			"-X",
+			"POST",
+			"-v",
+			"http://localhost:19000/quitquitquit")
+	}
+
+	ExpectRustExampleToWorkInIstioVersion := func(version string) {
+		err := test.WasmeCliSplit("init test-filter --platform istio --platform-version " + version + ".x --language rust")
+		Expect(err).NotTo(HaveOccurred())
+		imagename := "testimage"
+		envoyimage := "docker.io/istio/proxyv2:" + version + ".0"
+		err = test.RunMake("builder-image")
+		Expect(err).NotTo(HaveOccurred())
+		err = test.WasmeCli(
+			"build",
+			"rust",
+			// need to run with --tmp-dir=. in CI due to docker mount concerns
+			"--tmp-dir=.",
+			"-t="+imagename,
+			"test-filter",
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		// pull image synchronously to make sure the timeout for curl is enough
+		err = util.Docker(GinkgoWriter, GinkgoWriter, nil, "pull", envoyimage)
+		Expect(err).NotTo(HaveOccurred())
+
+		go func() {
+			defer GinkgoRecover()
+			err := test.WasmeCli(
+				"deploy",
+				"envoy",
+				imagename,
+				"--envoy-image="+envoyimage,
+				"--envoy-run-args=-l debug",
+				"--id=myfilter",
+			)
+			Expect(err).NotTo(HaveOccurred())
+		}()
+
+		testRequest := func() (string, error) {
+			b := &bytes.Buffer{}
+			w := io.MultiWriter(b, GinkgoWriter)
+			err := util.ExecCmd(
+				w,
+				w,
+				nil,
+				"curl",
+				"-v",
+				"http://localhost:8080/")
+			out := b.String()
+			return out, errors.Wrapf(err, out)
+		}
+
+		// expect header in response
+		const addedHeader = "hello: world"
+		Eventually(testRequest, 30*time.Second, time.Second).Should(ContainSubstring(addedHeader))
+
+		err = quitenvoy()
+		Expect(err).NotTo(HaveOccurred())
+
+	}
+
+	Context("istio-rust", func() {
+		AfterEach(func() {
+			// do cleanup incase test failed
+			quitenvoy()
+		})
+
+		It("builds a valid image", func() {
+			By("istio 1.5")
+			ExpectRustExampleToWorkInIstioVersion("1.5")
+			os.RemoveAll("test-filter")
+			By("istio 1.6")
+			ExpectRustExampleToWorkInIstioVersion("1.6")
+			os.RemoveAll("test-filter")
+			By("istio 1.7")
+			ExpectRustExampleToWorkInIstioVersion("1.7")
+		})
 	})
 })

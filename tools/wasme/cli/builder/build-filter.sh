@@ -14,8 +14,8 @@ bazel_build() {
   # name of bazel target to run
   TARGET=${TARGET:-:filter.wasm}
 
-  echo running "bazel build ${TARGET}"
-  bazel build ${TARGET}
+  echo running "bazelisk build ${TARGET}"
+  bazelisk build ${TARGET}
 
   cp -r bazel-bin/${BAZEL_OUTPUT} ${DESTFILE}
 }

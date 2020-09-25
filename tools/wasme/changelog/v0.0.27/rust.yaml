@@ -1,0 +1,9 @@
+changelog:
+  - type: NEW_FEATURE
+    description: >
+      Add support for rust filters in Istio 1.5.x-1.7.x
+    issueLink: https://github.com/solo-io/wasm/issues/184
+  - type: NEW_FEATURE
+    description: >
+      Add pod man support, using the WASME_USE_PODMAN environment variable.
+    issueLink: https://github.com/solo-io/wasm/issues/165
