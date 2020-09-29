@@ -31,7 +31,7 @@ require (
 	github.com/solo-io/go-utils v0.16.5
 	github.com/solo-io/protoc-gen-ext v0.0.9
 	github.com/solo-io/skv2 v0.8.1
-	github.com/solo-io/solo-apis v0.0.0-20200904153621-1545bb158329
+	github.com/solo-io/solo-apis v0.0.0-20200904153621-1545bb158329 // indirect
 	github.com/solo-io/solo-kit v0.13.13
 	github.com/solo-io/wasm/tools/wasme/pkg v0.0.0
 	github.com/spf13/afero v1.3.4 // indirect

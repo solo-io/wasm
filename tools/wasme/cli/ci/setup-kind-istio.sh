@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Set up a kind cluster with Gloo installed
+# Set up a kind cluster with Istio installed
 
 set -e
 
@@ -58,35 +58,23 @@ make wasme-image -B
 # grab the image names out of the `make docker` output
 make wasme-image -B | sed -nE 's|Successfully tagged (.*$)|\1|p' | while read f; do kind load docker-image --name $cluster $f; done
 
-kubectl create ns gloo-system-test
-helm install --namespace gloo-system-test --set global.wasm.enabled=true gloo https://storage.googleapis.com/solo-public-helm/charts/gloo-1.5.0-beta11.tgz
-
 kubectl apply -f https://raw.githubusercontent.com/solo-io/gloo/master/example/petstore/petstore.yaml
-cat <<EOF | kubectl apply -f -
-apiVersion: gateway.solo.io/v1
-kind: VirtualService
-metadata:
-  name: default
-  namespace: gloo-system-test
-spec:
-  virtualHost:
-    domains:
-    - '*'
-    routes:
-    - matchers:
-      - prefix: /
-      routeAction:
-        single:
-          upstream:
-            name: default-petstore-8080
-            namespace: gloo-system-test
-EOF
 
-kubectl -n gloo-system-test rollout status deployment gloo
-kubectl -n gloo-system-test rollout status deployment gateway
-kubectl -n gloo-system-test rollout status deployment discovery
-kubectl -n gloo-system-test rollout status deployment gateway-proxy
+# manifest apply depreciated after Istio 1.5, use install for later versions of istioctl
+if [[ "$ISTIO_VERSION" == *"1.5"* ]]; then
+  istioctl manifest apply --set profile=minimal
+else
+  istioctl install --set profile=minimal
+fi
+
+kubectl -n istio-system rollout status deployment istiod
+
 kubectl -n default rollout status deployment petstore
+
+# creating it during the test doesn't work for istio,
+# so create it here.
+kubectl create namespace bookinfo
+kubectl label namespace bookinfo istio-injection=enabled
 
 # setup local registry
 docker run -d -p 5000:5000 --name registry registry:2
