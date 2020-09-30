@@ -5,8 +5,9 @@ TODO (ilackarms): Devise a better strategy for adding support for new abi versio
 The current steps required to add a new language:
 1. Add it to the examples dir
 2. Make sure the runtime-config.json is present and contains necessary fields.
-3. run `make generated-code` to regen the 2gobytes archives with the new example
-4. Add the new example as a new filterBase to the availableBases map below
+3. Edit examples/generate.go so that the example is registered as a target for the code generation
+4. run `make generated-code` to regen the 2gobytes archives with the new example
+5. Add the new example as a new filterBase to the availableBases map below
   - it may be required to add additional ABI Versions to the Registry in abi.DefaultRegistry
 */
 
@@ -17,18 +18,19 @@ import (
 	"strings"
 
 	"github.com/manifoldco/promptui"
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/abi"
-
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/wasm/tools/wasme/pkg/util"
 	"github.com/spf13/cobra"
+
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/abi"
+	"github.com/solo-io/wasm/tools/wasme/pkg/util"
 )
 
 const (
 	languageCpp            = "cpp"
 	languageRust           = "rust"
 	languageAssemblyScript = "assemblyscript"
+	languageTinyGo         = "tinygo"
 )
 
 // a filterBase is a starter filter we generate from the example filters
@@ -115,6 +117,14 @@ var availableBases = map[string][]filterBase{
 			archiveBytes: rustIstio1_7TarBytes,
 		},
 	},
+	languageTinyGo: {
+		{
+			compatiblePlatforms: compatiblePlatforms{
+				abi.Istio17,
+			},
+			archiveBytes: tinygoTarBytes,
+		},
+	},
 }
 
 // map of language name to description
@@ -122,6 +132,7 @@ var supportedLanguages = []string{
 	languageCpp,
 	languageRust,
 	languageAssemblyScript,
+	languageTinyGo,
 }
 
 var log = logrus.StandardLogger()
