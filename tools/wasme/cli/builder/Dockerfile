@@ -12,4 +12,13 @@ RUN npm install -g @bazel/bazelisk
 
 COPY build-filter.sh /build-filter.sh
 
+# TODO: use the latest stable release package after the WASI supported is officially released
+#   this corresponds to https://github.com/tinygo-org/tinygo/commit/f50ad3585d084b17f7754f4b3cb0d42661fee036
+RUN wget https://19227-136505169-gh.circle-artifacts.com/0/tmp/tinygo_amd64.deb
+RUN dpkg -i tinygo_amd64.deb && rm tinygo_amd64.deb
+
+RUN wget https://golang.org/dl/go1.15.2.linux-amd64.tar.gz
+RUN tar -C /usr/local -xzf go1.15.2.linux-amd64.tar.gz && rm go1.15.2.linux-amd64.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin
+
 ENTRYPOINT /build-filter.sh

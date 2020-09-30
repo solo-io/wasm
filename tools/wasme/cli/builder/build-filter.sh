@@ -46,6 +46,10 @@ EOD
   rm -rf build
 }
 
+tinygo_build() {
+  tinygo build -o ${DESTFILE} -target=wasi -wasm-abi=generic .
+}
+
 echo -n "Building with ${BUILD_TOOL}..."
 
 case $BUILD_TOOL in
@@ -57,7 +61,9 @@ case $BUILD_TOOL in
   bazel)
     bazel_build
     ;;
-
+  tinygo)
+    tinygo_build
+    ;;
   *)
     echo -n "unsupported build tool: ${BUILD_TOOL}"
     exit 1
