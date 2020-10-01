@@ -52,6 +52,7 @@ func BuildCmd(ctx *context.Context) *cobra.Command {
 		rustCmd(ctx, &opts),
 		assemblyscriptCmd(ctx, &opts),
 		precompiledCmd(ctx, &opts),
+		tinygoCmd(ctx, &opts),
 	)
 
 	return cmd
