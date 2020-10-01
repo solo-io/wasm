@@ -1,5 +1,5 @@
 
-## WASM OCI Image Specification v0.0.0
+## WASM Artifact Image Specification v0.0.0
 
 - [Introduction](#introduction)
 - [Terminology](#terminology)
@@ -14,11 +14,11 @@
 
 ### Introduction:
 
-The WASM OCI Image Specification defines how to bundle WASM modules as OCI images. WASM OCI Images consist of a WASM binary file, configuration file, and metadata for the target WASM runtime.
+The WASM Artifact Image Specification defines how to bundle WASM modules as OCI images. WASM Artifact Images consist of a WASM binary file, configuration file, and metadata for the target WASM runtime.
 
 The spec is intended to be generic, allowing for any type of WASM module whether it is used to extend any Envoy, OPA, or the browser.
 
-The spec can be considered an extension of the OCI Image Spec designed specifically for use by applications which produce and consume WASM modules (as opposed to application containers). It is intended to provide a standard mechanism to manage the building and running of WASM modules. 
+The spec can be considered an extension of the OCI Artifact Spec designed specifically for use by applications which produce and consume WASM modules (as opposed to application containers). It is intended to provide a standard mechanism to manage the building and running of WASM modules. 
 
 This document considers primarily the use case of storing WASM Envoy Filters as OCI Images.
 
@@ -32,13 +32,13 @@ This document considers primarily the use case of storing WASM Envoy Filters as 
 | Runtime Configuration              | Configuration specific to the runtime which consumes a module. This configuration is stored as JSON and bundled with the module in the image in the specification. 
 | Envoy WASM Filter                  | Custom Filters for the Envoy Proxy built as a WASM module.
 | Envoy WASM OCI Image               | Envoy Filters stored as OCI images according to the specification. 
-| Envoy WASM OCI Image Specification | An extension of the WASM OCI Image Spec which describes how to bundle and ship Envoy WASM filters as OCI Images. |
+| Envoy WASM OCI Artifact Specification | An extension of the WASM OCI Artifact Spec which describes how to bundle and ship Envoy WASM filters as OCI Images. |
 
 ### Description:
 
 #### Overview:
 
-The WASM OCI Image Specification defines a method of storing WASM modules which makes them easy to build, pull, publish, and execute.
+The WASM OCI Artifact Specification defines a method of storing WASM modules which makes them easy to build, pull, publish, and execute.
 
 Because each execution environment (runtime) for a WASM module may have runtime-specific configuration parameters, a WASM image is composed of both a content layer, for the WASM module itself, as well as a config layer, with metadata describing the module which is relevant to the target runtime.
 
@@ -63,7 +63,7 @@ Control planes then configure the Envoy instances to load the filter via the loc
 
 ### Format:
 
-The WASM OCI Image Spec consists of two layers bundled together:
+The WASM OCI Artifact Spec consists of two layers bundled together:
 - A layer specifying configuration for the target runtime
 - A layer containing the compiled WASM module itself
 
@@ -71,10 +71,10 @@ Each layer is associated with its own Media Type, which is stored in the OCI Des
 
 | Media Type | Type | Description |
 |------------|------|-------------|
-| application/vnd.module.wasm.config.v1+json | JSON Object | Configuration for the Target WASM runtime.
-| application/vnd.module.wasm.content.layer.v1+wasm | binary data (byte array) | The compiled module data |
+| application/vnd.io.solo.wasm.config.v1+json | JSON Object | Configuration for the Target WASM runtime.
+| application/vnd.io.solo.wasm.content.layer.v1+wasm | binary data (byte array) | The compiled module data |
 
-`application/vnd.module.wasm.config.v1+json` Property Descriptions:
+`application/vnd.io.solo.wasm.config.v1+json` Property Descriptions:
 
 | Property   | Type | Description |
 |------------|------|-------------|
@@ -99,7 +99,7 @@ The following descriptors provide an example of the OCI Image descriptors for an
 ```
 [
   {
-    "mediaType": "application/vnd.module.wasm.config.v1+json",
+    "mediaType": "application/vnd.io.solo.wasm.config.v1+json",
     "digest": "sha256:d0a165298ae270c5644be8e9938036a3a7a5191f6be03286c40874d761c18abf",
     "size": 125,
     "annotations": {
@@ -107,7 +107,7 @@ The following descriptors provide an example of the OCI Image descriptors for an
     }
   },
   {
-    "mediaType": "application/vnd.module.wasm.content.layer.v1+wasm",
+    "mediaType": "application/vnd.io.solo.wasm.content.layer.v1+wasm",
     "digest": "sha256:5e82b945b59d03620fb360193753cbd08955e30a658dc51735a0fcbc2163d41c",
     "size": 1043056,
     "annotations": {
@@ -117,7 +117,7 @@ The following descriptors provide an example of the OCI Image descriptors for an
 ]
 ```
 
-The following is the runtime config stored as the `application/vnd.module.wasm.config.v1+json` layer:
+The following is the runtime config stored as the `application/vnd.io.solo.wasm.config.v1+json` layer:
 
 ```{
   "type": "envoy_proxy",
