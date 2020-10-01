@@ -32,14 +32,11 @@ func (ctx *httpHeaders) OnHttpRequestHeaders(int, bool) types.Action {
 }
 
 // override
-func (ctx *httpHeaders) OnHttpResponseHeaders(int, bool) types.Action {
-	hs, err := proxywasm.HostCallGetHttpResponseHeaders()
-	if err != nil {
-		proxywasm.LogCriticalf("failed to get request headers: %v", err)
-	}
 
-	for _, h := range hs {
-		proxywasm.LogInfof("response header: %s: %s", h[0], h[1])
+// override
+func (ctx *httpHeaders) OnHttpResponseHeaders(int, bool) types.Action {
+	if err := proxywasm.HostCallSetHttpResponseHeader("hello", "world"); err != nil {
+		proxywasm.LogCriticalf("failed to set response header: %v", err)
 	}
 	return types.ActionContinue
 }
