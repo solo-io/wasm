@@ -28,7 +28,7 @@ wasme init DEST_DIRECTORY [--language=FILTER_LANGUAGE] [--platform=TARGET_PLATFO
 ```
       --disable-prompt            Disable the interactive prompt if a required parameter is not passed. If set to true and one of the required flags is not provided, wasme CLI will return an error.
   -h, --help                      help for init
-      --language string           The programming language with which to create the filter. Supported languages are: [cpp rust assemblyscript]
+      --language string           The programming language with which to create the filter. Supported languages are: [cpp rust assemblyscript tinygo]
       --platform string           The name of the target platform against which to build. Supported platforms are: [gloo istio]
       --platform-version string   The version of the target platform against which to build. Supported Istio versions are: [1.5.x 1.6.x]. Supported Gloo versions are: [1.3.x 1.5.x]
 ```

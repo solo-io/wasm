@@ -7,3 +7,6 @@
 [submodule "sdks/proxy-wasm-rust-sdk"]
 	path = sdks/proxy-wasm-rust-sdk
 	url = https://github.com/proxy-wasm/proxy-wasm-rust-sdk
+[submodule "sdks/proxy-wasm-go-sdk"]
+	path = sdks/proxy-wasm-go-sdk
+	url = https://github.com/tetratelabs/proxy-wasm-go-sdk

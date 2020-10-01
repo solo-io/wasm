@@ -34,4 +34,5 @@ Options for the build are specific to the target language.
 * [wasme build cpp](../wasme_build_cpp)	 - Build a wasm image from a CPP filter using Bazel-in-Docker
 * [wasme build precompiled](../wasme_build_precompiled)	 - Build a wasm image from a Precompiled filter.
 * [wasme build rust](../wasme_build_rust)	 - Build a wasm image from a Rust filter using Bazel-in-Docker
+* [wasme build tinygo](../wasme_build_tinygo)	 - Build a wasm image from a TinyGo filter using TinyGo-in-Docker
 

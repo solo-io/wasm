@@ -50,6 +50,7 @@ var examples = map[string]string{
 	"cppIstio1_7":    "cpp-istio-1.7",
 	"rustIstio1_7":   "rust-istio-1.7",
 	"assemblyscript": "assemblyscript",
+	"tinygo":         "tinygo",
 }
 
 func generateEmbeddedArchiveFile(prefix, dir string) error {

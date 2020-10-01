@@ -129,7 +129,7 @@ var _ = Describe("Build", func() {
 
 	Context("istio-rust", func() {
 		AfterEach(func() {
-			// do cleanup incase test failed
+			// do cleanup in case test failed
 			quitenvoy()
 		})
 
@@ -142,6 +142,75 @@ var _ = Describe("Build", func() {
 			os.RemoveAll("test-filter")
 			By("istio 1.7")
 			ExpectRustExampleToWorkInIstioVersion("1.7")
+		})
+	})
+
+	ExpectTinyGoExampleToWorkInIstioVersion := func(version string) {
+		err := test.WasmeCliSplit("init test-filter --platform istio --platform-version " + version + ".x --language tinygo")
+		Expect(err).NotTo(HaveOccurred())
+		imagename := "testimage"
+		envoyimage := "docker.io/istio/proxyv2:" + version + ".0"
+		err = test.RunMake("builder-image")
+		Expect(err).NotTo(HaveOccurred())
+		err = test.WasmeCli(
+			"build",
+			"tinygo",
+			// need to run with --tmp-dir=. in CI due to docker mount concerns
+			"--tmp-dir=.",
+			"-t="+imagename,
+			"test-filter",
+		)
+		Expect(err).NotTo(HaveOccurred())
+
+		// pull image synchronously to make sure the timeout for curl is enough
+		err = util.Docker(GinkgoWriter, GinkgoWriter, nil, "pull", envoyimage)
+		Expect(err).NotTo(HaveOccurred())
+
+		go func() {
+			defer GinkgoRecover()
+			err := test.WasmeCli(
+				"deploy",
+				"envoy",
+				imagename,
+				"--envoy-image="+envoyimage,
+				"--envoy-run-args=-l debug",
+				"--id=myfilter",
+			)
+			Expect(err).NotTo(HaveOccurred())
+		}()
+
+		testRequest := func() (string, error) {
+			b := &bytes.Buffer{}
+			w := io.MultiWriter(b, GinkgoWriter)
+			err := util.ExecCmd(
+				w,
+				w,
+				nil,
+				"curl",
+				"-v",
+				"http://localhost:8080/")
+			out := b.String()
+			return out, errors.Wrapf(err, out)
+		}
+
+		// expect header in response
+		const addedHeader = "hello: world"
+		Eventually(testRequest, 30*time.Second, time.Second).Should(ContainSubstring(addedHeader))
+
+		err = quitenvoy()
+		Expect(err).NotTo(HaveOccurred())
+	}
+
+	Context("istio-tinygo", func() {
+		AfterEach(func() {
+			// do cleanup test failed
+			quitenvoy()
+		})
+
+		It("builds a valid image", func() {
+			os.RemoveAll("test-filter")
+			By("istio 1.7")
+			ExpectTinyGoExampleToWorkInIstioVersion("1.7")
 		})
 	})
 })
