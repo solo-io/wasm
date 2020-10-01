@@ -21,4 +21,11 @@ RUN wget https://golang.org/dl/go1.15.2.linux-amd64.tar.gz
 RUN tar -C /usr/local -xzf go1.15.2.linux-amd64.tar.gz && rm go1.15.2.linux-amd64.tar.gz
 ENV PATH=$PATH:/usr/local/go/bin
 
+# libstdc++6.so is required for TinyGo we
+RUN add-apt-repository ppa:ubuntu-toolchain-r/test && \
+    apt-get -y update && \
+    apt-get -y upgrade && \
+    apt-get -y dist-upgrade && \
+    rm -rf /var/lib/apt/lists/*
+
 ENTRYPOINT /build-filter.sh

@@ -32,8 +32,6 @@ func (ctx *httpHeaders) OnHttpRequestHeaders(int, bool) types.Action {
 }
 
 // override
-
-// override
 func (ctx *httpHeaders) OnHttpResponseHeaders(int, bool) types.Action {
 	if err := proxywasm.HostCallSetHttpResponseHeader("hello", "world"); err != nil {
 		proxywasm.LogCriticalf("failed to set response header: %v", err)
