@@ -80,7 +80,7 @@ message DeploymentSpec {
 // how to deploy to Istio
 message IstioDeploymentSpec {
     // the kind of workload to deploy the filter to
-    // can either be Deployment or DaemonSet
+    // can either be Deployment, DaemonSet or Statefulset
     string kind = 1;
 
     // deploy the filter to workloads with these labels

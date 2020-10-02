@@ -1,0 +1,5 @@
+changelog:
+  - type: NEW_FEATURE
+    description: >
+      Add support for deploying to StatfulSet as a workload type
+    issueLink: https://github.com/solo-io/wasm/issues/165

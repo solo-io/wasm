@@ -30,10 +30,10 @@ import (
 )
 
 const (
-	WorkloadTypeDeployment = "deployment"
-	WorkloadTypeDaemonSet  = "daemonset"
-
-	backupAnnotationPrefix = "wasme-backup."
+	WorkloadTypeDaemonSet   = "daemonset"
+	WorkloadTypeDeployment  = "deployment"
+	WorkloadTypeStatefulSet = "statefulset"
+	backupAnnotationPrefix  = "wasme-backup."
 )
 
 // the target workload to deploy the filter to
@@ -354,6 +354,22 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 		})
 		if err != nil {
 			return err
+		}
+		for _, workload := range workloads.Items {
+			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {
+				return err
+			}
+
+			if err = p.Client.Ensure(p.Ctx, nil, &workload); err != nil {
+				return err
+			}
+		}
+	case WorkloadTypeStatefulSet:
+		workloads, err := p.KubeClient.AppsV1().StatefulSets(p.Workload.Namespace).List(metav1.ListOptions{
+			LabelSelector: labels.SelectorFromSet(p.Workload.Labels).String(),
+		})
+		if err != nil {
+			return nil
 		}
 		for _, workload := range workloads.Items {
 			if err := do(workload.ObjectMeta, &workload.Spec.Template); err != nil {

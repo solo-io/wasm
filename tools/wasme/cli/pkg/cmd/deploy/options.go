@@ -3,6 +3,7 @@ package deploy
 import (
 	"context"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/deploy/local"
@@ -92,7 +93,7 @@ type istioOpts struct {
 func (opts *istioOpts) addToFlags(flags *pflag.FlagSet) {
 	flags.StringToStringVarP(&opts.workload.Labels, "labels", "l", nil, "labels of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace")
 	flags.StringVarP(&opts.workload.Namespace, "namespace", "n", "default", "namespace of the workload(s) to inject the filter.")
-	flags.StringVarP(&opts.workload.Kind, "workload-type", "t", istio.WorkloadTypeDeployment, "type of workload into which the filter should be injected. possible values are "+istio.WorkloadTypeDeployment+" or "+istio.WorkloadTypeDaemonSet)
+	flags.StringVarP(&opts.workload.Kind, "workload-type", "t", istio.WorkloadTypeDeployment, "type of workload into which the filter should be injected. possible values are "+strings.Join(SupportedWorkloadTypes, ", "))
 	flags.StringVarP(&opts.istioNamespace, "istio-namespace", "", "istio-system", "the namespace where the Istio control plane is installed")
 	flags.DurationVar(&opts.cacheTimeout, "cache-timeout", time.Minute, "the length of time to wait for the server-side filter cache to pull the filter image before giving up with an error. set to 0 to skip the check entirely (note, this may produce a known race condition).")
 	flags.BoolVar(&opts.ignoreVersionCheck, "ignore-version-check", false, "set to disable abi version compatability check.")
@@ -144,6 +145,18 @@ var SupportedProviders = []string{
 	Provider_Gloo,
 	Provider_Istio,
 	Provider_Envoy,
+}
+
+const (
+	WorkloadType_DaemonSet   = "daemonset"
+	WorkloadType_Deployment  = "deployment"
+	WorkloadType_STatefulset = "statefulset"
+)
+
+var SupportedWorkloadTypes = []string{
+	WorkloadType_DaemonSet,
+	WorkloadType_Deployment,
+	WorkloadType_STatefulset,
 }
 
 func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) {
