@@ -71,10 +71,10 @@ Each layer is associated with its own Media Type, which is stored in the OCI Des
 
 | Media Type | Type | Description |
 |------------|------|-------------|
-| application/vnd.io.solo.wasm.config.v1+json | JSON Object | Configuration for the Target WASM runtime.
-| application/vnd.io.solo.wasm.content.layer.v1+wasm | binary data (byte array) | The compiled module data |
+| application/vnd.module.wasm.config.v1+json | JSON Object | Configuration for the Target WASM runtime.
+| application/vnd.module.wasm.content.layer.v1+wasm | binary data (byte array) | The compiled module data |
 
-`application/vnd.io.solo.wasm.config.v1+json` Property Descriptions:
+`application/vnd.module.wasm.config.v1+json` Property Descriptions:
 
 | Property   | Type | Description |
 |------------|------|-------------|
@@ -99,7 +99,7 @@ The following descriptors provide an example of the OCI Image descriptors for an
 ```
 [
   {
-    "mediaType": "application/vnd.io.solo.wasm.config.v1+json",
+    "mediaType": "application/vnd.module.wasm.config.v1+json",
     "digest": "sha256:d0a165298ae270c5644be8e9938036a3a7a5191f6be03286c40874d761c18abf",
     "size": 125,
     "annotations": {
@@ -107,7 +107,7 @@ The following descriptors provide an example of the OCI Image descriptors for an
     }
   },
   {
-    "mediaType": "application/vnd.io.solo.wasm.content.layer.v1+wasm",
+    "mediaType": "application/vnd.module.wasm.content.layer.v1+wasm",
     "digest": "sha256:5e82b945b59d03620fb360193753cbd08955e30a658dc51735a0fcbc2163d41c",
     "size": 1043056,
     "annotations": {
@@ -117,7 +117,7 @@ The following descriptors provide an example of the OCI Image descriptors for an
 ]
 ```
 
-The following is the runtime config stored as the `application/vnd.io.solo.wasm.config.v1+json` layer:
+The following is the runtime config stored as the `application/vnd.module.wasm.config.v1+json` layer:
 
 ```{
   "type": "envoy_proxy",
