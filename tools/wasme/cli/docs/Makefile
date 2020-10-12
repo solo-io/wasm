@@ -21,6 +21,13 @@ IMAGE_REPO := $(GCR_REPO_PREFIX)/$(IMAGE_LEAF_NAME)
 PRODUCT_SCOPE := web-assembly-hub
 DOCS_VERSION := latest
 
+
+ifdef WASME_USE_PODMAN
+	CONTAINERCLI := podman
+else
+	CONTAINERCLI := docker
+endif
+
 #----------------------------------------------------------------------------------
 # Docs
 #----------------------------------------------------------------------------------
@@ -79,10 +86,10 @@ SERVE_AS_LATEST_TAG:=$(VERSION)-latest
 ## don't bother generating manifest, just copy/modify from docs-prod repo
 # docker-push-docs: site-release manifest
 docker-push-docs: site-release
-	@echo "${GCR_PASSWORD}" | docker login -u ${GCR_USERNAME} --password-stdin gcr.io
-	docker build \
+	@echo "${GCR_PASSWORD}" | $(CONTAINERCLI) login -u ${GCR_USERNAME} --password-stdin gcr.io
+	$(CONTAINERCLI) build \
 		--build-arg VERSION=latest \
 		--build-arg PRODUCT_SCOPE=$(PRODUCT_SCOPE) \
 		--build-arg FROM_DIR=./site-latest \
 		-t $(GCR_REPO_PREFIX)/$(IMAGE_LEAF_NAME):$(SERVE_AS_LATEST_TAG) .
-	docker push $(GCR_REPO_PREFIX)/$(IMAGE_LEAF_NAME):$(SERVE_AS_LATEST_TAG)
+	$(CONTAINERCLI) push $(GCR_REPO_PREFIX)/$(IMAGE_LEAF_NAME):$(SERVE_AS_LATEST_TAG)

@@ -181,8 +181,8 @@ endif
 # Important to clean before pushing new releases. Dockerfiles and binaries may not update properly
 .PHONY: clean
 clean:
-	rm -rf  _output/
-	rm -rf  example/cpp/{bazel-bin,bazel-out,bazel-testlogs,bazel-workspace}
+	rm -rf _output/
+	rm -rf example/cpp/{bazel-bin,bazel-out,bazel-testlogs,bazel-workspace}
 
 .PHONY: build-example
 build-example:
