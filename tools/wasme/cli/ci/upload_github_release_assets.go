@@ -7,7 +7,7 @@ import (
 const buildDir = "_output"
 const installDir = "operator/install"
 const repoOwner = "solo-io"
-const repoName = "wasme"
+const repoName = "wasm"
 
 func main() {
 	assets := []githubutils.ReleaseAssetSpec{
