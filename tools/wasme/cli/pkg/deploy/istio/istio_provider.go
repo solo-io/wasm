@@ -290,17 +290,17 @@ func (p *Provider) waitForCacheEvents(image string) error {
 				return errors.Wrapf(err, "getting events for image %v", image)
 			}
 			// expect an event for each cache instance
-			var successEvents int32
+			successEvents := map[string]bool{}
 
 			for _, evt := range events {
 				if evt.Reason == cache.Reason_ImageError {
 					logrus.Warnf("event %v was in Error state: %+v", evt.Name, evt)
 					continue
 				}
-				successEvents++
+				successEvents[evt.Source.Host] = true
 			}
 
-			if successEvents != cacheDaemonset.Status.NumberReady {
+			if len(successEvents) != int(cacheDaemonset.Status.NumberReady) {
 				eventsErr = errors.Errorf("expected %v image-ready events for image %v, only found %v", cacheDaemonset.Status.NumberReady, image, successEvents)
 				logrus.Warnf("event err: %v", eventsErr)
 				continue

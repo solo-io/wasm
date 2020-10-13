@@ -122,8 +122,12 @@ spec:
         - /etc/wasme-cache/images.txt
         - --cache-ns
         - '{{ .Release.Namespace }}'
-{{- if $wasmeCache.env }}
         env:
+        - name: NODE_HOSTNAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+{{- if $wasmeCache.env }}
 {{ toYaml $wasmeCache.env | indent 10 }}
 {{- end }}
         volumeMounts:
