@@ -3,6 +3,7 @@ package cache
 import (
 	"crypto/md5"
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/go-multierror"
 	v1 "k8s.io/api/core/v1"
@@ -56,6 +57,7 @@ func (n *Notifier) Notify(err error, image string) error {
 		Message: message,
 		Source: v1.EventSource{
 			Component: "wasme-cache",
+			Host:      os.Getenv("NODE_HOSTNAME"),
 		},
 	})
 

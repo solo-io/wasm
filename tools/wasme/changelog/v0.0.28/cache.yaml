@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Fix a bug where the operator miscounted cache events.
+    issueLink: https://github.com/solo-io/wasm/issues/199
