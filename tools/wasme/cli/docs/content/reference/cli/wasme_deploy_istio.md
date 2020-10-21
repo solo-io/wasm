@@ -37,7 +37,7 @@ wasme deploy istio <image> --id=<unique name> [--config=<inline string>] [--root
       --istio-namespace string           the namespace where the Istio control plane is installed (default "istio-system")
   -l, --labels stringToString            labels of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace (default [])
   -n, --namespace string                 namespace of the workload(s) to inject the filter. (default "default")
-  -t, --workload-type string             type of workload into which the filter should be injected. possible values are deployment or daemonset (default "deployment")
+  -t, --workload-type string             type of workload into which the filter should be injected. possible values are daemonset, deployment, statefulset (default "deployment")
 ```
 
 ### Options inherited from parent commands

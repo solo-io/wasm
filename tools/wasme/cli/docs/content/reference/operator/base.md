@@ -136,7 +136,8 @@ Header name/value pair plus option to control append behavior.
 
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
-| header | [HeaderValue](#envoy.api.v2.core.HeaderValue) |  | Header name/value pair that this option applies to. |
+| header | [HeaderValue](#envoy.api.v2.core.HeaderValue) |  | Explicitly specified header |
+| header_secret_ref | [core.solo.io.ResourceRef](#core.solo.io.ResourceRef) |  | Reference to header contained in a secret |
 | append | [google.protobuf.BoolValue](#google.protobuf.BoolValue) |  | Should the value be appended? If true (default), the value is appended to
 existing values. |
 
