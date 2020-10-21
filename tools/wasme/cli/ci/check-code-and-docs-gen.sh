@@ -17,6 +17,11 @@ if [[ $? -ne 0 ]]; then
   echo "Code generation failed"
   exit 1;
 fi
+
+# Tars can build slightly differently based on the host system.
+# At build time, they will be re-built in CI, so we can ignore diffs in tars
+git status --porcelain | grep archive_2gobytes.go | cut -c 20- | xargs git restore
+
 if [[ $(git status --porcelain | wc -l) -ne 0 ]]; then
   echo "Error: Generating code produced a non-empty diff"
   echo "Try running 'make install-go-tools generated-code operator-gen manifest-gen -B' from the tools/wasme/cli directory, then re-pushing."
