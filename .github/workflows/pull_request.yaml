@@ -39,6 +39,7 @@ jobs:
           ${{ runner.os }}-go-
     - name: Generate Code
       run: |
+        cd ./tools/wasme/cli
         ./ci/check-code-and-docs-gen.sh
   test:
     name: end-to-end
