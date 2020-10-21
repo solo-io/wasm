@@ -1,0 +1,4 @@
+changelog:
+  - type: NON_USER_FACING
+    description: Add codegen check to CI
+    issueLink: https://github.com/solo-io/wasm/issues/203
