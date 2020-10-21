@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -30,17 +31,32 @@ func Tar(src string, writers ...io.Writer) error {
 	tw := tar.NewWriter(gzw)
 	defer tw.Close()
 
+	var files []struct {
+		File string
+		FI   os.FileInfo
+	}
 	// walk path
-	return filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
+	err := filepath.Walk(src, func(file string, fi os.FileInfo, err error) error {
+		files = append(files, struct {
+			File string
+			FI   os.FileInfo
+		}{File: file, FI: fi})
+		return err
+	})
+	if err != nil {
+		return err
+	}
 
-		// return on any error
-		if err != nil {
-			return err
-		}
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].File < files[j].File
+	})
 
+	for _, f := range files {
+		file := f.File
+		fi := f.FI
 		// return on non-regular files (thanks to [kumo](https://medium.com/@komuw/just-like-you-did-fbdd7df829d3) for this suggested update)
 		if !fi.Mode().IsRegular() {
-			return nil
+			continue
 		}
 
 		// create a new dir/file header
@@ -71,9 +87,8 @@ func Tar(src string, writers ...io.Writer) error {
 		// manually close here after each file operation; defering would cause each file close
 		// to wait until all operations have completed.
 		f.Close()
-
-		return nil
-	})
+	}
+	return nil
 }
 
 // Untar takes a destination path and a reader; a tar reader loops over the tarfile
