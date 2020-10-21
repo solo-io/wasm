@@ -6,6 +6,7 @@ protoc --version
 
 if [ ! -f .gitignore ]; then
   echo "_output" > .gitignore
+  echo "_output" > tools/wasme/cli/.gitignore
 fi
 
 make install-deps
