@@ -166,7 +166,7 @@ how to deploy to Istio
 | Field | Type | Label | Description |
 | ----- | ---- | ----- | ----------- |
 | kind | [string](#string) |  | the kind of workload to deploy the filter to
-can either be Deployment or DaemonSet |
+can either be Deployment, DaemonSet or Statefulset |
 | labels | [][IstioDeploymentSpec.LabelsEntry](#wasme.io.IstioDeploymentSpec.LabelsEntry) | repeated | deploy the filter to workloads with these labels
 the workload must live in the same namespace as the FilterDeployment
 if empty, the filter will be deployed to all workloads in the namespace |

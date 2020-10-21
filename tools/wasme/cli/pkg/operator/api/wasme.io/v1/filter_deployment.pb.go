@@ -325,7 +325,7 @@ func (*DeploymentSpec) XXX_OneofWrappers() []interface{} {
 // how to deploy to Istio
 type IstioDeploymentSpec struct {
 	// the kind of workload to deploy the filter to
-	// can either be Deployment or DaemonSet
+	// can either be Deployment, DaemonSet or Statefulset
 	Kind string `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
 	// deploy the filter to workloads with these labels
 	// the workload must live in the same namespace as the FilterDeployment
