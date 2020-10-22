@@ -1,6 +1,7 @@
 package istio
 
 import (
+	"context"
 	"github.com/pkg/errors"
 	"github.com/solo-io/wasme/pkg/util"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -14,7 +15,7 @@ const (
 )
 
 type VersionInspector interface {
-	GetIstioVersion() (string, error)
+	GetIstioVersion(ctx context.Context) (string, error)
 }
 
 type versionInspector struct {
@@ -22,12 +23,12 @@ type versionInspector struct {
 	kube           kubernetes.Interface
 }
 
-func (i *versionInspector) GetIstioVersion() (string, error) {
+func (i *versionInspector) GetIstioVersion(ctx context.Context) (string, error) {
 	istioNamespace := i.istioNamespace
 	if istioNamespace == "" {
 		istioNamespace = defaultIstioNamespace
 	}
-	pilotDeployment, err := i.kube.AppsV1().Deployments(istioNamespace).Get(pilotDeploymentName, metav1.GetOptions{})
+	pilotDeployment, err := i.kube.AppsV1().Deployments(istioNamespace).Get(ctx, pilotDeploymentName, metav1.GetOptions{})
 	if err != nil {
 		return "", nil
 	}

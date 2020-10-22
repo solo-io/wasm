@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/solo-io/go-utils/kubeerrutils"
@@ -42,6 +43,7 @@ var (
 )
 
 type deployer struct {
+	ctx        context.Context
 	kube       kubernetes.Interface
 	namespace  string
 	name       string
@@ -51,7 +53,7 @@ type deployer struct {
 	logger     *logrus.Entry
 }
 
-func NewDeployer(kube kubernetes.Interface, namespace, name string, imageRepo, imageTag string, args []string, pullPolicy v1.PullPolicy) *deployer {
+func NewDeployer(ctx context.Context, kube kubernetes.Interface, namespace, name string, imageRepo, imageTag string, args []string, pullPolicy v1.PullPolicy) *deployer {
 	if namespace == "" {
 		namespace = CacheNamespace
 	}
@@ -69,6 +71,7 @@ func NewDeployer(kube kubernetes.Interface, namespace, name string, imageRepo, i
 	}
 	image := imageRepo + ":" + imageTag
 	return &deployer{
+		ctx:        ctx,
 		kube:       kube,
 		namespace:  namespace,
 		name:       name,
@@ -111,11 +114,12 @@ func (d *deployer) EnsureCache() error {
 }
 
 func (d *deployer) createNamespaceIfNotExist() error {
-	_, err := d.kube.CoreV1().Namespaces().Create(&v1.Namespace{
+	_, err := d.kube.CoreV1().Namespaces().Create(d.ctx, &v1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: d.namespace,
-		},
-	})
+		}},
+		metav1.CreateOptions{},
+	)
 	// ignore already exists err
 	if err != nil {
 		if kubeerrutils.IsAlreadyExists(err) {
@@ -129,15 +133,16 @@ func (d *deployer) createNamespaceIfNotExist() error {
 }
 
 func (d *deployer) createConfigMapIfNotExist() error {
-	_, err := d.kube.CoreV1().ConfigMaps(d.namespace).Create(&v1.ConfigMap{
+	_, err := d.kube.CoreV1().ConfigMaps(d.namespace).Create(d.ctx, &v1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      d.name,
 			Namespace: d.namespace,
 		},
 		Data: map[string]string{
 			ImagesKey: "",
-		},
-	})
+		}},
+		metav1.CreateOptions{},
+	)
 	// ignore already exists err
 	if err != nil {
 		if kubeerrutils.IsAlreadyExists(err) {
@@ -152,7 +157,7 @@ func (d *deployer) createConfigMapIfNotExist() error {
 
 func (d *deployer) createServiceAccountIfNotExist() error {
 	svcAcct := MakeServiceAccount(d.name, d.namespace)
-	_, err := d.kube.CoreV1().ServiceAccounts(d.namespace).Create(svcAcct)
+	_, err := d.kube.CoreV1().ServiceAccounts(d.namespace).Create(d.ctx, svcAcct, metav1.CreateOptions{})
 	// ignore already exists err
 	if err != nil {
 		if kubeerrutils.IsAlreadyExists(err) {
@@ -167,20 +172,20 @@ func (d *deployer) createServiceAccountIfNotExist() error {
 
 func (d *deployer) createOrUpdateCacheRole(role *rbacv1.Role) error {
 
-	_, err := d.kube.RbacV1().Roles(d.namespace).Create(role)
+	_, err := d.kube.RbacV1().Roles(d.namespace).Create(d.ctx, role, metav1.CreateOptions{})
 	// update on already exists err
 	if err != nil {
 		if !kubeerrutils.IsAlreadyExists(err) {
 			return err
 		}
-		existing, err := d.kube.RbacV1().Roles(d.namespace).Get(role.Name, metav1.GetOptions{})
+		existing, err := d.kube.RbacV1().Roles(d.namespace).Get(d.ctx, role.Name, metav1.GetOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to get existing cache role")
 		}
 
 		existing.Rules = role.Rules
 
-		_, err = d.kube.RbacV1().Roles(d.namespace).Update(existing)
+		_, err = d.kube.RbacV1().Roles(d.namespace).Update(d.ctx, existing, metav1.UpdateOptions{})
 		if err != nil {
 			return err
 		}
@@ -196,13 +201,13 @@ func (d *deployer) createOrUpdateCacheRole(role *rbacv1.Role) error {
 }
 
 func (d *deployer) createOrUpdateCacheRolebinding(roleBinding *rbacv1.RoleBinding) error {
-	_, err := d.kube.RbacV1().RoleBindings(d.namespace).Create(roleBinding)
+	_, err := d.kube.RbacV1().RoleBindings(d.namespace).Create(d.ctx, roleBinding, metav1.CreateOptions{})
 	// update on already exists err
 	if err != nil {
 		if !kubeerrutils.IsAlreadyExists(err) {
 			return err
 		}
-		existing, err := d.kube.RbacV1().RoleBindings(d.namespace).Get(roleBinding.Name, metav1.GetOptions{})
+		existing, err := d.kube.RbacV1().RoleBindings(d.namespace).Get(d.ctx, roleBinding.Name, metav1.GetOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to get existing cache rolebinding")
 		}
@@ -210,7 +215,7 @@ func (d *deployer) createOrUpdateCacheRolebinding(roleBinding *rbacv1.RoleBindin
 		existing.Subjects = roleBinding.Subjects
 		existing.RoleRef = roleBinding.RoleRef
 
-		_, err = d.kube.RbacV1().RoleBindings(d.namespace).Update(existing)
+		_, err = d.kube.RbacV1().RoleBindings(d.namespace).Update(d.ctx, existing, metav1.UpdateOptions{})
 		if err != nil {
 			return err
 		}
@@ -232,13 +237,13 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 
 	desiredDaemonSet := MakeDaemonSet(d.name, d.namespace, d.image, labels, d.args, d.pullPolicy)
 
-	_, err := d.kube.AppsV1().DaemonSets(d.namespace).Create(desiredDaemonSet)
+	_, err := d.kube.AppsV1().DaemonSets(d.namespace).Create(d.ctx, desiredDaemonSet, metav1.CreateOptions{})
 	// update on already exists err
 	if err != nil {
 		if !kubeerrutils.IsAlreadyExists(err) {
 			return err
 		}
-		existing, err := d.kube.AppsV1().DaemonSets(d.namespace).Get(desiredDaemonSet.Name, metav1.GetOptions{})
+		existing, err := d.kube.AppsV1().DaemonSets(d.namespace).Get(d.ctx, desiredDaemonSet.Name, metav1.GetOptions{})
 		if err != nil {
 			return errors.Wrap(err, "failed to get existing cache daemonset")
 		}
@@ -246,7 +251,7 @@ func (d *deployer) createOrUpdateDaemonSet() error {
 		// TODO: how will this handle immutable fields?
 		existing.Spec = desiredDaemonSet.Spec
 
-		_, err = d.kube.AppsV1().DaemonSets(d.namespace).Update(existing)
+		_, err = d.kube.AppsV1().DaemonSets(d.namespace).Update(d.ctx, existing, metav1.UpdateOptions{})
 		if err != nil {
 			return err
 		}
@@ -380,8 +385,8 @@ func MakeDaemonSet(name, namespace, image string, labels map[string]string, args
 
 // get the cache events for an image.
 // used by tests and the istio deployer, not by this package
-func GetImageEvents(kube kubernetes.Interface, eventNamespace, image string) ([]v1.Event, error) {
-	imageEvents, err := kube.CoreV1().Events(eventNamespace).List(metav1.ListOptions{
+func GetImageEvents(ctx context.Context, kube kubernetes.Interface, eventNamespace, image string) ([]v1.Event, error) {
+	imageEvents, err := kube.CoreV1().Events(eventNamespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labels.SelectorFromSet(EventLabels(image)).String(),
 	})
 	if err != nil {

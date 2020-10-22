@@ -142,6 +142,7 @@ Note: currently only Istio 1.5.x and 1.6.x are supported.
 
 	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
 		cacheDeployer := cachedeployment.NewDeployer(
+			*ctx,
 			helpers.MustKubeClient(),
 			opts.cacheOpts.namespace,
 			opts.cacheOpts.name,

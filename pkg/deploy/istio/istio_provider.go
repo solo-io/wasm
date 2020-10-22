@@ -199,7 +199,7 @@ func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image
 // updates the deployed wasme-cache configmap
 // if configmap does not exist (cache not deployed), this will error
 func (p *Provider) addImageToCacheConfigMap(image string) error {
-	cm, err := p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
+	cm, err := p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Get(p.Ctx, p.Cache.Name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -227,7 +227,7 @@ func (p *Provider) addImageToCacheConfigMap(image string) error {
 
 	cm.Data[cache.ImagesKey] = strings.Trim(strings.Join(images, "\n"), "\n")
 
-	_, err = p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Update(cm)
+	_, err = p.KubeClient.CoreV1().ConfigMaps(p.Cache.Namespace).Update(p.Ctx, cm, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}
@@ -260,7 +260,7 @@ func (p *Provider) waitForCacheEvents(image string) error {
 
 	logrus.Infof("waiting for event with timeout %v", p.WaitForCacheTimeout)
 
-	cacheDaemonset, err := p.KubeClient.AppsV1().DaemonSets(p.Cache.Namespace).Get(p.Cache.Name, metav1.GetOptions{})
+	cacheDaemonset, err := p.KubeClient.AppsV1().DaemonSets(p.Cache.Namespace).Get(p.Ctx, p.Cache.Name, metav1.GetOptions{})
 	if err != nil {
 		return errors.Wrapf(err, "getting daemonset for cache %v", p.Cache)
 	}
@@ -271,7 +271,7 @@ func (p *Provider) waitForCacheEvents(image string) error {
 		case <-timeout:
 			return errors.Errorf("timed out after %s (last err: %v)", p.WaitForCacheTimeout, eventsErr)
 		case <-interval:
-			events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
+			events, err := cache.GetImageEvents(p.Ctx, p.KubeClient, p.Cache.Namespace, image)
 			if err != nil {
 				return errors.Wrapf(err, "getting events for image %v", image)
 			}
@@ -300,13 +300,13 @@ func (p *Provider) waitForCacheEvents(image string) error {
 
 func (p *Provider) cleanupCacheEvents(image string) error {
 	logrus.Infof("cleaning up cache events for image %v", image)
-	events, err := cache.GetImageEvents(p.KubeClient, p.Cache.Namespace, image)
+	events, err := cache.GetImageEvents(p.Ctx, p.KubeClient, p.Cache.Namespace, image)
 	if err != nil {
 		return errors.Wrapf(err, "getting events for image %v", image)
 	}
 
 	for _, event := range events {
-		if err := p.KubeClient.CoreV1().Events(event.Namespace).Delete(event.Name, nil); err != nil {
+		if err := p.KubeClient.CoreV1().Events(event.Namespace).Delete(p.Ctx, event.Name, metav1.DeleteOptions{}); err != nil {
 			return err
 		}
 	}
@@ -319,7 +319,7 @@ func (p *Provider) cleanupCacheEvents(image string) error {
 func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error) error {
 	switch strings.ToLower(p.Workload.Kind) {
 	case WorkloadTypeDeployment:
-		workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(metav1.ListOptions{
+		workloads, err := p.KubeClient.AppsV1().Deployments(p.Workload.Namespace).List(p.Ctx, metav1.ListOptions{
 			LabelSelector: labels.SelectorFromSet(p.Workload.Labels).String(),
 		})
 		if err != nil {
@@ -335,7 +335,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 			}
 		}
 	case WorkloadTypeDaemonSet:
-		workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(metav1.ListOptions{
+		workloads, err := p.KubeClient.AppsV1().DaemonSets(p.Workload.Namespace).List(p.Ctx, metav1.ListOptions{
 			LabelSelector: labels.SelectorFromSet(p.Workload.Labels).String(),
 		})
 		if err != nil {
@@ -528,5 +528,5 @@ func (p *Provider) getIstioVersion() (string, error) {
 		kube:           p.KubeClient,
 		istioNamespace: p.IstioNamespace,
 	}
-	return inspector.GetIstioVersion()
+	return inspector.GetIstioVersion(p.Ctx)
 }

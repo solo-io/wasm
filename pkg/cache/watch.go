@@ -41,7 +41,7 @@ func (f *localImagePuller) WatchFile(ctx context.Context) error {
 			err = f.addToDirectory(ctx, digest)
 		}
 		if f.cacheNotifier != nil {
-			err = f.cacheNotifier.Notify(err, ref)
+			err = f.cacheNotifier.Notify(ctx, err, ref)
 		}
 		if err != nil {
 			logrus.Errorf("caching image failed: %v", err)

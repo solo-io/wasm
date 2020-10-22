@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"context"
 	"crypto/md5"
 	"fmt"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type EventNotifier interface {
-	Notify(err error, image string) error
+	Notify(ctx context.Context, err error, image string) error
 }
 
 // sends Events to kubernetes when images are added to the cache
@@ -34,7 +35,7 @@ const (
 	Reason_ImageError  = "ImageError"
 )
 
-func (n *Notifier) Notify(err error, image string) error {
+func (n *Notifier) Notify(ctx context.Context, err error, image string) error {
 	var reason, message string
 	if err != nil {
 		reason = Reason_ImageError
@@ -43,7 +44,7 @@ func (n *Notifier) Notify(err error, image string) error {
 		reason = Reason_ImageAdded
 		message = fmt.Sprintf("Image %v added successfully", image)
 	}
-	_, eventCreateErr := n.kube.CoreV1().Events(n.wasmeNamespace).Create(&v1.Event{
+	_, eventCreateErr := n.kube.CoreV1().Events(n.wasmeNamespace).Create(ctx, &v1.Event{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "wasme-cache-event-",
 			Namespace:    n.wasmeNamespace,
@@ -60,8 +61,9 @@ func (n *Notifier) Notify(err error, image string) error {
 		Message: message,
 		Source: v1.EventSource{
 			Component: "wasme-cache",
-		},
-	})
+		}},
+		metav1.CreateOptions{},
+	)
 
 	if eventCreateErr != nil {
 		return multierror.Append(err, eventCreateErr)

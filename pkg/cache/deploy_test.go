@@ -71,7 +71,7 @@ var _ = Describe("Deploy", func() {
 	})
 	It("creates the cache namespace, configmap, and daemonset", func() {
 
-		deployer := NewDeployer(kube, cacheNamespace, "", operatorImage, cacheNamespace, nil, corev1.PullAlways)
+		deployer := NewDeployer(kube, cacheNamespace, "", operatorImage, cacheNamespace, nil, corev1.PullAlways) // TODO
 
 		err := deployer.EnsureCache()
 		Expect(err).NotTo(HaveOccurred())
@@ -110,7 +110,7 @@ var _ = Describe("Deploy", func() {
 		var events []corev1.Event
 		// eventually event should be fired with success
 		Eventually(func() ([]corev1.Event, error) {
-			events, err = GetImageEvents(kube, cacheNamespace, testImage)
+			events, err = GetImageEvents(kube, cacheNamespace, testImage) // TODO
 			return events, err
 		}, time.Second*30).Should(HaveLen(1))
 
