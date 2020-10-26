@@ -86,6 +86,7 @@ var availableBases = map[string][]filterBase{
 			// cpp for istio 1.7
 			compatiblePlatforms: compatiblePlatforms{
 				abi.Istio17,
+				abi.Istio18,
 			},
 			archiveBytes: cppIstio1_7TarBytes,
 		},
@@ -105,6 +106,8 @@ var availableBases = map[string][]filterBase{
 				abi.Gloo16,
 				abi.Istio15,
 				abi.Istio16,
+				abi.Istio17,
+				abi.Istio18,
 			},
 			archiveBytes: assemblyscriptTarBytes,
 		},
@@ -117,6 +120,7 @@ var availableBases = map[string][]filterBase{
 				abi.Istio16,
 				abi.Istio17,
 				abi.Gloo16,
+				abi.Istio18,
 			},
 			archiveBytes: rustIstio1_7TarBytes,
 		},
@@ -126,6 +130,7 @@ var availableBases = map[string][]filterBase{
 			compatiblePlatforms: compatiblePlatforms{
 				abi.Istio17,
 				abi.Gloo16,
+				abi.Istio18,
 			},
 			archiveBytes: tinygoTarBytes,
 		},

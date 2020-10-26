@@ -22,8 +22,10 @@ var _ = Describe("ABI Version Registry", func() {
 		err = DefaultRegistry.ValidateIstioVersion([]string{Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f.Name}, "1.6.0")
 		Expect(err).NotTo(HaveOccurred())
 
-		// This version should work with Istio 1.7.x but not 1.6.x:
+		// This version should work with Istio 1.7.x & 1.8.x but not 1.6.x:
 		err = DefaultRegistry.ValidateIstioVersion([]string{Version_4689a30309abf31aee9ae36e73d34b1bb182685f.Name}, "1.7.0")
+		Expect(err).NotTo(HaveOccurred())
+		err = DefaultRegistry.ValidateIstioVersion([]string{Version_4689a30309abf31aee9ae36e73d34b1bb182685f.Name}, "1.8.0")
 		Expect(err).NotTo(HaveOccurred())
 		err = DefaultRegistry.ValidateIstioVersion([]string{Version_4689a30309abf31aee9ae36e73d34b1bb182685f.Name}, "1.6.0")
 		Expect(err).To(HaveOccurred())
