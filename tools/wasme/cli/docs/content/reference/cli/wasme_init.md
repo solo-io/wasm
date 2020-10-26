@@ -30,7 +30,7 @@ wasme init DEST_DIRECTORY [--language=FILTER_LANGUAGE] [--platform=TARGET_PLATFO
   -h, --help                      help for init
       --language string           The programming language with which to create the filter. Supported languages are: [cpp rust assemblyscript tinygo]
       --platform string           The name of the target platform against which to build. Supported platforms are: [gloo istio]
-      --platform-version string   The version of the target platform against which to build. Supported Istio versions are: [1.5.x 1.6.x]. Supported Gloo versions are: [1.3.x 1.5.x 1.6.x]
+      --platform-version string   The version of the target platform against which to build. Supported Istio versions are: [1.5.x 1.6.x 1.7.x 1.8.x]. Supported Gloo versions are: [1.3.x 1.5.x 1.6.x]
 ```
 
 ### Options inherited from parent commands
