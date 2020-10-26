@@ -1,6 +1,6 @@
 {
   "type": "envoy_proxy",
-  "abiVersions": ["v0-097b7f2e4cc1fb490cc1943d0d633655ac3c522f", "v0-4689a30309abf31aee9ae36e73d34b1bb182685f"],
+  "abiVersions": ["v0-097b7f2e4cc1fb490cc1943d0d633655ac3c522f", "v0-4689a30309abf31aee9ae36e73d34b1bb182685f", "v0.2.1"],
   "config": {
     "rootIds": [
       "root_id"
