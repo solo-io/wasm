@@ -1,0 +1,10 @@
+changelog:
+  - type: NON_USER_FACING
+    description: Start using ABI SemVer numbers instead of commit Sha's for determining ABI versions.
+    issueLink: https://github.com/solo-io/wasm/issues/201
+  - type: NEW_FEATURE
+    description: Add wasme support for Gloo 1.6.x for cpp, as, rust, tinygo
+    issueLink: https://github.com/solo-io/wasm/issues/211
+  - type: NEW_FEATURE
+    description: Support Assemblyscript init with Gloo 1.5
+    issueLink: https://github.com/solo-io/wasm/issues/143
