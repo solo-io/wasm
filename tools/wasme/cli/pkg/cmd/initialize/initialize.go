@@ -209,7 +209,7 @@ If --language, --platform, or --platform-version are not provided, the CLI will 
 		fmt.Sprintf("The name of the target platform against which to build. Supported platforms are: %v", []string{"gloo", "istio"}))
 
 	cmd.PersistentFlags().StringVar(&opts.platform.Version, "platform-version", "",
-		fmt.Sprintf("The version of the target platform against which to build. Supported Istio versions are: %v. Supported Gloo versions are: %v", []string{abi.Version15x, abi.Version16x}, []string{abi.Version13x, abi.Version15x, abi.Version16x}))
+		fmt.Sprintf("The version of the target platform against which to build. Supported Istio versions are: %v. Supported Gloo versions are: %v", []string{abi.Version15x, abi.Version16x, abi.Version17x, abi.Version18x}, []string{abi.Version13x, abi.Version15x, abi.Version16x}))
 
 	cmd.PersistentFlags().BoolVar(&opts.disablePrompt, "disable-prompt", false,
 		"Disable the interactive prompt if a required parameter is not passed. If set to true and one of the required flags is not provided, wasme CLI will return an error.")
