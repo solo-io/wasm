@@ -15,6 +15,7 @@ const (
 	Version15x = "1.5.x"
 	Version16x = "1.6.x"
 	Version17x = "1.7.x"
+	Version18x = "1.8.x"
 )
 
 // an abi provider
@@ -103,6 +104,10 @@ var (
 		Name:    PlatformNameIstio,
 		Version: Version17x,
 	}
+	Istio18 = Platform{
+		Name:    PlatformNameIstio,
+		Version: Version18x,
+	}
 	Gloo13 = Platform{
 		Name:    PlatformNameGloo,
 		Version: Version13x,
@@ -154,6 +159,7 @@ var (
 		},
 		Version_4689a30309abf31aee9ae36e73d34b1bb182685f: {
 			Istio17,
+			Istio18,
 		},
 		Version_0_2_1: {
 			Gloo16,

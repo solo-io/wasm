@@ -64,7 +64,7 @@ kubectl apply -f https://raw.githubusercontent.com/solo-io/gloo/master/example/p
 if [[ "$ISTIO_VERSION" == *"1.5"* ]]; then
   istioctl manifest apply --set profile=minimal
 else
-  istioctl install --set profile=minimal
+  istioctl install --set profile=minimal --skip-confirmation
 fi
 
 kubectl -n istio-system rollout status deployment istiod
