@@ -111,6 +111,10 @@ var (
 		Name:    PlatformNameGloo,
 		Version: Version15x,
 	}
+	Gloo16 = Platform{
+		Name:    PlatformNameGloo,
+		Version: Version16x,
+	}
 
 	Version_097b7f2e4cc1fb490cc1943d0d633655ac3c522f = Version{
 		// December 12 2019
@@ -124,11 +128,20 @@ var (
 		Repository: "https://github.com/envoyproxy/envoy-wasm",
 		Commit:     "edc016b1fa5adca3ebd3d7020eaed0ad7b8814ca",
 	}
+
+	// Precursor to ABI v0_2_0
 	Version_4689a30309abf31aee9ae36e73d34b1bb182685f = Version{
 		// August 4th 2020
 		Name:       "v0-4689a30309abf31aee9ae36e73d34b1bb182685f",
 		Repository: "https://github.com/envoyproxy/envoy-wasm",
 		Commit:     "4689a30309abf31aee9ae36e73d34b1bb182685f",
+	}
+
+	Version_0_2_1 = Version{
+		// Oct 23rd 2020
+		Name:       "v0.2.1",
+		Repository: "https://github.com/envoyproxy/envoy",
+		Commit:     "2758575b9a02f935245fe8a3b08af0a8c14994dc",
 	}
 
 	DefaultRegistry = Registry{
@@ -141,6 +154,9 @@ var (
 		},
 		Version_4689a30309abf31aee9ae36e73d34b1bb182685f: {
 			Istio17,
+		},
+		Version_0_2_1: {
+			Gloo16,
 		},
 	}
 )
