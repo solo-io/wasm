@@ -27,7 +27,7 @@ You'll be asked with an interactive prompt which language platform you are build
 ```
 
 ```
-INFO[0014] extracting 1973 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasme/assemblyscript-filter
+INFO[0014] extracting 1973 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasm/assemblyscript-filter
 ```
 
 The `init` command will place our *base* filter into the `assemblyscript-filter` directory:
@@ -63,10 +63,10 @@ The new directory contains all files necessary to build and deploy a WASM filter
 
 | File | Description |
 | ----- | ---- |
-| `assembly/index.ts`        | The source code for the filter, written in AssemblyScript. |         
-| `assembly/tsconfig.json`   | Typescript config file (AssemblyScript is a subset of Typescript). |              
-| `package.json`             | Used by to import npm modules during build time. |    
-| `package-lock.json`        | Locked npm modules.  |    
+| `assembly/index.ts`        | The source code for the filter, written in AssemblyScript. |
+| `assembly/tsconfig.json`   | Typescript config file (AssemblyScript is a subset of Typescript). |
+| `package.json`             | Used by to import npm modules during build time. |
+| `package-lock.json`        | Locked npm modules.  |
 | `runtime-config.json`      | Config stored with the filter image used to load the filter at runtime. |
 
 Open `assembly/index.ts` in your favorite text editor. The source code is AssemblyScript and we'll make some changes to customize our new filter.
@@ -90,7 +90,7 @@ Your method should look like this:
 
 ## Building the filter
 
-Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored in a local registry, similar to how [Docker](https://www.docker.com/) stores images. 
+Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored in a local registry, similar to how [Docker](https://www.docker.com/) stores images.
 
 Images tagged with `wasme` have the following format:
 
@@ -99,7 +99,7 @@ Images tagged with `wasme` have the following format:
 ```
 
 * `<registry address>` specifies the address of the remote OCI registry where the image will be pushed by the `wasme push` command. The project authors maintain a free public registry at `webassemblyhub.io`.
- 
+
 * `<registry username|org>` either your username for the remote OCI registry, or a valid org name with which you are registered.
 
 
@@ -115,11 +115,11 @@ wasme build assemblyscript -t webassemblyhub.io/$YOUR_USERNAME/add-header:v0.1 .
 ```
 
 {{% notice note %}}
-`wasme build` runs a build container inside of Docker which may run into issues due to SELinux (on Linux environments). To disable, run `sudo setenforce 0` 
+`wasme build` runs a build container inside of Docker which may run into issues due to SELinux (on Linux environments). To disable, run `sudo setenforce 0`
 {{% /notice %}}
 
-The module will take up to a few minutes to build. In the background, `wasme` has launched a Docker container to run the necessary 
-build steps. 
+The module will take up to a few minutes to build. In the background, `wasme` has launched a Docker container to run the necessary
+build steps.
 
 When the build has finished, you'll be able to see the image with `wasme list`:
 

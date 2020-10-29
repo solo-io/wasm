@@ -1,4 +1,4 @@
 changelog:
   - type: FIX
     description: Fix cache race by firing events
-    issueLink: https://github.com/solo-io/wasme/issues/64
+    issueLink: https://github.com/solo-io/wasm/issues/64

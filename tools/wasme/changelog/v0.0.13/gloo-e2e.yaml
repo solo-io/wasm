@@ -5,4 +5,4 @@ changelog:
     description: 'Update & improve documentation'
   - type: NEW_FEATURE
     description: 'Support use of labelSelector to deploy filters to Istio'
-    issueLink: https://github.com/solo-io/wasme/issues/43
+    issueLink: https://github.com/solo-io/wasm/issues/43

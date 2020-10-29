@@ -16,7 +16,7 @@ Let's create a new filter called `cpp-filter`:
 wasme init cpp-filter
 ```
 
-You'll be asked with an interactive prompt which language platform you are building for. At time of writing, `wasme` includes separate bases 
+You'll be asked with an interactive prompt which language platform you are building for. At time of writing, `wasme` includes separate bases
  for Istio 1.5.x and Gloo 1.3.x:
 
 {{< tabs >}}
@@ -39,7 +39,7 @@ You'll be asked with an interactive prompt which language platform you are build
 {{< /tabs >}}
 
 ```
-INFO[0014] extracting 5072 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasme/cpp-filter
+INFO[0014] extracting 5072 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasm/cpp-filter
 ```
 
 The `init` command will place our *base* filter into the `cpp-filter` directory:
@@ -85,12 +85,12 @@ The new directory contains all files necessary to build and deploy a WASM filter
 
 | File | Description |
 | ----- | ---- |
-| `BUILD`                | The Bazel BUILD file used to build the filter. |         
-| `WORKSPACE`            | The Bazel WORKSPACE file used to build the filter. |         
-| `bazel/`               | Bazel external dependencies. |              
-| `toolchain/`           | Bazel tooling for building wasm modules. |              
-| `filter.cc`            | The source code for the filter, written in C++. |         
-| `filter.proto`         | The protobuf schema of the filter configuration. |         
+| `BUILD`                | The Bazel BUILD file used to build the filter. |
+| `WORKSPACE`            | The Bazel WORKSPACE file used to build the filter. |
+| `bazel/`               | Bazel external dependencies. |
+| `toolchain/`           | Bazel tooling for building wasm modules. |
+| `filter.cc`            | The source code for the filter, written in C++. |
+| `filter.proto`         | The protobuf schema of the filter configuration. |
 | `runtime-config.json`  | Config stored with the filter image used to load the filter at runtime. |
 
 Open `filter.cc` in your favorite text editor. We'll make some changes to customize our new filter.
@@ -116,7 +116,7 @@ The code above will add the `hello: world!` header to HTTP responses processed b
 
 ## Building the filter
 
-Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored in a local registry, similar to how [Docker](https://www.docker.com/) stores images. 
+Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored in a local registry, similar to how [Docker](https://www.docker.com/) stores images.
 
 Images tagged with `wasme` have the following format:
 
@@ -125,7 +125,7 @@ Images tagged with `wasme` have the following format:
 ```
 
 * `<registry address>` specifies the address of the remote OCI registry where the image will be pushed by the `wasme push` command. The project authors maintain a free public registry at `webassemblyhub.io`.
- 
+
 * `<registry username|org>` either your username for the remote OCI registry, or a valid org name with which you are registered.
 
 
@@ -141,11 +141,11 @@ wasme build cpp -t webassemblyhub.io/$YOUR_USERNAME/add-header:v0.1 .
 ```
 
 {{% notice note %}}
-`wasme build` runs a build container inside of Docker which may run into issues due to SELinux (on Linux environments). To disable, run `sudo setenforce 0` 
+`wasme build` runs a build container inside of Docker which may run into issues due to SELinux (on Linux environments). To disable, run `sudo setenforce 0`
 {{% /notice %}}
 
-The module will take up to a few minutes to build. In the background, `wasme` has launched a Docker container to run the necessary 
-build steps. 
+The module will take up to a few minutes to build. In the background, `wasme` has launched a Docker container to run the necessary
+build steps.
 
 When the build has finished, you'll be able to see the image with `wasme list`:
 

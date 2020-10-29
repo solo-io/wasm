@@ -1,4 +1,4 @@
 changelog:
   - type: NEW_FEATURE
     description: Adds the new Wasme Operator for deploying filters to production.
-    issueLink: https://github.com/solo-io/wasme/issues/42
+    issueLink: https://github.com/solo-io/wasm/issues/42
