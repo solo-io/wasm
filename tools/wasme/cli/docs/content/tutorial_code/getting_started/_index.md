@@ -14,14 +14,14 @@ In this tutorial we will:
 
 For in-depth guides, please refer to:
 
-- [Build tutorials](../build_tutorials) for topics relating to *building* WASM filters 
-- [Deployment tutorials](../deploy_tutorials) for topics relating to *deploying* WASM filters 
+- [Build tutorials](../build_tutorials) for topics relating to *building* WASM filters
+- [Deployment tutorials](../deploy_tutorials) for topics relating to *deploying* WASM filters
 
 ## Creating a new WASM module
 
 ### Install the `wasme` CLI
 
-In order to create and deploy a WASM filter, we'll use the `wasme` command line tool. `wasme` makes 
+In order to create and deploy a WASM filter, we'll use the `wasme` command line tool. `wasme` makes
 building and managing Envoy WASM filters similar to how `docker` builds and manages Linux containers.
 
 To install `wasme`:
@@ -59,7 +59,7 @@ You'll be asked with an interactive prompt which language platform you are build
 ```
 
 ```
-INFO[0014] extracting 1973 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasme/new-filter
+INFO[0014] extracting 1973 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasm/new-filter
 ```
 
 The `init` command will place our *base* filter into the `new-filter` directory:
@@ -104,7 +104,7 @@ Your method should look like this:
   }
 ```
 
-Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored in a local registry, similar to how [Docker](https://www.docker.com/) stores images. 
+Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored in a local registry, similar to how [Docker](https://www.docker.com/) stores images.
 
 Build and tag our image like so:
 
@@ -117,7 +117,7 @@ INFO[0010] adding image to cache...                      filter file=/tmp/wasme6
 INFO[0010] tagged image                                  digest="sha256:8b74e9b0bbc5ff674c49cde904669a775a939b4d8f7f72aba88c184d527dfc30" image="webassemblyhub.io/ilackarms/add-header:v0.1"
 ```
 
-The module will take less than a minute to build. In the background, `wasme` has launched a Docker container to run the necessary build steps. 
+The module will take less than a minute to build. In the background, `wasme` has launched a Docker container to run the necessary build steps.
 
 When the build has finished, you'll be able to see the image with `wasme list`:
 
@@ -126,19 +126,19 @@ wasme list
 ```
 
 ```
-NAME                                   TAG  SHA      UPDATED             SIZE   
-webassemblyhub.io/ilackarms/add-header v0.1 bbfdf674 26 Jan 20 10:45 EST 1.0 MB 
+NAME                                   TAG  SHA      UPDATED             SIZE
+webassemblyhub.io/ilackarms/add-header v0.1 bbfdf674 26 Jan 20 10:45 EST 1.0 MB
 ```
 
-## Pushing your new WASM module 
+## Pushing your new WASM module
 
 In order to push the module to a registry, we'll need to log in. If you've already logged in, you can skip this step.
 
 ### Create a User on [`webassemblyhub.io`](https://webassemblyhub.io)
 
-Pushing images with `wasme` requires a compatible OCI registry. In this tutorial, we'll use [`webassemblyhub.io`](https://webassemblyhub.io) as our remote registry. 
+Pushing images with `wasme` requires a compatible OCI registry. In this tutorial, we'll use [`webassemblyhub.io`](https://webassemblyhub.io) as our remote registry.
 
-Let's open [`webassemblyhub.io`](https://webassemblyhub.io) in the browser to create an account. 
+Let's open [`webassemblyhub.io`](https://webassemblyhub.io) in the browser to create an account.
 
 1. Click **Log In** in the top right:
 
@@ -147,11 +147,11 @@ Let's open [`webassemblyhub.io`](https://webassemblyhub.io) in the browser to cr
 1. Choose **Sign up now** under the login form:
 
     ![](../../img/login/log-in-2.png)
-    
+
 1. Fill out the sign-up form and click **Sign Up**:
 
     ![](../../img/login/log-in-3.png)
-    
+
 1. You should now be logged in as a new user:
 
     ![](../../img/login/log-in-4.png)
@@ -188,10 +188,10 @@ INFO[0000] Pushing image webassemblyhub.io/ilackarms/add-header:v0.1
 INFO[0006] Pushed webassemblyhub.io/ilackarms/add-header:v0.1
 INFO[0006] Digest: sha256:9d4b4660f71f2714cc71e2b844e9b8460def21f6d76259140e70d447ccc7c702
 ```
- 
+
 Awesome! Our image should be pushed and ready to deploy.
- 
-## View our published image 
+
+## View our published image
 
 We can verify the image was pushed via the command-line:
 
@@ -219,7 +219,7 @@ kubectl apply -f https://raw.githubusercontent.com/solo-io/gloo/master/example/p
 You should now have the petstore running:
 
 ```shell
-$  kubectl get po 
+$  kubectl get po
 
 NAME                        READY   STATUS    RESTARTS   AGE
 petstore-5dcf5d6b66-n8tjt   1/1     Running   0          2m20s
@@ -229,7 +229,7 @@ petstore-5dcf5d6b66-n8tjt   1/1     Running   0          2m20s
 
 In this tutorial, we'll use Gloo, an API Gateway based on Envoy that has built-in wasm support but these steps should also work for base Envoy.
 
-First, install Gloo using one of the following installation options: 
+First, install Gloo using one of the following installation options:
 
 {{< tabs >}}
 {{< tab name="install-gloo" codelang="shell">}}
@@ -255,7 +255,7 @@ apiVersion: gateway.solo.io/v1
 kind: VirtualService
 metadata:
   name: default
-  namespace: gloo-system  
+  namespace: gloo-system
 spec:
   virtualHost:
     domains:
@@ -303,7 +303,7 @@ curl -v $URL/api/pets
 * Connection #0 to host 34.74.28.75 left intact
 ```
 
-If you're able to get to this point, we have a working Envoy proxy and we're able to call it externally. 
+If you're able to get to this point, we have a working Envoy proxy and we're able to call it externally.
 
 
 To deploy the module to Envoy via Gloo:
@@ -347,12 +347,12 @@ We expect to see our new headers in the response:
 
 If we can see the new header `hello: world!` in our response, that means everything worked!
 
-You've now gone through the process step-by-step to build and deploy Envoy filters from scratch. 
+You've now gone through the process step-by-step to build and deploy Envoy filters from scratch.
 
 For guides on performing specific tasks with `wasme`, please refer to:
 
-- [Build tutorials](../build_tutorials) for topics relating to *building* WASM filters 
-- [Deployment tutorials](../deploy_tutorials) for topics relating to *deploying* WASM filters 
+- [Build tutorials](../build_tutorials) for topics relating to *building* WASM filters
+- [Deployment tutorials](../deploy_tutorials) for topics relating to *deploying* WASM filters
 
 For more information and support using `wasme` and the Web Assembly Hub, visit the Solo.io slack channel at
 https://slack.solo.io.

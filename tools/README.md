@@ -24,7 +24,7 @@ The WebAssembly Hub acts as an image registry for WebAssembly Filters hosted at 
 - compile [Envoy WebAssembly](https://github.com/envoyproxy/envoy-wasm) filters on a local machine (the only dependency is `docker`)
 - push filters to https://webassemblyhub.io
 - pull filters from https://webassemblyhub.io
-- publish filters to the catalog at https://webassemblyhub.io/extensions/ 
+- publish filters to the catalog at https://webassemblyhub.io/extensions/
 
 ### Getting Started
 
@@ -34,4 +34,4 @@ See the [Getting Started tutorial](https://docs.solo.io/web-assembly-hub/latest/
 - Join us on our Slack channel: [https://slack.solo.io/](https://slack.solo.io/)
 - Follow us on Twitter: [https://twitter.com/soloio_inc](https://twitter.com/soloio_inc)
 - Check out the docs: [https://docs.solo.io/web-assembly-hub/latest](https://docs.solo.io/web-assembly-hub/latest)
-- Contribute to the [Docs](https://github.com/solo-io/wasme)
+- Contribute to the [Docs](https://github.com/solo-io/wasm)

@@ -1,4 +1,4 @@
 changelog:
   - type: FIX
     description: Fix issue where `wasme list` would return an error if the cache had not been initialized with `wasme build` or `wasme pull`.
-    issueLink: https://github.com/solo-io/wasme/issues/87
+    issueLink: https://github.com/solo-io/wasm/issues/87

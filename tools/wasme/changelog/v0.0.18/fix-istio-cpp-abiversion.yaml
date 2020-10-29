@@ -1,4 +1,4 @@
 changelog:
   - type: FIX
     description: Fix incorrect base selection on wasme init command.
-    issueLink: https://github.com/solo-io/wasme/issues/90
+    issueLink: https://github.com/solo-io/wasm/issues/90

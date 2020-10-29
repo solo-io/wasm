@@ -1,4 +1,4 @@
 changelog:
   - type: FIX
     description: Fix Bookinfo URL.
-    issueLink: https://github.com/solo-io/wasme/issues/122
+    issueLink: https://github.com/solo-io/wasm/issues/122
