@@ -1,0 +1,4 @@
+changelog:
+  - type: FIX
+    description: Fix bug with AssemblyScript filters not being generated with metadata marking them as compatible with Istio 1.7
+    issueLink: https://github.com/solo-io/wasm/issues/216
