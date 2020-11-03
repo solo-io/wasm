@@ -137,12 +137,12 @@ spec:
       kind: Deployment
   filter:
     config: '{"name":"hello","value":"world"}'
-    image: webassemblyhub.io/ilackarms/istio-test:1.5.0-0
+    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
 ```
 
 This resource tells wasme to:
 
-- add the `webassemblyhub.io/ilackarms/istio-test:1.5.0-0` filter to each **Deployment** in the `bookinfo` namespace
+- add the `webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5` filter to each **Deployment** in the `bookinfo` namespace
 - with the *configuration* `{"name":"hello","value":"world"}` 
 
 
@@ -161,7 +161,7 @@ spec:
       kind: Deployment
   filter:
     config: '{"name":"hello","value":"world"}'
-    image: webassemblyhub.io/ilackarms/istio-test:1.5.0-0
+    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
 EOF
 ```
 
@@ -194,7 +194,7 @@ spec:
       kind: Deployment
   filter:
     config: '{"name":"hello","value":"world"}'
-    image: webassemblyhub.io/ilackarms/istio-test:1.5.0-0
+    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
 status:
   observedGeneration: "1"
   workloads:
@@ -259,7 +259,7 @@ spec:
       kind: Deployment
   filter:
     config: '{"name":"hello","value":"goodbye"}'
-    image: webassemblyhub.io/ilackarms/istio-test:1.5.0-0
+    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
 EOF
 {{< /highlight >}}
 
