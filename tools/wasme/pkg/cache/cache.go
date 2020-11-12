@@ -101,7 +101,7 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		c.logger.Debugf("serving http request for image ref %v", ref)
 		desc, err := c.Add(r.Context(), ref)
 		if err != nil {
-			c.logger.Errorf("failed to add or fetch descriptor %v", ref)
+			c.logger.Errorf("failed to add or fetch descriptor %v: %v", ref, err)
 			http.Error(rw, err.Error(), http.StatusBadRequest)
 			return
 		}
@@ -154,4 +154,5 @@ func (c *CacheImpl) ServeHTTPSha(rw http.ResponseWriter, r *http.Request, sha st
 			}
 		}
 	}
+	c.logger.Debugf("finished writing %v: %v bytes", image.Ref(), desc.Size)
 }
