@@ -1,0 +1,3 @@
+changelog:
+  - type: NON_USER_FACING
+    description: Expand the Wasm Cache to allow just-in-time pulling of images based on ref. Also adds additional logging to the cache.

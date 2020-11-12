@@ -2,13 +2,16 @@ package cache
 
 import (
 	"context"
+	"crypto"
+	"encoding/hex"
 	"fmt"
+	"github.com/solo-io/go-utils/contextutils"
+	"go.uber.org/zap"
 	"io"
-	"log"
 	"net/http"
 	"path"
 	"strconv"
-	"sync"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -32,68 +35,25 @@ type Cache interface {
 type CacheImpl struct {
 	Puller pull.ImagePuller
 
+	logger *zap.SugaredLogger
+
 	cacheState cacheState
 }
 
 func NewCache(puller pull.ImagePuller) Cache {
+	return NewCacheWithConext(context.Background(), puller)
+}
+
+func NewCacheWithConext(ctx context.Context, puller pull.ImagePuller) Cache {
 	return &CacheImpl{
 		Puller: puller,
+		logger: contextutils.LoggerFrom(ctx),
 	}
-}
-
-type cacheState struct {
-	images     map[string]pull.Image
-	imagesLock sync.RWMutex
-}
-
-func (c *cacheState) add(image pull.Image) {
-	desc, err := image.Descriptor()
-	if err != nil {
-		// image is missing descriptor, should never happen
-		// TODO: better logging impl
-		log.Printf("error: image %v missing code descriptor", image.Ref())
-		return
-	}
-	if c.find(desc.Digest) != nil {
-		// check existence for idempotence
-		// technically metadata can be different, but it's fine for now.
-		return
-	}
-	c.imagesLock.Lock()
-	if c.images == nil {
-		c.images = make(map[string]pull.Image)
-	}
-	c.images[image.Ref()] = image
-	c.imagesLock.Unlock()
-}
-
-func (c *cacheState) find(digest digest.Digest) pull.Image {
-	c.imagesLock.RLock()
-	defer c.imagesLock.RUnlock()
-	if c.images == nil {
-		return nil
-	}
-	for _, image := range c.images {
-		desc, err := image.Descriptor()
-		if err != nil {
-			log.Printf("error: image %v missing code descriptor", image.Ref())
-			return nil
-		}
-
-		if desc.Digest == digest {
-			return image
-		}
-	}
-	return nil
-}
-func (c *cacheState) findImage(image string) pull.Image {
-	c.imagesLock.RLock()
-	defer c.imagesLock.RUnlock()
-	return c.images[image]
 }
 
 func (c *CacheImpl) Add(ctx context.Context, ref string) (digest.Digest, error) {
 	if img := c.cacheState.findImage(ref); img != nil {
+		c.logger.Debugf("found cached image ref %v", ref)
 		desc, err := img.Descriptor()
 		if err != nil {
 			return "", err
@@ -101,6 +61,7 @@ func (c *CacheImpl) Add(ctx context.Context, ref string) (digest.Digest, error) 
 		return desc.Digest, nil
 	}
 
+	c.logger.Debugf("attempting to pull image %v", ref)
 	image, err := c.Puller.Pull(ctx, ref)
 	if err != nil {
 		return "", err
@@ -112,6 +73,8 @@ func (c *CacheImpl) Add(ctx context.Context, ref string) (digest.Digest, error) 
 	}
 
 	c.cacheState.add(image)
+
+	c.logger.Debugf("pulled image %v (digest: %v)", ref, desc.Digest)
 
 	return desc.Digest, nil
 }
@@ -125,11 +88,33 @@ func (c *CacheImpl) Get(ctx context.Context, digest digest.Digest) (model.Filter
 }
 
 func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	// we support two paths:
+	// /<HASH> - used in gloo
+	// /image-name - used here to cache on demand
+	_, file := path.Split(r.URL.Path)
+	switch {
+	case len(file) == hex.EncodedLen(crypto.SHA256.Size()):
+		c.ServeHTTPSha(rw, r, file)
+	default:
+		// assume that the path is a ref. add it to cache
+		ref := strings.TrimPrefix(r.URL.Path, "/")
+		c.logger.Debugf("serving http request for image ref %v", ref)
+		desc, err := c.Add(r.Context(), ref)
+		if err != nil {
+			c.logger.Errorf("failed to add or fetch descriptor %v: %v", ref, err)
+			http.Error(rw, err.Error(), http.StatusBadRequest)
+			return
+		}
+		c.ServeHTTPSha(rw, r, desc.Encoded())
+	}
+}
+
+func (c *CacheImpl) ServeHTTPSha(rw http.ResponseWriter, r *http.Request, sha string) {
 	// parse the url
 	ctx := r.Context()
-	_, file := path.Split(r.URL.Path)
-	image := c.cacheState.find(digest.Digest("sha256:" + file))
+	image := c.cacheState.find(digest.Digest("sha256:" + sha))
 	if image == nil {
+		c.logger.Errorf("image with sha %v not found", sha)
 		http.NotFound(rw, r)
 		return
 	}
@@ -142,6 +127,7 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	filter, err := image.FetchFilter(ctx)
 	if err != nil {
+		c.logger.Errorf("failed fetching image content")
 		http.NotFound(rw, r)
 		return
 	}
@@ -151,12 +137,14 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 	rw.Header().Set("Content-Type", desc.MediaType)
 	rw.Header().Set("Etag", "\""+string(desc.Digest)+"\"")
+	c.logger.Debugf("writing image content...")
 	if rs, ok := filter.(io.ReadSeeker); ok {
 		// content of digests never changes so set mod time to a constant
 		// don't use zero time because serve content doesn't use that.
 		modTime := time.Date(2000, time.January, 1, 0, 0, 0, 0, time.UTC)
-		http.ServeContent(rw, r, file, modTime, rs)
+		http.ServeContent(rw, r, sha, modTime, rs)
 	} else {
+		c.logger.Debugf("writing image content")
 		rw.Header().Add("Content-Length", strconv.Itoa(int(desc.Size)))
 		if r.Method != "HEAD" {
 			_, err = io.Copy(rw, filter)
@@ -166,4 +154,5 @@ func (c *CacheImpl) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	c.logger.Debugf("finished writing %v: %v bytes", image.Ref(), desc.Size)
 }

@@ -12,7 +12,7 @@ RUN npm install -g @bazel/bazelisk
 
 # TODO: use the latest stable release package after the WASI supported is officially released
 #   this corresponds to https://github.com/tinygo-org/tinygo/commit/9a015f4f6441fd68eabe35b3dc9748a5467d5934
-RUN wget https://19333-136505169-gh.circle-artifacts.com/0/tmp/tinygo_amd64.deb
+RUN wget https://storage.googleapis.com/getenvoy-package/tinygo-nightly-packages/tinygo_amd64.deb
 RUN dpkg -i tinygo_amd64.deb && rm tinygo_amd64.deb
 
 RUN wget https://golang.org/dl/go1.15.2.linux-amd64.tar.gz
