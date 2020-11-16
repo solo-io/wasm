@@ -50,7 +50,7 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: '1.15.2'
-    - uses: engineerd/setup-kind@v0.3.0
+    - uses: engineerd/setup-kind@v0.5.0
       with:
         skipClusterCreation: "true"
     - name: Install Protoc
@@ -125,7 +125,7 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: '1.15.2'
-    - uses: engineerd/setup-kind@v0.3.0
+    - uses: engineerd/setup-kind@v0.5.0
       with:
         skipClusterCreation: "true"
     - name: Install Protoc
