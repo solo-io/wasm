@@ -54,7 +54,7 @@ func runBazelBuild(build buildOptions, bazel bazelOptions) (string, error) {
 		"-e", "BUILD_TOOL=bazel", // required by build-filter.sh in container
 	}
 
-	args = append(args, getProxyEnvArgs()...)
+	args = append(args, GetProxyEnvArgs()...)
 
 	log.WithFields(logrus.Fields{
 		"args": args,

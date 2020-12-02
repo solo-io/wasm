@@ -40,7 +40,7 @@ func runTinyGoBuild(build buildOptions) (string, error) {
 		"-e", "BUILD_TOOL=tinygo", // required by build-filter.sh in container
 	}
 
-	args = append(args, getProxyEnvArgs()...)
+	args = append(args, GetProxyEnvArgs()...)
 
 	log.WithFields(logrus.Fields{
 		"args": args,

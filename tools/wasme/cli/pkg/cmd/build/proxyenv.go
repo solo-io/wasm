@@ -6,16 +6,16 @@ import (
 )
 
 var passThroughVars = []string{
-	"GOPROXY",
 	"http_proxy",
 	"https_proxy",
 	"no_proxy",
+	"GOPROXY",
 }
 
-// getProxyEnvArgs reads several environment variables and returns
+// GetProxyEnvArgs reads several environment variables and returns
 // the arguments to pass them into the docker container used
 // during a wasme build command
-func getProxyEnvArgs() []string {
+func GetProxyEnvArgs() []string {
 	var proxyEnvArgs []string
 	for _, envVar := range passThroughVars {
 		val, isSet := os.LookupEnv(envVar)

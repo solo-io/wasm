@@ -55,7 +55,7 @@ func runNpmBuild(build buildOptions, npm npmOpts) (string, error) {
 		args = append(args, "-e", "NPM_USERNAME="+npm.username, "-e", "NPM_PASSWORD="+npm.password, "-e", "NPM_EMAIL="+npm.email)
 	}
 
-	args = append(args, getProxyEnvArgs()...)
+	args = append(args, GetProxyEnvArgs()...)
 
 	log.WithFields(logrus.Fields{
 		"args": args,
