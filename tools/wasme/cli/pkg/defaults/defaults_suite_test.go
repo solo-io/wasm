@@ -1,4 +1,4 @@
-package build_test
+package defaults_test
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestBuild(t *testing.T) {
+func TestDefaults(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Build Suite")
+	RunSpecs(t, "Defaults Suite")
 }

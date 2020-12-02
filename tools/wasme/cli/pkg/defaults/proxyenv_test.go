@@ -1,4 +1,4 @@
-package build_test
+package defaults_test
 
 import (
 	"os"
@@ -6,7 +6,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	. "github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/build"
+	. "github.com/solo-io/wasm/tools/wasme/cli/pkg/defaults"
 )
 
 var _ = Describe("Env Proxy Args Passthrough", func() {

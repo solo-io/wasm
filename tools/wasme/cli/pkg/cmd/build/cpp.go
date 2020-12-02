@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/sirupsen/logrus"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/defaults"
 	"github.com/solo-io/wasm/tools/wasme/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -54,7 +55,7 @@ func runBazelBuild(build buildOptions, bazel bazelOptions) (string, error) {
 		"-e", "BUILD_TOOL=bazel", // required by build-filter.sh in container
 	}
 
-	args = append(args, GetProxyEnvArgs()...)
+	args = append(args, defaults.GetProxyEnvArgs()...)
 
 	log.WithFields(logrus.Fields{
 		"args": args,
