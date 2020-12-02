@@ -1,0 +1,6 @@
+changelog:
+  - type: NEW_FEATURE
+    description: >-
+      When using the ee-builder container, wasme will now pass in the http_proxy,
+      https_proxy, no_proxy, and GOPROXY environment variables.
+    issueLink: https://github.com/solo-io/wasm/issues/119
