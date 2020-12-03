@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/defaults"
 	"github.com/solo-io/wasm/tools/wasme/pkg/util"
 
 	"github.com/sirupsen/logrus"
@@ -54,6 +55,8 @@ func runNpmBuild(build buildOptions, npm npmOpts) (string, error) {
 	if npm.username != "" && npm.password != "" && npm.email != "" {
 		args = append(args, "-e", "NPM_USERNAME="+npm.username, "-e", "NPM_PASSWORD="+npm.password, "-e", "NPM_EMAIL="+npm.email)
 	}
+
+	args = append(args, defaults.GetProxyEnvArgs()...)
 
 	log.WithFields(logrus.Fields{
 		"args": args,
