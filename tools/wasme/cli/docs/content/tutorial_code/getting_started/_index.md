@@ -239,7 +239,7 @@ kubectl create ns gloo-system
 helm install --namespace gloo-system --set global.wasm.enabled=true gloo gloo/gloo
 {{< /tab >}}
 {{< tab name="glooctl" codelang="shell" >}}
-glooctl install gateway -n gloo-system --values <(echo '{"namespace":{"create":true},"crds":{"create":true},"global":{"wasm":{"enabled":true}}}')
+glooctl install gateway -n gloo-system --values <(echo '{"crds":{"create":true},"global":{"wasm":{"enabled":true}}}')
 {{< /tab >}}
 {{< /tabs >}}
 
