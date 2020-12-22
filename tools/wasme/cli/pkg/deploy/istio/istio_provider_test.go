@@ -32,6 +32,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"istio.io/api/networking/v1alpha3"
+	networkingv1alpha3 "istio.io/api/networking/v1alpha3"
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
@@ -208,6 +209,45 @@ var _ = Describe("IstioProvider", func() {
 
 		Expect(ef2.Spec.WorkloadSelector.Labels).To(Equal(dep2.Spec.Template.Labels))
 		Expect(ef2.Spec.ConfigPatches).To(HaveLen(1))
+	})
+
+	It("create an Envoy filter for outbound traffic", func() {
+		workload := istio.Workload{
+			//all workloads
+			Namespace: ns,
+			Kind:      istio.WorkloadTypeDeployment,
+		}
+
+		p := &istio.Provider{
+			Ctx:        context.TODO(),
+			KubeClient: kube,
+			Client:     client,
+			Puller:     puller,
+			Workload:   workload,
+			Cache:      cache,
+		}
+
+		obfilter := &wasmev1.FilterSpec{
+			Id:           "filter-id",
+			Config:       nil,
+			Image:        "filter/image:v1",
+			RootID:       "root_id",
+			PatchContext: "outbound",
+		}
+		err := p.ApplyFilter(obfilter)
+		Expect(err).NotTo(HaveOccurred())
+
+		ef := &istiov1alpha3.EnvoyFilter{
+			ObjectMeta: metav1.ObjectMeta{
+				Namespace: workload.Namespace,
+				Name:      istioEnvoyFilterName(deployment.Name, obfilter.Id),
+			},
+		}
+		err = client.Get(context.TODO(), ef)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(ef.Spec.ConfigPatches).To(HaveLen(1))
+		Expect(ef.Spec.ConfigPatches[0].Match.Context).To(Equal(networkingv1alpha3.EnvoyFilter_SIDECAR_OUTBOUND))
 	})
 
 	// note: this test assumes istio 1.5 installed to cluster
