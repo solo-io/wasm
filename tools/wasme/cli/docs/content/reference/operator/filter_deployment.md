@@ -127,6 +127,9 @@ the first time it must pull the image and inspect it
 second time it will cache it locally
 if the user provides |
 | imagePullOptions | [ImagePullOptions](#wasme.io.ImagePullOptions) |  | custom options if pulling from private / custom repositories |
+| patchContext | [string](#string) |  | a class of configurations based on the traffic flow direction
+and workload type.
+defaults to `inbound`. |
 
 
 
