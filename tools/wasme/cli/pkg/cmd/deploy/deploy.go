@@ -119,7 +119,7 @@ Use --labels to use a match Gateway CRs by label.
 }
 
 func deployIstioCmd(ctx *context.Context, opts *options) *cobra.Command {
-	use := "istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--name deployment-name]"
+	use := "istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--name deployment-name] [--patch-context={any|inbound|outbound|gateway}]"
 	short := "Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy)."
 	long := `Deploy an Envoy WASM Filter to Istio Sidecar Proxies (Envoy).
 
@@ -141,6 +141,7 @@ Note: currently only Istio 1.5.x - 1.8.x are supported.
 	)
 
 	cmd.PreRunE = func(cmd *cobra.Command, args []string) error {
+		opts.filter.PatchContext = opts.istioOpts.patchContext
 		cacheDeployer := cachedeployment.NewDeployer(
 			helpers.MustKubeClient(),
 			opts.cacheOpts.namespace,

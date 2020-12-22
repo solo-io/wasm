@@ -34,6 +34,10 @@ const (
 	WorkloadTypeDeployment  = "deployment"
 	WorkloadTypeStatefulSet = "statefulset"
 	backupAnnotationPrefix  = "wasme-backup."
+	PatchContextAny         = "any"
+	PatchContextInbound     = "inbound"
+	PatchContextOutbound    = "outbound"
+	PatchContextGateway     = "gateway"
 )
 
 // the target workload to deploy the filter to
@@ -450,9 +454,24 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 		return nil, err
 	}
 
+	var patchContext networkingv1alpha3.EnvoyFilter_PatchContext
+	switch strings.ToLower(filter.GetPatchContext()) {
+	case PatchContextAny:
+		patchContext = networkingv1alpha3.EnvoyFilter_ANY
+	case PatchContextInbound, "":
+		// include empty string in this case for backword compatibility
+		patchContext = networkingv1alpha3.EnvoyFilter_SIDECAR_INBOUND
+	case PatchContextOutbound:
+		patchContext = networkingv1alpha3.EnvoyFilter_SIDECAR_OUTBOUND
+	case PatchContextGateway:
+		patchContext = networkingv1alpha3.EnvoyFilter_GATEWAY
+	default:
+		return nil, errors.Errorf("unknown patch context %v, must be one of %v, %v, %v, and %v", filter.GetPatchContext(), PatchContextGateway, PatchContextInbound, PatchContextOutbound, PatchContextGateway)
+	}
+
 	makeMatch := func() *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch {
 		return &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch{
-			Context: networkingv1alpha3.EnvoyFilter_SIDECAR_INBOUND,
+			Context: patchContext,
 			ObjectTypes: &networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch_Listener{
 				Listener: &networkingv1alpha3.EnvoyFilter_ListenerMatch{
 					FilterChain: &networkingv1alpha3.EnvoyFilter_ListenerMatch_FilterChainMatch{
