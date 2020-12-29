@@ -2,6 +2,7 @@ package istio
 
 import (
 	"context"
+	"encoding/json"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -176,7 +177,9 @@ func (p *Provider) ApplyFilter(filter *v1.FilterSpec) error {
 
 // applies the filter to the target workload: adds annotations and creates the EnvoyFilter CR
 func (p *Provider) applyFilterToWorkload(filter *v1.FilterSpec, image pull.Image, meta metav1.ObjectMeta, spec *corev1.PodTemplateSpec) error {
-	p.setAnnotations(spec)
+	if err := p.setAnnotations(spec); err != nil {
+		return err
+	}
 	labels := spec.Labels
 	workloadName := meta.Name
 
@@ -389,7 +392,7 @@ func (p *Provider) forEachWorkload(do func(meta metav1.ObjectMeta, spec *corev1.
 }
 
 // set sidecar annotations on the workload
-func (p *Provider) setAnnotations(template *corev1.PodTemplateSpec) {
+func (p *Provider) setAnnotations(template *corev1.PodTemplateSpec) error {
 	if template.Annotations == nil {
 		template.Annotations = map[string]string{}
 	}
@@ -397,9 +400,29 @@ func (p *Provider) setAnnotations(template *corev1.PodTemplateSpec) {
 		// create backups of the existing annotations if they exist
 		if currentVal, ok := template.Annotations[k]; ok {
 			template.Annotations[backupAnnotationPrefix+k] = currentVal
+			var currentAnnotations []map[string]interface{}
+			if err := json.Unmarshal([]byte(currentVal), &currentAnnotations); err != nil {
+				return err
+			}
+			var annotation []map[string]interface{}
+			if err := json.Unmarshal([]byte(v), &annotation); err != nil {
+				return err
+			}
+			mergeAnnotations := append(annotation, currentAnnotations...)
+			merge, err := json.Marshal(mergeAnnotations)
+			if err != nil {
+				return err
+			}
+			v = string(merge)
+			logger := logrus.WithFields(logrus.Fields{
+				"before": currentVal,
+				"after":  v,
+			})
+			logger.Infof("merge istio annotations")
 		}
 		template.Annotations[k] = v
 	}
+	return nil
 }
 
 // construct Istio EnvoyFilter Custom Resource
