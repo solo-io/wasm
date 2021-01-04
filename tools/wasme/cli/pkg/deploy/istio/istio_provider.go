@@ -397,18 +397,31 @@ func (p *Provider) setAnnotations(template *corev1.PodTemplateSpec) error {
 		template.Annotations = map[string]string{}
 	}
 	for k, v := range requiredSidecarAnnotations() {
-		// create backups of the existing annotations if they exist
+		// create backups of the existing annotations if they exist, and merge sidecar annotations
 		if currentVal, ok := template.Annotations[k]; ok {
 			template.Annotations[backupAnnotationPrefix+k] = currentVal
 			var currentAnnotations []map[string]interface{}
 			if err := json.Unmarshal([]byte(currentVal), &currentAnnotations); err != nil {
 				return err
 			}
-			var annotation []map[string]interface{}
-			if err := json.Unmarshal([]byte(v), &annotation); err != nil {
+			var sidecarAnnotation []map[string]interface{}
+			if err := json.Unmarshal([]byte(v), &sidecarAnnotation); err != nil {
 				return err
 			}
-			mergeAnnotations := append(annotation, currentAnnotations...)
+			// append if not exist
+			mergeAnnotations := currentAnnotations
+			for _, required := range sidecarAnnotation {
+				merge := true
+				for _, current := range mergeAnnotations {
+					if current["name"] == required["name"] {
+						merge = false
+						break
+					}
+				}
+				if merge {
+					mergeAnnotations = append(mergeAnnotations, required)
+				}
+			}
 			merge, err := json.Marshal(mergeAnnotations)
 			if err != nil {
 				return err
