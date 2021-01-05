@@ -52,6 +52,7 @@ message FilterSpec {
     // a class of configurations based on the traffic flow direction
     // and workload type.
     // defaults to `inbound`.
+    // See https://istio.io/latest/docs/reference/config/networking/envoy-filter/#EnvoyFilter-PatchContext for more details.
     string patchContext = 6;
 }
 
