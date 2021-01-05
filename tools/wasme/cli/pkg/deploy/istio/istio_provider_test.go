@@ -86,7 +86,7 @@ var _ = Describe("IstioProvider", func() {
 		})
 		Expect(err).NotTo(HaveOccurred())
 
-		deployment, err = kube.AppsV1().Deployments(ns).Create(makeDeployment(workloadName, ns))
+		deployment, err = kube.AppsV1().Deployments(ns).Create(makeDeployment(workloadName, ns, map[string]string{}))
 		Expect(err).NotTo(HaveOccurred())
 	})
 	AfterEach(func() {
@@ -166,10 +166,10 @@ var _ = Describe("IstioProvider", func() {
 			Workload:   workload,
 			Cache:      cache,
 		}
-		dep1, err := kube.AppsV1().Deployments(workload.Namespace).Create(makeDeployment("one", ns))
+		dep1, err := kube.AppsV1().Deployments(workload.Namespace).Create(makeDeployment("one", ns, map[string]string{}))
 		Expect(err).NotTo(HaveOccurred())
 
-		dep2, err := kube.AppsV1().Deployments(workload.Namespace).Create(makeDeployment("two", ns))
+		dep2, err := kube.AppsV1().Deployments(workload.Namespace).Create(makeDeployment("two", ns, map[string]string{}))
 		Expect(err).NotTo(HaveOccurred())
 
 		err = p.ApplyFilter(filter)
@@ -208,6 +208,43 @@ var _ = Describe("IstioProvider", func() {
 
 		Expect(ef2.Spec.WorkloadSelector.Labels).To(Equal(dep2.Spec.Template.Labels))
 		Expect(ef2.Spec.ConfigPatches).To(HaveLen(1))
+	})
+
+	It("merge required istio sidecar annotations into user custom annotations", func() {
+		workload := istio.Workload{
+			//all workloads
+			Namespace: ns,
+			Kind:      istio.WorkloadTypeDeployment,
+		}
+
+		p := &istio.Provider{
+			Ctx:        context.TODO(),
+			KubeClient: kube,
+			Client:     client,
+			Puller:     puller,
+			Workload:   workload,
+			Cache:      cache,
+		}
+		// custom
+		dep1, err := kube.AppsV1().Deployments(workload.Namespace).Create(makeDeployment("merge", ns, customSidecarAnnotations()))
+		Expect(err).NotTo(HaveOccurred())
+
+		// already exist
+		dep2, err := kube.AppsV1().Deployments(workload.Namespace).Create(makeDeployment("merge", ns, requiredSidecarAnnotations()))
+		Expect(err).NotTo(HaveOccurred())
+
+		err = p.ApplyFilter(filter)
+		Expect(err).NotTo(HaveOccurred())
+
+		dep1, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep1.Name, metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(dep1.Spec.Template.Annotations).To(Equal(mergedSidecarAnnotations()))
+
+		dep2, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep2.Name, metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations()))
 	})
 
 	// note: this test assumes istio 1.5 installed to cluster
@@ -293,7 +330,7 @@ var _ = Describe("IstioProvider", func() {
 	})
 })
 
-func makeDeployment(workloadName, ns string) *appsv1.Deployment {
+func makeDeployment(workloadName, ns string, annotations map[string]string) *appsv1.Deployment {
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      workloadName,
@@ -305,7 +342,8 @@ func makeDeployment(workloadName, ns string) *appsv1.Deployment {
 			},
 			Template: kubev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{"app": workloadName},
+					Labels:      map[string]string{"app": workloadName},
+					Annotations: annotations,
 				},
 				Spec: kubev1.PodSpec{
 					Containers: []kubev1.Container{{
@@ -369,5 +407,19 @@ func requiredSidecarAnnotations() map[string]string {
 	return map[string]string{
 		"sidecar.istio.io/userVolume":      `[{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
 		"sidecar.istio.io/userVolumeMount": `[{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
+	}
+}
+
+func customSidecarAnnotations() map[string]string {
+	return map[string]string{
+		"sidecar.istio.io/userVolume":      `[{"name":"tmp-dir","emptyDir":{}}]`,
+		"sidecar.istio.io/userVolumeMount": `[{"mountPath":"/tmp","name":"tmp-dir"}]`,
+	}
+}
+
+func mergedSidecarAnnotations() map[string]string {
+	return map[string]string{
+		"sidecar.istio.io/userVolume":      `[{"name":"tmp-dir","emptyDir":{}},{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
+		"sidecar.istio.io/userVolumeMount": `[{"mountPath":"/tmp","name":"tmp-dir"},{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
 	}
 }
