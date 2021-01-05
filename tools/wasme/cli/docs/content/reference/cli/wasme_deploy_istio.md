@@ -19,7 +19,7 @@ Note: currently only Istio 1.5.x - 1.8.x are supported.
 
 
 ```
-wasme deploy istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--name deployment-name] [flags]
+wasme deploy istio <image> --id=<unique name> [--config=<inline string>] [--root-id=<root id>] [--namespaces <comma separated namespaces>] [--name deployment-name] [--patch-context={any|inbound|outbound|gateway}] [flags]
 ```
 
 ### Options
@@ -37,6 +37,7 @@ wasme deploy istio <image> --id=<unique name> [--config=<inline string>] [--root
       --istio-namespace string           the namespace where the Istio control plane is installed (default "istio-system")
   -l, --labels stringToString            labels of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace (default [])
   -n, --namespace string                 namespace of the workload(s) to inject the filter. (default "default")
+      --patch-context string             patch context of the filter. possible values are any, inbound, outbound, gateway (default "inbound")
   -t, --workload-type string             type of workload into which the filter should be injected. possible values are daemonset, deployment, statefulset (default "deployment")
 ```
 
