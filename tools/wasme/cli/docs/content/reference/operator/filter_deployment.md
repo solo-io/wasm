@@ -129,7 +129,8 @@ if the user provides |
 | imagePullOptions | [ImagePullOptions](#wasme.io.ImagePullOptions) |  | custom options if pulling from private / custom repositories |
 | patchContext | [string](#string) |  | a class of configurations based on the traffic flow direction
 and workload type.
-defaults to `inbound`. |
+defaults to `inbound`.
+See https://istio.io/latest/docs/reference/config/networking/envoy-filter/#EnvoyFilter-PatchContext for more details. |
 
 
 

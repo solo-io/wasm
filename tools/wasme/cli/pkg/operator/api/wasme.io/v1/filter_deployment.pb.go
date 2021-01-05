@@ -132,6 +132,7 @@ type FilterSpec struct {
 	// a class of configurations based on the traffic flow direction
 	// and workload type.
 	// defaults to `inbound`.
+	// See https://istio.io/latest/docs/reference/config/networking/envoy-filter/#EnvoyFilter-PatchContext for more details.
 	PatchContext         string   `protobuf:"bytes,6,opt,name=patchContext,proto3" json:"patchContext,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
