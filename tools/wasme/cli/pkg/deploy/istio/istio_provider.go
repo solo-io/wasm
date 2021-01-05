@@ -40,6 +40,13 @@ const (
 	PatchContextGateway     = "gateway"
 )
 
+var SupportedPatchContexts = []string{
+	PatchContextAny,
+	PatchContextInbound,
+	PatchContextOutbound,
+	PatchContextGateway,
+}
+
 // the target workload to deploy the filter to
 // can select all workloads in a namespace
 type Workload struct {
@@ -466,7 +473,7 @@ func (p *Provider) makeIstioEnvoyFilter(filter *v1.FilterSpec, image pull.Image,
 	case PatchContextGateway:
 		patchContext = networkingv1alpha3.EnvoyFilter_GATEWAY
 	default:
-		return nil, errors.Errorf("unknown patch context %v, must be one of %v, %v, %v, and %v", filter.GetPatchContext(), PatchContextGateway, PatchContextInbound, PatchContextOutbound, PatchContextGateway)
+		return nil, errors.Errorf("unknown patch context %v, must be one of the following values: %s", filter.GetPatchContext(), strings.Join(SupportedPatchContexts, ", "))
 	}
 
 	makeMatch := func() *networkingv1alpha3.EnvoyFilter_EnvoyConfigObjectMatch {

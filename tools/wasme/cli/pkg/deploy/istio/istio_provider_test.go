@@ -232,7 +232,7 @@ var _ = Describe("IstioProvider", func() {
 			Config:       nil,
 			Image:        "filter/image:v1",
 			RootID:       "root_id",
-			PatchContext: "outbound",
+			PatchContext: istio.PatchContextOutbound,
 		}
 		err := p.ApplyFilter(obfilter)
 		Expect(err).NotTo(HaveOccurred())

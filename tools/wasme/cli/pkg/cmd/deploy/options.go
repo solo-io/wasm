@@ -28,20 +28,6 @@ import (
 	"github.com/spf13/pflag"
 )
 
-const (
-	PatchContext_Any      = "any"
-	PatchContext_Inbound  = "inbound"
-	PatchContext_Outbound = "outbound"
-	PatchContext_Gateway  = "gateway"
-)
-
-var SupportedPatchContexts = []string{
-	PatchContext_Any,
-	PatchContext_Inbound,
-	PatchContext_Outbound,
-	PatchContext_Gateway,
-}
-
 type options struct {
 	// filter to deploy
 	filter v1.FilterSpec
@@ -109,7 +95,7 @@ func (opts *istioOpts) addToFlags(flags *pflag.FlagSet) {
 	flags.StringToStringVarP(&opts.workload.Labels, "labels", "l", nil, "labels of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace")
 	flags.StringVarP(&opts.workload.Namespace, "namespace", "n", "default", "namespace of the workload(s) to inject the filter.")
 	flags.StringVarP(&opts.workload.Kind, "workload-type", "t", istio.WorkloadTypeDeployment, "type of workload into which the filter should be injected. possible values are "+strings.Join(SupportedWorkloadTypes, ", "))
-	flags.StringVar(&opts.patchContext, "patch-context", PatchContext_Inbound, "patch context of the filter. possible values are "+strings.Join(SupportedPatchContexts, ", "))
+	flags.StringVar(&opts.patchContext, "patch-context", istio.PatchContextInbound, "patch context of the filter. possible values are "+strings.Join(istio.SupportedPatchContexts, ", "))
 	flags.StringVar(&opts.istioNamespace, "istio-namespace", "istio-system", "the namespace where the Istio control plane is installed")
 	flags.DurationVar(&opts.cacheTimeout, "cache-timeout", time.Minute, "the length of time to wait for the server-side filter cache to pull the filter image before giving up with an error. set to 0 to skip the check entirely (note, this may produce a known race condition).")
 	flags.BoolVar(&opts.ignoreVersionCheck, "ignore-version-check", false, "set to disable abi version compatability check.")
