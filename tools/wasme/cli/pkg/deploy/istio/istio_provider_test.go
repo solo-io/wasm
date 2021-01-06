@@ -231,7 +231,7 @@ var _ = Describe("IstioProvider", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		// already exist
-		dep2, err := kube.AppsV1().Deployments(workload.Namespace).Create(makeDeployment("merge", ns, requiredSidecarAnnotations()))
+		dep2, err := kube.AppsV1().Deployments(workload.Namespace).Create(makeDeployment("donotmerge", ns, requiredSidecarAnnotations()))
 		Expect(err).NotTo(HaveOccurred())
 
 		err = p.ApplyFilter(filter)
