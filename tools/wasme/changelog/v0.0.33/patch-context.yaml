@@ -1,0 +1,5 @@
+changelog:
+  - type: NEW_FEATURE
+    description: >
+      Add a feature to configure EnvoyFilter.PatchContext at the time of deployment.
+    issueLink: https://github.com/solo-io/wasm/issues/115
