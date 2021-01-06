@@ -459,7 +459,9 @@ func customSidecarAnnotations() map[string]string {
 
 func mergedSidecarAnnotations() map[string]string {
 	return map[string]string{
-		"sidecar.istio.io/userVolume":      `[{"name":"tmp-dir","emptyDir":{}},{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
-		"sidecar.istio.io/userVolumeMount": `[{"mountPath":"/tmp","name":"tmp-dir"},{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
+		"sidecar.istio.io/userVolume":                   `[{"name":"tmp-dir","emptyDir":{}},{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
+		"sidecar.istio.io/userVolumeMount":              `[{"mountPath":"/tmp","name":"tmp-dir"},{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
+		"wasme-backup.sidecar.istio.io/userVolume":      `[{"name":"tmp-dir","emptyDir":{}}]`,
+		"wasme-backup.sidecar.istio.io/userVolumeMount": `[{"mountPath":"/tmp","name":"tmp-dir"}]`,
 	}
 }
