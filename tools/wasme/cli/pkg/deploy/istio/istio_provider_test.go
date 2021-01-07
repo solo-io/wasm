@@ -24,6 +24,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gstruct"
 	"github.com/opencontainers/go-digest"
 	v1 "github.com/opencontainers/image-spec/specs-go/v1"
 	istiov1alpha3 "istio.io/client-go/pkg/apis/networking/v1alpha3"
@@ -240,12 +241,14 @@ var _ = Describe("IstioProvider", func() {
 		dep1, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep1.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(dep1.Spec.Template.Annotations).To(Equal(mergedSidecarAnnotations()))
+		Expect(dep1.Spec.Template.Annotations).To(MatchAllKeys(mergedSidecarAnnotations()))
 
 		dep2, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep2.Name, metav1.GetOptions{})
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(dep1.Spec.Template.Annotations).To(Equal(requiredSidecarAnnotations()))
+		for key, value := range requiredSidecarAnnotations() {
+			Expect(dep2.Spec.Template.Annotations).To(HaveKeyWithValue(key, MatchJSON(value)))
+		}
 	})
 
 	It("create an Envoy filter for outbound traffic", func() {
@@ -450,6 +453,7 @@ func requiredSidecarAnnotations() map[string]string {
 	}
 }
 
+// the sidecar annotations already exist on the pod
 func customSidecarAnnotations() map[string]string {
 	return map[string]string{
 		"sidecar.istio.io/userVolume":      `[{"name":"tmp-dir","emptyDir":{}}]`,
@@ -457,11 +461,11 @@ func customSidecarAnnotations() map[string]string {
 	}
 }
 
-func mergedSidecarAnnotations() map[string]string {
-	return map[string]string{
-		"sidecar.istio.io/userVolume":                   `[{"name":"tmp-dir","emptyDir":{}},{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`,
-		"sidecar.istio.io/userVolumeMount":              `[{"mountPath":"/tmp","name":"tmp-dir"},{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`,
-		"wasme-backup.sidecar.istio.io/userVolume":      `[{"name":"tmp-dir","emptyDir":{}}]`,
-		"wasme-backup.sidecar.istio.io/userVolumeMount": `[{"mountPath":"/tmp","name":"tmp-dir"}]`,
+func mergedSidecarAnnotations() Keys {
+	return Keys{
+		"sidecar.istio.io/userVolume":                   MatchJSON(`[{"name":"tmp-dir","emptyDir":{}},{"name":"cache-dir","hostPath":{"path":"/var/local/lib/wasme-cache"}}]`),
+		"sidecar.istio.io/userVolumeMount":              MatchJSON(`[{"mountPath":"/tmp","name":"tmp-dir"},{"mountPath":"/var/local/lib/wasme-cache","name":"cache-dir"}]`),
+		"wasme-backup.sidecar.istio.io/userVolume":      MatchJSON(`[{"name":"tmp-dir","emptyDir":{}}]`),
+		"wasme-backup.sidecar.istio.io/userVolumeMount": MatchJSON(`[{"mountPath":"/tmp","name":"tmp-dir"}]`),
 	}
 }
