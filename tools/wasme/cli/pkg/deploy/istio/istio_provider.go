@@ -611,10 +611,10 @@ func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
 
 		// restore backup annotations
 		for k, v := range spec.Annotations {
-			if strings.HasPrefix(backupAnnotationPrefix, k) {
+			if strings.HasPrefix(k, backupAnnotationPrefix) {
 				key := strings.TrimPrefix(k, backupAnnotationPrefix)
 				spec.Annotations[key] = v
-				delete(spec.Annotations, key)
+				delete(spec.Annotations, k)
 			}
 		}
 

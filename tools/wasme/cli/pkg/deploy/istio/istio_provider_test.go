@@ -251,6 +251,42 @@ var _ = Describe("IstioProvider", func() {
 		}
 	})
 
+	It("restore backup annotations", func() {
+		workload := istio.Workload{
+			//all workloads
+			Namespace: ns,
+			Kind:      istio.WorkloadTypeDeployment,
+		}
+
+		p := &istio.Provider{
+			Ctx:        context.TODO(),
+			KubeClient: kube,
+			Client:     client,
+			Puller:     puller,
+			Workload:   workload,
+			Cache:      cache,
+		}
+
+		dep1, err := kube.AppsV1().Deployments(workload.Namespace).Create(makeDeployment("deploy", ns, customSidecarAnnotations()))
+		Expect(err).NotTo(HaveOccurred())
+
+		err = p.ApplyFilter(filter)
+		Expect(err).NotTo(HaveOccurred())
+
+		dep1, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep1.Name, metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(dep1.Spec.Template.Annotations).To(MatchAllKeys(mergedSidecarAnnotations()))
+
+		err = p.RemoveFilter(filter)
+		Expect(err).NotTo(HaveOccurred())
+
+		dep1, err = kube.AppsV1().Deployments(workload.Namespace).Get(dep1.Name, metav1.GetOptions{})
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(dep1.Spec.Template.Annotations).To(Equal(customSidecarAnnotations()))
+	})
+
 	It("create an Envoy filter for outbound traffic", func() {
 		workload := istio.Workload{
 			//all workloads
