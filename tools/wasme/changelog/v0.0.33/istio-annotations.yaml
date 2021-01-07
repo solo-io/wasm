@@ -1,0 +1,3 @@
+changelog:
+  - type: NEW_FEATURE
+    description: Merge required istio sidecar annotations into user custom annotations
