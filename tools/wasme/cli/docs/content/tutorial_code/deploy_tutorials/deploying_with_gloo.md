@@ -28,20 +28,20 @@ petstore-5dcf5d6b66-n8tjt   1/1     Running   0          2m20s
 
 ### Deploying Envoy
 
-In this tutorial, we'll use Gloo, an API Gateway based on Envoy that has built-in wasm support but these steps should also work for base Envoy.
+In this tutorial, we'll use Gloo Edge Enterprise, an API Gateway based on Envoy that has built-in wasm support.  But these steps should also work for base Envoy.
 
 First, install Gloo via the helm chart:
 
 ```shell
 helm repo update
 kubectl create ns gloo-system
-helm install gloo-gateway gloo/gloo --namespace gloo-system --set global.wasm.enabled=true
+helm install gloo-gateway glooe/gloo-ee --namespace gloo-system --set-string license_key=$GLOO_KEY
 ```
 
-Gloo will be installed to the `gloo-system` namespace.
+Gloo Edge will be installed to the `gloo-system` namespace.
 
 {{% notice note %}}
-Gloo version `1.3.6` or greater required. Check your installed version of Gloo with `glooctl version`
+Gloo Edge Enterprise version `1.6.2` or greater is required. Check your installed version of Gloo with `glooctl version`. You may obtain a license key with a free trial of the Enterprise edition, available [here](https://lp.solo.io/request-trial).
 {{% /notice %}}
 
 ### Create a Route
@@ -140,14 +140,14 @@ wasme deploy gloo webassemblyhub.io/ilackarms/add-header:v0.1 --id=myfilter --co
 
 This filter adds the header `hello: <value>` to responses, where `<value>` is the value of the `--config` string.
 
-The deployment should have added our filter to the Gloo Gateway. Let's check this with `kubectl`:
+The deployment should have added our filter to the Gloo Edge Gateway. Let's check this with `kubectl`:
 
 ```bash
 kubectl get gateway -n gloo-system '-ojsonpath={.items[0].spec.httpGateway.options.wasm}'
 ```
 
 ```
-map[config:world image:webassemblyhub.io/ilackarms/add-header:v0.1 name:myfilter rootId:add_header_root_id]
+{"filters":[{"image":"webassemblyhub.io/ilackarms/add-header:v0.1","name":"add-header","rootId":"add_header"}]}
 ```
 
 If we try our request again, we should see the `hello: world` header was added by our filter:
