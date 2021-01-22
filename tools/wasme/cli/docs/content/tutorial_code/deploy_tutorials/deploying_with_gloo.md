@@ -119,23 +119,23 @@ curl -sL https://run.solo.io/wasme/install | sh
 export PATH=$HOME/.wasme/bin:$PATH
 ```
 
-Let's run `wasme list` to see what's available on the hub:
+Let's run `wasme list` to see what's available on the hub.  Note that this may take a couple of minutes.
 
 ```shell
-wasme list --published
+wasme list --published --search add-header
 ```
 
 ```
 NAME                                   TAG                                 SIZE    SHA      UPDATED
 ...
-webassemblyhub.io/ilackarms/add-header v0.1                             1.0 MB  8c001279 12 Feb 20 19:10 UTC
+webassemblyhub.io/jameshbarton/add-header                  v0.1                13.9 kB  d696cba6 15 Jan 21 22:05 UTC
 ...
 ```
 
 Let's try deploying one of these to Gloo:
 
 ```bash
-wasme deploy gloo webassemblyhub.io/ilackarms/add-header:v0.1 --id=myfilter --config 'world'
+wasme deploy gloo webassemblyhub.io/jameshbarton/add-header:v0.1 --id=myfilter --config 'world'
 ```
 
 This filter adds the header `hello: <value>` to responses, where `<value>` is the value of the `--config` string.
@@ -147,7 +147,7 @@ kubectl get gateway -n gloo-system '-ojsonpath={.items[0].spec.httpGateway.optio
 ```
 
 ```
-{"filters":[{"image":"webassemblyhub.io/ilackarms/add-header:v0.1","name":"add-header","rootId":"add_header"}]}
+{"filters":[{"image":"webassemblyhub.io/jameshbarton/add-header:v0.1","name":"add-header","rootId":"add_header"}]}
 ```
 
 If we try our request again, we should see the `hello: world` header was added by our filter:
