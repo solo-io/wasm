@@ -119,20 +119,18 @@ curl -sL https://run.solo.io/wasme/install | sh
 export PATH=$HOME/.wasme/bin:$PATH
 ```
 
-Let's run `wasme list` to see what's available on the hub.  Note that this may take a couple of minutes.
+Let's run `wasme list` to see what's available on the hub.  Note that this may take a few minutes without a `--search` option to limit the results.
 
 ```shell
-wasme list --published --search add-header
+wasme list --published --search jameshbarton/add-header
 ```
 
 ```
 NAME                                   TAG                                 SIZE    SHA      UPDATED
-...
 webassemblyhub.io/jameshbarton/add-header                  v0.1                13.9 kB  d696cba6 15 Jan 21 22:05 UTC
-...
 ```
 
-Let's try deploying one of these to Gloo:
+Let's try deploying this filter to Gloo:
 
 ```bash
 wasme deploy gloo webassemblyhub.io/jameshbarton/add-header:v0.1 --id=myfilter --config 'world'
