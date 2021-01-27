@@ -227,21 +227,25 @@ petstore-5dcf5d6b66-n8tjt   1/1     Running   0          2m20s
 
 ### Deploying Gloo/Envoy
 
-In this tutorial, we'll use Gloo, an API Gateway based on Envoy that has built-in wasm support but these steps should also work for base Envoy.
+In this tutorial, we'll use Gloo Edge Enterprise, an API Gateway based on Envoy that has built-in wasm support.  But these steps should also work for base Envoy.
 
-First, install Gloo using one of the following installation options:
+First, install Gloo Edge using one of the following installation options:
 
 {{< tabs >}}
 {{< tab name="install-gloo" codelang="shell">}}
-helm repo add gloo https://storage.googleapis.com/solo-public-helm
+helm repo add glooe http://storage.googleapis.com/gloo-ee-helm
 helm repo update
 kubectl create ns gloo-system
-helm install --namespace gloo-system --set global.wasm.enabled=true gloo gloo/gloo
+helm install gloo-gateway glooe/gloo-ee --namespace gloo-system --set-string license_key=$GLOO_KEY
 {{< /tab >}}
 {{< tab name="glooctl" codelang="shell" >}}
-glooctl install gateway -n gloo-system --values <(echo '{"crds":{"create":true},"global":{"wasm":{"enabled":true}}}')
+glooctl install gateway enterprise -n gloo-system --license-key $GLOO_KEY
 {{< /tab >}}
 {{< /tabs >}}
+
+{{% notice note %}}
+Gloo Edge Enterprise version `1.6.2` or greater is required. Check your installed version of Gloo with `glooctl version`. You may obtain a license key with a free trial of the Enterprise edition, available [here](https://lp.solo.io/request-trial).
+{{% /notice %}}
 
 ### Verify set up
 
@@ -312,7 +316,15 @@ To deploy the module to Envoy via Gloo:
 wasme deploy gloo webassemblyhub.io/$YOUR_USERNAME/add-header:v0.1 --id=add-header
 ```
 
-It will take a few moments for the image to be pulled by the server-side cache.
+It will take a few moments for the image to be pulled by the server-side cache.  The deployment should have added our filter to the Gloo Edge Gateway. Let's confirm this with `kubectl`:
+
+```bash
+kubectl get gateway -n gloo-system '-ojsonpath={.items[0].spec.httpGateway.options.wasm}'
+```
+
+```
+{"filters":[{"image":"webassemblyhub.io/$YOUR_USERNAME/add-header:v0.1","name":"add-header","rootId":"add_header"}]}
+```
 
 ## Verify behavior
 
