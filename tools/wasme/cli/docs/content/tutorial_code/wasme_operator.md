@@ -31,6 +31,12 @@ Currently, the Wasme Operator only supports Istio. If Istio (specifically the `e
 
 To install istio, follow the [Istio installation Guide](https://istio.io/docs/setup/getting-started/#install).
 
+{{% notice note %}}
+Note that this guide was written and tested against Istio 1.8.2. Some older versions of Istio (<1.7.x) may have a different `config` type to configure the filter, which previously took a `string` value instead of a `google.protobuf.Any`.
+
+If you are running this guide against a different minor version of Istio, it is recommended that you use `wasme init` to generate your own wasm filter targeting your specific Istio version.
+{{% /notice %}}
+
 ### Installing Wasme
 
 First, install the Wasme CRDs:
@@ -116,7 +122,7 @@ kubectl apply -n bookinfo -f https://raw.githubusercontent.com/solo-io/wasm/mast
 ```
 
 {{% notice note %}}
-The bookinfo app installed here is identical to that shipped with Istio `1.5.0`.
+The bookinfo app installed here is identical to that shipped with Istio `1.8.2`.
 {{% /notice %}}
 
 #### Deploy the Filter
@@ -136,14 +142,17 @@ spec:
     istio:
       kind: Deployment
   filter:
-    config: '{"name":"hello","value":"world"}'
-    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
+    config:
+      '@type': type.googleapis.com/google.protobuf.StringValue
+      value: world
+    image: webassemblyhub.io/sodman/istio-1-7:v0.3
+
 ```
 
 This resource tells wasme to:
 
-- add the `webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5` filter to each **Deployment** in the `bookinfo` namespace
-- with the *configuration* `{"name":"hello","value":"world"}` 
+- add the `webassemblyhub.io/sodman/istio-1-7:v0.3` filter to each **Deployment** in the `bookinfo` namespace
+- with the *configuration* string `world`
 
 
 Run the following to add the filter to the Bookinfo app:
@@ -160,8 +169,10 @@ spec:
     istio:
       kind: Deployment
   filter:
-    config: '{"name":"hello","value":"world"}'
-    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
+    config:
+      '@type': type.googleapis.com/google.protobuf.StringValue
+      value: world
+    image: webassemblyhub.io/sodman/istio-1-7:v0.3
 EOF
 ```
 
@@ -177,24 +188,26 @@ kubectl get filterdeployments.wasme.io -n bookinfo -o yaml bookinfo-custom-filte
 
 Note the `status` of the FilterDeployment
 
-{{< highlight yaml "hl_lines=18-32" >}}
+{{< highlight yaml "hl_lines=20-34" >}}
 apiVersion: wasme.io/v1
 kind: FilterDeployment
 metadata:
-  creationTimestamp: "2020-01-20T19:16:07Z"
+  creationTimestamp: "2021-02-09T21:38:25Z"
   generation: 1
   name: bookinfo-custom-filter
   namespace: bookinfo
-  resourceVersion: "16085964"
+  resourceVersion: "47379"
   selfLink: /apis/wasme.io/v1/namespaces/bookinfo/filterdeployments/bookinfo-custom-filter
-  uid: 4f3811aa-3bb9-11ea-b3ed-42010af0016c
+  uid: 6b1ca022-1bef-455e-9fb2-ac411909cda0
 spec:
   deployment:
     istio:
       kind: Deployment
   filter:
-    config: '{"name":"hello","value":"world"}'
-    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
+    config:
+      '@type': type.googleapis.com/google.protobuf.StringValue
+      value: world
+    image: webassemblyhub.io/sodman/istio-1-7:v0.3
 status:
   observedGeneration: "1"
   workloads:
@@ -223,28 +236,29 @@ kubectl exec -ti -n bookinfo deploy/productpage-v1 -c istio-proxy -- curl -v htt
 The output should have a `200 OK` response and contain the response header `hello: world`:
 
 {{< highlight yaml "hl_lines=15" >}}
-*   Trying 10.55.247.3...
+*   Trying 10.107.216.139...
 * TCP_NODELAY set
-* Connected to details.bookinfo (10.55.247.3) port 9080 (#0)
+* Connected to details.bookinfo (10.107.216.139) port 9080 (#0)
 > GET /details/123 HTTP/1.1
 > Host: details.bookinfo:9080
 > User-Agent: curl/7.58.0
 > Accept: */*
->
+> 
 < HTTP/1.1 200 OK
 < content-type: application/json
 < server: istio-envoy
-< date: Mon, 06 Jan 2020 18:13:12 GMT
+< date: Tue, 09 Feb 2021 21:41:30 GMT
 < content-length: 180
-< x-envoy-upstream-service-time: 1
+< x-envoy-upstream-service-time: 2
 < hello: world
+< location: envoy-wasm
 < x-envoy-decorator-operation: details.bookinfo.svc.cluster.local:9080/*
-<
+< 
 * Connection #0 to host details.bookinfo left intact
 {"id":123,"author":"William Shakespeare","year":1595,"type":"paperback","pages":200,"publisher":"PublisherA","language":"English","ISBN-10":"1234567890","ISBN-13":"123-1234567890"}
 {{< /highlight >}}
 
-We can easily modify the `hello: world` custom header by updating the FilterDeployment `spec.filter.config`:
+We can easily modify the `hello: world` custom header by updating the FilterDeployment `spec.filter.config.value`:
 
 {{< highlight yaml "hl_lines=12" >}}
 cat <<EOF | kubectl apply -f -
@@ -258,8 +272,10 @@ spec:
     istio:
       kind: Deployment
   filter:
-    config: '{"name":"hello","value":"goodbye"}'
-    image: webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5
+    config:
+      '@type': type.googleapis.com/google.protobuf.StringValue
+      value: goodbye
+    image: webassemblyhub.io/sodman/istio-1-7:v0.3
 EOF
 {{< /highlight >}}
 
@@ -273,23 +289,24 @@ kubectl exec -ti -n bookinfo deploy/productpage-v1 -c istio-proxy -- curl -v htt
 The output should now contain the response header `hello: goodbye`:
 
 {{< highlight yaml "hl_lines=15" >}}
-*   Trying 10.55.247.3...
+*   Trying 10.107.216.139...
 * TCP_NODELAY set
-* Connected to details.bookinfo (10.55.247.3) port 9080 (#0)
+* Connected to details.bookinfo (10.107.216.139) port 9080 (#0)
 > GET /details/123 HTTP/1.1
 > Host: details.bookinfo:9080
 > User-Agent: curl/7.58.0
 > Accept: */*
->
+> 
 < HTTP/1.1 200 OK
 < content-type: application/json
 < server: istio-envoy
-< date: Mon, 20 Jan 2020 19:39:33 GMT
+< date: Tue, 09 Feb 2021 21:45:42 GMT
 < content-length: 180
-< x-envoy-upstream-service-time: 1
+< x-envoy-upstream-service-time: 2
 < hello: goodbye
+< location: envoy-wasm
 < x-envoy-decorator-operation: details.bookinfo.svc.cluster.local:9080/*
-<
+< 
 * Connection #0 to host details.bookinfo left intact
 {"id":123,"author":"William Shakespeare","year":1595,"type":"paperback","pages":200,"publisher":"PublisherA","language":"English","ISBN-10":"1234567890","ISBN-13":"123-1234567890"}
 {{< /highlight >}}
