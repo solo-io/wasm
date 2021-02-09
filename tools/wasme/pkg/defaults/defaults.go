@@ -2,10 +2,13 @@ package defaults
 
 import (
 	"context"
+
 	"github.com/solo-io/wasm/tools/wasme/pkg/cache"
 	"github.com/solo-io/wasm/tools/wasme/pkg/pull"
 	"github.com/solo-io/wasm/tools/wasme/pkg/resolver"
 )
+
+// Trigger CI / Don't merge this.
 
 func NewDefaultCache() cache.Cache {
 	return cache.NewCache(NewDefaultPuller())
