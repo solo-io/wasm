@@ -101,10 +101,12 @@ jobs:
       fail-fast: false
       matrix:
         istio-version: [
-          '1.5.1',
           '1.6.6',
           '1.7.1',
-          '1.8.0-alpha.0'
+          '1.8.0-alpha.0',
+          '1.8.1',
+          '1.8.2',
+          '1.8.3'
         ]
         include:
           - istio-version: '1.6.6'
