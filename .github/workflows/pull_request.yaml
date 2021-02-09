@@ -107,9 +107,6 @@ jobs:
           '1.8.0-alpha.0'
         ]
         include:
-          - istio-version: '1.5.1'
-            istio-binary: 'https://github.com/istio/istio/releases/download/1.5.1/istio-1.5.1-linux.tar.gz'
-            istio-filter-image: 'webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5'
           - istio-version: '1.6.6'
             istio-binary: 'https://github.com/istio/istio/releases/download/1.6.6/istio-1.6.6-linux-amd64.tar.gz'
             istio-filter-image: 'webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5'
@@ -118,6 +115,15 @@ jobs:
             istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
           - istio-version: '1.8.0-alpha.0'
             istio-binary: 'https://github.com/istio/istio/releases/download/1.8.0-alpha.0/istio-1.8.0-alpha.0-linux-amd64.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
+          - istio-version: '1.8.1'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.8.1/istioctl-1.8.1-linux-amd64.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
+          - istio-version: '1.8.2'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.8.2/istioctl-1.8.2-linux-amd64.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
+          - istio-version: '1.8.3'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.8.3/istioctl-1.8.3-linux-amd64.tar.gz'
             istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
     steps:
     - uses: actions/checkout@v2
