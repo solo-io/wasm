@@ -156,7 +156,7 @@ jobs:
         KUBECTL: ${{ steps.kubectl.outputs.kubectl-path }}
       working-directory: ./tools/wasme/cli
       run: |
-        export PATH=$(dirname $KUBECTL):$PATH
+        export PATH=$PWD/linux-amd64:$(dirname $KUBECTL):$PATH
         export FILTER_IMAGE_ISTIO_TAG=${{ matrix.istio-filter-image }}
         export ISTIO_VERSION=${{ matrix.istio-version }}
         export TEST_PKG=pkg/deploy/istio/
