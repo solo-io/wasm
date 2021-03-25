@@ -8,8 +8,6 @@ import (
 	"github.com/solo-io/wasm/tools/wasme/pkg/resolver"
 )
 
-// Trigger CI / Don't merge this.
-
 func NewDefaultCache() cache.Cache {
 	return cache.NewCache(NewDefaultPuller())
 }
