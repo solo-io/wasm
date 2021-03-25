@@ -5,10 +5,10 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 )
 
-// Other examples can be found at https://github.com/tetratelabs/proxy-wasm-go-sdk/tree/v0.0.8/examples
+// Other examples can be found at https://github.com/tetratelabs/proxy-wasm-go-sdk/tree/v0.1.1/examples
 
 func main() {
-	proxywasm.SetNewHttpContext(newHttpContext)
+	proxywasm.SetNewRootContext(newRootContext)
 }
 
 type httpHeaders struct {
@@ -17,11 +17,20 @@ type httpHeaders struct {
 	contextID uint32
 }
 
-func newHttpContext(rootContextID, contextID uint32) proxywasm.HttpContext {
+type rootContext struct {
+	// You'd better embed the default root context
+	// so that you don't need to reimplement all the methods by yourself.
+	proxywasm.DefaultRootContext
+}
+
+func newRootContext(uint32) proxywasm.RootContext { return &rootContext{} }
+
+// Override DefaultRootContext.
+func (*rootContext) NewHttpContext(contextID uint32) proxywasm.HttpContext {
 	return &httpHeaders{contextID: contextID}
 }
 
-// override
+// Override DefaultHttpContext.
 func (ctx *httpHeaders) OnHttpRequestHeaders(numHeaders int, endOfStream bool) types.Action {
 	hs, err := proxywasm.GetHttpRequestHeaders()
 	if err != nil {
@@ -34,7 +43,7 @@ func (ctx *httpHeaders) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
 	return types.ActionContinue
 }
 
-// override
+// Override DefaultHttpContext.
 func (ctx *httpHeaders) OnHttpResponseHeaders(numHeaders int, endOfStream bool) types.Action {
 	if err := proxywasm.SetHttpResponseHeader("hello", "world"); err != nil {
 		proxywasm.LogCriticalf("failed to set response header: %v", err)
@@ -42,7 +51,7 @@ func (ctx *httpHeaders) OnHttpResponseHeaders(numHeaders int, endOfStream bool) 
 	return types.ActionContinue
 }
 
-// override
+// Override DefaultHttpContext.
 func (ctx *httpHeaders) OnHttpStreamDone() {
 	proxywasm.LogInfof("%d finished", ctx.contextID)
 }
