@@ -128,7 +128,7 @@ wasme deploys a server-side cache component which runs in cluster and pulls filt
 
 If --name is not provided, all deployments in the targeted namespace will attach the filter.
 
-Note: currently only Istio 1.5.x - 1.8.x are supported.
+Note: currently only Istio 1.5.x - 1.9.x are supported.
 `
 	cmd := makeDeployCommand(ctx, opts,
 		Provider_Istio,
