@@ -1,0 +1,5 @@
+changelog:
+  - type: NEW_FEATURE
+    description: >
+      Add istiod deployment name support in wasme deploy istio command
+    issueLink: https://github.com/solo-io/wasm/issues/245

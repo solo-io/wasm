@@ -201,6 +201,7 @@ func (f *filterDeploymentHandler) makeProvider(obj *v1.FilterDeployment, puller 
 			obj,
 			onWorkload,
 			dep.Istio.IstioNamespace,
+			"",
 			f.cacheTimeout,
 			false,
 		)

@@ -27,6 +27,7 @@ wasme undeploy istio --id=<unique name> --namespace=<deployment namespace> [--na
   -h, --help                     help for istio
       --ignore-version-check     set to disable abi version compatability check.
       --istio-namespace string   the namespace where the Istio control plane is installed (default "istio-system")
+      --istiod-name string       deployment name of the istiod (default "istiod")
   -l, --labels stringToString    labels of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace (default [])
   -n, --namespace string         namespace of the workload(s) to inject the filter. (default "default")
       --patch-context string     patch context of the filter. possible values are any, inbound, outbound, gateway (default "inbound")

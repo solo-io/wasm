@@ -82,11 +82,12 @@ func (opts *glooOpts) addToFlags(flags *pflag.FlagSet) {
 }
 
 type istioOpts struct {
-	workload           istio.Workload
-	patchContext       string
-	istioNamespace     string
-	cacheTimeout       time.Duration
-	ignoreVersionCheck bool
+	workload             istio.Workload
+	patchContext         string
+	istioNamespace       string
+	istiodDeploymentName string
+	cacheTimeout         time.Duration
+	ignoreVersionCheck   bool
 
 	puller pull.ImagePuller // set by load
 }
@@ -94,6 +95,7 @@ type istioOpts struct {
 func (opts *istioOpts) addToFlags(flags *pflag.FlagSet) {
 	flags.StringToStringVarP(&opts.workload.Labels, "labels", "l", nil, "labels of the deployment or daemonset into which to inject the filter. if not set, will apply to all workloads in the target namespace")
 	flags.StringVarP(&opts.workload.Namespace, "namespace", "n", "default", "namespace of the workload(s) to inject the filter.")
+	flags.StringVar(&opts.istiodDeploymentName, "istiod-name", "istiod", "deployment name of the istiod")
 	flags.StringVarP(&opts.workload.Kind, "workload-type", "t", istio.WorkloadTypeDeployment, "type of workload into which the filter should be injected. possible values are "+strings.Join(SupportedWorkloadTypes, ", "))
 	flags.StringVar(&opts.patchContext, "patch-context", istio.PatchContextInbound, "patch context of the filter. possible values are "+strings.Join(istio.SupportedPatchContexts, ", "))
 	flags.StringVar(&opts.istioNamespace, "istio-namespace", "istio-system", "the namespace where the Istio control plane is installed")
@@ -216,6 +218,7 @@ func (opts *options) makeProvider(ctx context.Context) (deploy.Provider, error) 
 			nil, // no parent object when using CLI
 			nil, // no callback when using CLI
 			opts.istioOpts.istioNamespace,
+			opts.istioOpts.istiodDeploymentName,
 			opts.istioOpts.cacheTimeout,
 			opts.istioOpts.ignoreVersionCheck,
 		)
