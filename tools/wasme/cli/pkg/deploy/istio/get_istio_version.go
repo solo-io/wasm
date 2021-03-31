@@ -18,8 +18,9 @@ type VersionInspector interface {
 }
 
 type versionInspector struct {
-	istioNamespace string
-	kube           kubernetes.Interface
+	istioNamespace       string
+	istiodDeploymentName string
+	kube                 kubernetes.Interface
 }
 
 func (i *versionInspector) GetIstioVersion() (string, error) {
@@ -27,7 +28,11 @@ func (i *versionInspector) GetIstioVersion() (string, error) {
 	if istioNamespace == "" {
 		istioNamespace = defaultIstioNamespace
 	}
-	pilotDeployment, err := i.kube.AppsV1().Deployments(istioNamespace).Get(pilotDeploymentName, metav1.GetOptions{})
+	istiodDeploymentName := i.istiodDeploymentName
+	if istiodDeploymentName == "" {
+		istiodDeploymentName = pilotDeploymentName
+	}
+	pilotDeployment, err := i.kube.AppsV1().Deployments(istioNamespace).Get(istiodDeploymentName, metav1.GetOptions{})
 	if err != nil {
 		return "", nil
 	}
