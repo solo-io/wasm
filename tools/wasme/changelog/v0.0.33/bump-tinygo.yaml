@@ -1,0 +1,7 @@
+changelog:
+- dependencyOwner: tinygo-org
+  dependencyRepo: tinygo
+  dependencyTag: v0.17.0
+  description: Update TinyGo to v 0.17.0. This fixes several issues, especially around memory management.
+  issueLink: https://github.com/solo-io/wasm/issues/246
+  type: DEPENDENCY_BUMP
