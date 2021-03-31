@@ -94,6 +94,10 @@ type Provider struct {
 	// defaults to istio-system
 	IstioNamespace string
 
+	// name of istiod deployment
+	// defaults to istiod
+	IstiodDeploymentName string
+
 	// if set to true, will attempt to deploy wasm filters
 	// to Istio even if the version check doesn't match known
 	// compatible versions for that filter.
@@ -105,7 +109,7 @@ type Provider struct {
 	WaitForCacheTimeout time.Duration
 }
 
-func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error), istioNamespace string, cacheTimeout time.Duration, ignoreVersionCheck bool) (*Provider, error) {
+func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ezkube.Ensurer, puller pull.ImagePuller, workload Workload, cache Cache, parentObject ezkube.Object, onWorkload func(workloadMeta metav1.ObjectMeta, err error), istioNamespace, istiodDeploymentName string, cacheTimeout time.Duration, ignoreVersionCheck bool) (*Provider, error) {
 
 	// ensure istio types are added to scheme
 	if err := v1alpha3.AddToScheme(client.Manager().GetScheme()); err != nil {
@@ -113,17 +117,18 @@ func NewProvider(ctx context.Context, kubeClient kubernetes.Interface, client ez
 	}
 
 	return &Provider{
-		Ctx:                 ctx,
-		KubeClient:          kubeClient,
-		Client:              client,
-		Puller:              puller,
-		Workload:            workload,
-		Cache:               cache,
-		ParentObject:        parentObject,
-		OnWorkload:          onWorkload,
-		IstioNamespace:      istioNamespace,
-		WaitForCacheTimeout: cacheTimeout,
-		IngoreVersionCheck:  ignoreVersionCheck,
+		Ctx:                  ctx,
+		KubeClient:           kubeClient,
+		Client:               client,
+		Puller:               puller,
+		Workload:             workload,
+		Cache:                cache,
+		ParentObject:         parentObject,
+		OnWorkload:           onWorkload,
+		IstioNamespace:       istioNamespace,
+		IstiodDeploymentName: istiodDeploymentName,
+		WaitForCacheTimeout:  cacheTimeout,
+		IngoreVersionCheck:   ignoreVersionCheck,
 	}, nil
 }
 
@@ -653,8 +658,9 @@ func (p *Provider) RemoveFilter(filter *v1.FilterSpec) error {
 
 func (p *Provider) getIstioVersion() (string, error) {
 	inspector := &versionInspector{
-		kube:           p.KubeClient,
-		istioNamespace: p.IstioNamespace,
+		kube:                 p.KubeClient,
+		istioNamespace:       p.IstioNamespace,
+		istiodDeploymentName: p.IstiodDeploymentName,
 	}
 	return inspector.GetIstioVersion()
 }
