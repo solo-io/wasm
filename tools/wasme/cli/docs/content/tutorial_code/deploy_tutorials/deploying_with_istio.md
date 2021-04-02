@@ -13,18 +13,29 @@ In this tutorial we'll use `wasme` to deploy a simple "hello world" filter that 
 
 ### Install Istio
 
-1. First, we'll download the latest Istio release. At time of writing, this is `1.6.7`:
+1. First, we'll download the latest Istio release. We take version 1.8.1 as an example:
 
 ```bash
-curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.6.7 sh -
-cd istio-1.6.7
+curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.8.1 sh -
+cd istio-1.8.1
 ```
 
 1. To install Istio:
 
 ```bash
-bin/istioctl manifest apply --set profile=demo
-```  
+istioctl install --set profile=demo
+```
+
+You should get output like this:
+
+```bash
+This will install the Istio 1.8.1 demo profile with ["Istio core" "Istiod" "Ingress gateways" "Egress gateways"] components into the cluster. Proceed? (y/N) y
+✔ Istio core installed                                                                                                                
+✔ Istiod installed                                                                                                                    
+✔ Egress gateways installed                                                                                                           
+✔ Ingress gateways installed                                                                                                          
+✔ Installation complete 
+```
 
 ### Deploy Bookinfo App
 
@@ -33,8 +44,7 @@ bin/istioctl manifest apply --set profile=demo
 ```bash
 kubectl create ns bookinfo
 kubectl label namespace bookinfo istio-injection=enabled --overwrite
-kubectl apply -n bookinfo \
-  -f samples/bookinfo/platform/kube/bookinfo.yaml 
+kubectl apply -n bookinfo -f samples/bookinfo/platform/kube/bookinfo.yaml 
 ```
 
 ### Testing the Setup
@@ -53,22 +63,22 @@ It may take a few minutes before all the Istio sidecars are ready to serve traff
 The output should look have a `200 OK` response and look like the following:
 
 {{< highlight yaml "hl_lines=9-15" >}}
-*   Trying 10.55.247.3...
+*   Trying 10.102.48.118...
 * TCP_NODELAY set
-* Connected to details.bookinfo (10.55.247.3) port 9080 (#0)
+* Connected to details.bookinfo (10.102.48.118) port 9080 (#0)
 > GET /details/123 HTTP/1.1
 > Host: details.bookinfo:9080
 > User-Agent: curl/7.58.0
 > Accept: */*
->
+> 
 < HTTP/1.1 200 OK
 < content-type: application/json
 < server: istio-envoy
-< date: Mon, 06 Jan 2020 16:28:55 GMT
+< date: Fri, 02 Apr 2021 07:23:31 GMT
 < content-length: 180
-< x-envoy-upstream-service-time: 2
+< x-envoy-upstream-service-time: 32
 < x-envoy-decorator-operation: details.bookinfo.svc.cluster.local:9080/*
-<
+< 
 * Connection #0 to host details.bookinfo left intact
 {"id":123,"author":"William Shakespeare","year":1595,"type":"paperback","pages":200,"publisher":"PublisherA","language":"English","ISBN-10":"1234567890","ISBN-13":"123-1234567890"}
 {{< /highlight >}}
@@ -82,27 +92,27 @@ Refer to the [installation guide]({{< versioned_link_path fromRoot="/installatio
 Let's run `wasme list` to see what's available on the hub:
 
 ```shell
-wasme list --published
+wasme list
 ```
 
+You should get output like this:
+
 ```
-NAME                                            TAG       SIZE    SHA      UPDATED
-...                 
-webassemblyhub.io/ilackarms/assemblyscript-test istio-1.5 12.5 kB 8b74e9b0 13 Feb 20 13:59 EST
-...
+NAME                                      TAG  SIZE    SHA      UPDATED
+webassemblyhub.io/ilackarms/add-header v0.1 12.6 kB 0295d929 02 Apr 21 13:06 CST
 ```
 
 Deploying the filter is done with a single `wasme` command:
 
 ```bash
-wasme deploy istio webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5 \
+wasme deploy istio webassemblyhub.io/ilackarms/add-header:v0.1 \
     --id=myfilter \
     --namespace bookinfo \
     --config 'world'
 ```
 
 {{% notice note %}}
-The `config` for the `webassemblyhub.io/ilackarms/assemblyscript-test` filter specifies the value of 
+The `config` for the `webassemblyhub.io/ilackarms/add-header:v0.1` filter specifies the value of 
 a "`hello`" header which will be appended by the filter to HTTP responses. The value of `config` is specific to the 
 filter deployed via `wasme`.
 {{% /notice %}}
@@ -111,22 +121,25 @@ filter deployed via `wasme`.
 Wasme will output the following logs as it deploys the filter to each `deployment` that composes the bookinfo app:
 
 ```
-INFO[0001] cache namespace already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:dev"
-INFO[0001] cache configmap already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:dev"
-INFO[0002] cache daemonset updated                       cache=wasme-cache.wasme image="quay.io/solo-io/wasme:dev"
-INFO[0005] added image to cache                          cache="{wasme-cache wasme}"
-INFO[0015] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=details-v1
-INFO[0015] created Istio EnvoyFilter resource            envoy_filter_resource=details-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=details-v1
-INFO[0015] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=productpage-v1
-INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=productpage-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=productpage-v1
-INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=ratings-v1
-INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=ratings-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=ratings-v1
-INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=reviews-v1
-INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=reviews-v1
-INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=reviews-v2
-INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v2-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=reviews-v2
-INFO[0016] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=reviews-v3
-INFO[0016] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v3-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/ilackarms/assemblyscript-test:istio-1.5\" config:\"world\" rootID:\"add_header\" " workload=reviews-v3
+INFO[0000] cache namespace already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:0.0.33"
+INFO[0000] cache configmap already exists                cache=wasme-cache.wasme image="quay.io/solo-io/wasme:0.0.33"
+INFO[0000] cache service account already exists          cache=wasme-cache.wasme image="quay.io/solo-io/wasme:0.0.33"
+INFO[0000] cache role updated                            cache=wasme-cache.wasme image="quay.io/solo-io/wasme:0.0.33"
+INFO[0000] cache rolebinding updated                     cache=wasme-cache.wasme image="quay.io/solo-io/wasme:0.0.33"
+INFO[0000] cache daemonset updated                       cache=wasme-cache.wasme image="quay.io/solo-io/wasme:0.0.33"
+INFO[0007] image is already cached                       cache="{wasme-cache wasme}" image="webassemblyhub.io/tanjunchen20/add-header:v0.1"
+INFO[0007] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=details-v1
+INFO[0007] created Istio EnvoyFilter resource            envoy_filter_resource=details-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=details-v1
+INFO[0008] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=productpage-v1
+INFO[0008] created Istio EnvoyFilter resource            envoy_filter_resource=productpage-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=productpage-v1
+INFO[0008] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=ratings-v1
+INFO[0008] created Istio EnvoyFilter resource            envoy_filter_resource=ratings-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=ratings-v1
+INFO[0009] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=reviews-v1
+INFO[0009] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v1-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=reviews-v1
+INFO[0009] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=reviews-v2
+INFO[0009] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v2-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=reviews-v2
+INFO[0009] updated workload sidecar annotations          filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=reviews-v3
+INFO[0009] created Istio EnvoyFilter resource            envoy_filter_resource=reviews-v3-myfilter.bookinfo filter="id:\"myfilter\" image:\"webassemblyhub.io/tanjunchen20/add-header:v0.1\" config:<type_url:\"type.googleapis.com/google.protobuf.StringValue\" value:\"\\n\\005world\" > rootID:\"add_header\" patchContext:\"inbound\" " workload=reviews-v3
 ```
 
 If the above command finished without error, we should be ready to test the filter:
@@ -139,23 +152,23 @@ kubectl exec -ti -n bookinfo deploy/productpage-v1 -c istio-proxy -- curl -v htt
 The output should look have a `200 OK` response and contain the response header `hello: world`:
 
 {{< highlight yaml "hl_lines=15" >}}
-*   Trying 10.55.247.3...
+*   Trying 10.108.142.139...
 * TCP_NODELAY set
-* Connected to details.bookinfo (10.55.247.3) port 9080 (#0)
+* Connected to details.bookinfo (10.108.142.139) port 9080 (#0)
 > GET /details/123 HTTP/1.1
 > Host: details.bookinfo:9080
 > User-Agent: curl/7.58.0
 > Accept: */*
->
+> 
 < HTTP/1.1 200 OK
 < content-type: application/json
 < server: istio-envoy
-< date: Mon, 06 Jan 2020 18:13:12 GMT
+< date: Fri, 02 Apr 2021 09:44:48 GMT
 < content-length: 180
-< x-envoy-upstream-service-time: 1
+< x-envoy-upstream-service-time: 3
 < hello: world
 < x-envoy-decorator-operation: details.bookinfo.svc.cluster.local:9080/*
-<
+< 
 * Connection #0 to host details.bookinfo left intact
 {"id":123,"author":"William Shakespeare","year":1595,"type":"paperback","pages":200,"publisher":"PublisherA","language":"English","ISBN-10":"1234567890","ISBN-13":"123-1234567890"}
 {{< /highlight >}}
