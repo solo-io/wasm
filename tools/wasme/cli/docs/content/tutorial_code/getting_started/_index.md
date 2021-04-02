@@ -36,8 +36,10 @@ Verify that `wasme` installed correctly:
 wasme --version
 ```
 
+You should get output like this:
+
 ```
-wasme version 0.0.25
+wasme version 0.0.33
 ```
 
 ### Initialize a new filter project
@@ -48,18 +50,29 @@ Let's create a new project called `new-filter`:
 $  wasme init ./new-filter
 ```
 
-You'll be asked with an interactive prompt which language platform you are building for. At time of writing, the AssemblyScript Filter base is compatible with Istio 1.5.x, 1.6.x and Gloo 1.3.x:
+You'll be asked with an interactive prompt which language platform you are building for. At time of writing, the AssemblyScript Filter base is compatible with gloo:1.3.x, gloo:1.5.x, gloo:1.6.x, istio:1.5.x, istio:1.6.x, istio:1.7.x, istio:1.8.x, istio:1.9.x:
+
+You should get output like this:
 
 ```shell script
-? What language do you wish to use for the filter:
-    cpp
-  ▸ assemblyscript
-? With which platforms do you wish to use the filter?:
-  ▸ gloo:1.3.x, istio:1.5.x, istio:1.6.x
+Use the arrow keys to navigate: ↓ ↑ → ← 
+? What language do you wish to use for the filter: 
+  ▸ cpp
+    rust
+    assemblyscript
+    tinygo
+
+✔ assemblyscript
+Use the arrow keys to navigate: ↓ ↑ → ← 
+? With which platforms do you wish to use the filter?: 
+  ▸ gloo:1.3.x, gloo:1.5.x, gloo:1.6.x, istio:1.5.x, istio:1.6.x, istio:1.7.x, istio:1.8.x, istio:1.9.x
+
+✔ assemblyscript
+✔ gloo:1.3.x, gloo:1.5.x, gloo:1.6.x, istio:1.5.x, istio:1.6.x, istio:1.7.x, istio:1.8.x, istio:1.9.x
 ```
 
 ```
-INFO[0014] extracting 1973 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasm/new-filter
+INFO[0118] extracting 1812 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasm/new-filter
 ```
 
 The `init` command will place our *base* filter into the `new-filter` directory:
@@ -69,13 +82,15 @@ cd new-filter
 tree .
 ```
 
+You should get output like this:
+
 ```
 .
 ├── assembly
 │   ├── index.ts
 │   └── tsconfig.json
-├── package-lock.json
 ├── package.json
+├── package-lock.json
 └── runtime-config.json
 ```
 
@@ -87,7 +102,9 @@ The new directory contains all files necessary to build and deploy a WASM filter
 
 Open `assembly/index.ts` in your favorite text editor. The source code is AssemblyScript and we'll make some changes to customize our new filter.
 
-Navigate to the `onResponseHeaders` method defined near the top of the file. Let's add a new header that we can use to verify our module was executed correctly (later down in the tutorial). Let's add a new response header `hello: world!`:
+Navigate to the `onResponseHeaders` method defined near the top of the file. 
+Let's add a new header that we can use to verify our module was executed correctly (later down in the tutorial). Let's add a new response header `hello: world!`:
+The response header `hello: world!` has been added by default, you can do nothing or change the value of this header.
 
 ```typescript
       stream_context.headers.response.add("hello", "world!");
@@ -96,12 +113,15 @@ Navigate to the `onResponseHeaders` method defined near the top of the file. Let
 Your method should look like this:
 
 ```typescript
-  onResponseHeaders(a: u32): FilterHeadersStatusValues {
-    // add the hello: world! response header
-    stream_context.headers.response.add("hello", "world!");
-    // continue execution of the filter chain
-    return FilterHeadersStatusValues.Continue;
-  }
+    onResponseHeaders(a: u32): FilterHeadersStatusValues {
+        const root_context = this.root_context;
+        if (root_context.configuration == "") {
+          stream_context.headers.response.add("hello", "world!");
+        } else {
+          stream_context.headers.response.add("hello", root_context.configuration);
+        }
+        return FilterHeadersStatusValues.Continue;
+      }
 ```
 
 Now, let's build a WASM image from our filter with `wasme`. The filter will be tagged and stored in a local registry, similar to how [Docker](https://www.docker.com/) stores images.
@@ -112,9 +132,11 @@ Build and tag our image like so:
 wasme build assemblyscript -t webassemblyhub.io/$YOUR_USERNAME/add-header:v0.1 .
 ```
 
+You should get output like this:
+
 ```
-INFO[0010] adding image to cache...                      filter file=/tmp/wasme653155634/filter.wasm tag="webassemblyhub.io/ilackarms/add-header:v0.1"
-INFO[0010] tagged image                                  digest="sha256:8b74e9b0bbc5ff674c49cde904669a775a939b4d8f7f72aba88c184d527dfc30" image="webassemblyhub.io/ilackarms/add-header:v0.1"
+INFO[0030] adding image to cache...                      filter file=/tmp/wasme614580807/filter.wasm tag="webassemblyhub.io/ilackarms/add-header:v0.1"
+INFO[0030] tagged image                                  digest="sha256:0295d929353976266ab721389ec859b2fe012d63ce2e58815469ab85c123b510" image="webassemblyhub.io/ilackarms/add-header:v0.1"
 ```
 
 The module will take less than a minute to build. In the background, `wasme` has launched a Docker container to run the necessary build steps.
@@ -125,9 +147,11 @@ When the build has finished, you'll be able to see the image with `wasme list`:
 wasme list
 ```
 
+You should get output like this:
+
 ```
-NAME                                   TAG  SHA      UPDATED             SIZE
-webassemblyhub.io/ilackarms/add-header v0.1 bbfdf674 26 Jan 20 10:45 EST 1.0 MB
+NAME                                      TAG  SIZE    SHA      UPDATED
+webassemblyhub.io/ilackarms/add-header v0.1 12.6 kB 0295d929 02 Apr 21 13:06 CST
 ```
 
 ## Pushing your new WASM module
@@ -168,6 +192,8 @@ Let's do that now with `wasme login`:
  wasme login -u $YOUR_USERNAME -p $YOUR_PASSWORD
 ```
 
+You should get output like this:
+
 ```
 INFO[0000] Successfully logged in as ilackarms (Scott Weiss)
 INFO[0000] stored credentials in /Users/ilackarms/.wasme/credentials.json
@@ -183,10 +209,12 @@ Pushing the image is done with a single command:
 wasme push webassemblyhub.io/$YOUR_USERNAME/add-header:v0.1
 ```
 
+You should get output like this:
+
 ```
 INFO[0000] Pushing image webassemblyhub.io/ilackarms/add-header:v0.1
 INFO[0006] Pushed webassemblyhub.io/ilackarms/add-header:v0.1
-INFO[0006] Digest: sha256:9d4b4660f71f2714cc71e2b844e9b8460def21f6d76259140e70d447ccc7c702
+INFO[0009] Digest: sha256:292ccca873163a82424efeb77b47d6ecc513fb9a925ba02bf95dca93d07fb319
 ```
 
 Awesome! Our image should be pushed and ready to deploy.
@@ -199,9 +227,11 @@ We can verify the image was pushed via the command-line:
 wasme list --search $YOUR_USERNAME
 ```
 
+You should get output like this:
+
 ```
-NAME                                   TAG  SIZE    SHA      UPDATED
-webassemblyhub.io/ilackarms/add-header v0.1 13.8 kB 9d4b4660 05 Mar 20 01:12 UTC
+NAME                                                     TAG  SIZE    SHA      UPDATED
+webassemblyhub.io/ilackarms/add-header                v0.1 14.0 kB 292ccca8 02 Apr 21 06:01 UTC
 ```
 
 ## Deploy our new module

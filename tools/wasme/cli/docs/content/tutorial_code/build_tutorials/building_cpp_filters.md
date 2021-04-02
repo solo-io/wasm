@@ -16,30 +16,51 @@ Let's create a new filter called `cpp-filter`:
 wasme init cpp-filter
 ```
 
-You'll be asked with an interactive prompt which language platform you are building for. At time of writing, `wasme` includes separate bases
- for Istio 1.5.x and Gloo 1.3.x:
+You'll be asked with an interactive prompt which language platform you are building for. We now support below languages, each of which can support different platforms, as shown below:
 
 {{< tabs >}}
-{{< tab name="gloo" codelang="shell" >}}
+{{< tab name="cpp" codelang="shell" >}}
 ? What language do you wish to use for the filter:
-    assemblyscript
   ▸ cpp
+    rust
+    assemblyscript
+    tinygo
 ? With which platform do you wish to use the filter?:
-    istio 1.5.x
-  ▸ gloo 1.3.x
+    istio:1.5.x, istio:1.6.x
+  ▸ istio:1.7.x, istio:1.8.x, istio:1.9.x
+    gloo:1.5.x, gloo:1.6.x
 {{< /tab >}}
-{{< tab name="istio" codelang="shell">}}
+{{< tab name="rust" codelang="shell">}}
 ? What language do you wish to use for the filter:
+    cpp
+  ▸ rust
     assemblyscript
-  ▸ cpp
+    tinygo
 ? With which platform do you wish to use the filter?:
-  ▸ istio 1.5.x
-    gloo 1.3.x
+  ▸ istio:1.5.x, istio:1.6.x, istio:1.7.x, gloo:1.6.x, istio:1.8.x, istio:1.9.x
+{{< /tab >}}
+{{< tab name="assemblyscript" codelang="shell">}}
+? What language do you wish to use for the filter:
+    cpp
+    rust
+  ▸ assemblyscript
+    tinygo
+? With which platform do you wish to use the filter?:
+  ▸ gloo:1.3.x, gloo:1.5.x, gloo:1.6.x, istio:1.5.x, istio:1.6.x, istio:1.7.x, istio:1.8.x, istio:1.9.x
+{{< /tab >}}
+{{< tab name="tinygo" codelang="shell">}}
+? What language do you wish to use for the filter:
+    cpp
+    rust
+    assemblyscript
+  ▸ tinygo
+? With which platform do you wish to use the filter?:
+  ▸ istio:1.7.x, gloo:1.6.x, istio:1.8.x, istio:1.9.x
 {{< /tab >}}
 {{< /tabs >}}
 
 ```
-INFO[0014] extracting 5072 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasm/cpp-filter
+INFO[0118] extracting 1812 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasm/new-filter
 ```
 
 The `init` command will place our *base* filter into the `cpp-filter` directory:
@@ -50,24 +71,27 @@ tree .
 ```
 
 ```
-
-├── BUILD
-├── README.md
-├── WORKSPACE
+.
 ├── bazel
-│   └── external
+│   ├── external
+│   │   ├── BUILD
+│   │   ├── emscripten-toolchain.BUILD
+│   │   └── envoy-wasm-api.BUILD
+│   └── wasm
 │       ├── BUILD
-│       ├── emscripten-toolchain.BUILD
-│       └── envoy-wasm-api.BUILD
+│       └── wasm.bzl
+├── BUILD
 ├── filter.cc
 ├── filter.proto
+├── README.md
 ├── runtime-config.json
-└── toolchain
-    ├── BUILD
-    ├── cc_toolchain_config.bzl
-    ├── common.sh
-    ├── emar.sh
-    └── emcc.sh
+├── toolchain
+│   ├── BUILD
+│   ├── cc_toolchain_config.bzl
+│   ├── common.sh
+│   ├── emar.sh
+│   └── emcc.sh
+└── WORKSPACE
 ```
 
 `wasme` uses [Bazel](https://bazel.build/) to build C++ filters under the hood.
@@ -96,20 +120,22 @@ The new directory contains all files necessary to build and deploy a WASM filter
 Open `filter.cc` in your favorite text editor. We'll make some changes to customize our new filter.
 
 Navigate to the `AddHeaderContext::onResponseHeaders` method defined near the bottom of the file.
- Let's add a new header that we can use to verify our module was executed correctly. Let's add a new response header `hello: world!`:
+Let's add a new header that we can use to verify our module was executed correctly. Let's add a new response header `hello: world!`:
+The header key-value pair is added by default in the generated configuration.
 
 ```typescript
-    addResponseHeader("hello", "world!");
+    addResponseHeader("newheader", root_->header_value_);
 ```
 
 Your method should look like this:
 
 ```c++
-FilterHeadersStatus AddHeaderContext::onResponseHeaders(uint32_t) {
-  addResponseHeader("hello", "world!");
-  return FilterHeadersStatus::Continue;
-}
-
+    FilterHeadersStatus AddHeaderContext::onResponseHeaders(uint32_t, bool) {
+      LOG_DEBUG(std::string("onResponseHeaders ") + std::to_string(id()));
+      addResponseHeader("newheader", root_->header_value_);
+      replaceResponseHeader("location", "envoy-wasm");
+      return FilterHeadersStatus::Continue;
+    }
 ```
 
 The code above will add the `hello: world!` header to HTTP responses processed by our filter.
@@ -154,8 +180,8 @@ wasme list
 ```
 
 ```
-NAME                                     SHA      UPDATED             SIZE   TAGS
-webassemblyhub.io/ilackarms/add-header  bbfdf674 26 Jan 20 10:45 EST 1.0 MB v0.1
+NAME                                      TAG  SIZE    SHA      UPDATED
+webassemblyhub.io/ilackarms/add-header v0.1 12.6 kB 0295d929 02 Apr 21 13:06 CST
 ```
 
 ## Next Steps

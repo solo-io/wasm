@@ -16,18 +16,29 @@ Let's create a new filter called `assemblyscript-filter`:
 wasme init assemblyscript-filter
 ```
 
-You'll be asked with an interactive prompt which language platform you are building for. At time of writing, the AssemblyScript Filter base is compatible with both Istio 1.5.x and Gloo 1.3.x:
+You'll be asked with an interactive prompt which language platform you are building for. At time of writing, the AssemblyScript Filter base is compatible with gloo:1.3.x, gloo:1.5.x, gloo:1.6.x, istio:1.5.x, istio:1.6.x, istio:1.7.x, istio:1.8.x, istio:1.9.x:
+
+You should get output like this:
 
 ```shell script
-? What language do you wish to use for the filter:
-    cpp
-  ▸ assemblyscript
-? With which platforms do you wish to use the filter?:
-  ▸ gloo:1.3.x, istio:1.5.x
+Use the arrow keys to navigate: ↓ ↑ → ← 
+? What language do you wish to use for the filter: 
+  ▸ cpp
+    rust
+    assemblyscript
+    tinygo
+
+✔ assemblyscript
+Use the arrow keys to navigate: ↓ ↑ → ← 
+? With which platforms do you wish to use the filter?: 
+  ▸ gloo:1.3.x, gloo:1.5.x, gloo:1.6.x, istio:1.5.x, istio:1.6.x, istio:1.7.x, istio:1.8.x, istio:1.9.x
+
+✔ assemblyscript
+✔ gloo:1.3.x, gloo:1.5.x, gloo:1.6.x, istio:1.5.x, istio:1.6.x, istio:1.7.x, istio:1.8.x, istio:1.9.x
 ```
 
 ```
-INFO[0014] extracting 1973 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasm/assemblyscript-filter
+INFO[0118] extracting 1812 bytes to /Users/ilackarms/go/src/github.com/solo-io/wasm/new-filter
 ```
 
 The `init` command will place our *base* filter into the `assemblyscript-filter` directory:
@@ -37,13 +48,15 @@ cd assemblyscript-filter
 tree .
 ```
 
+You should get output like this:
+
 ```
 .
 ├── assembly
 │   ├── index.ts
 │   └── tsconfig.json
-├── package-lock.json
 ├── package.json
+├── package-lock.json
 └── runtime-config.json
 ```
 
@@ -80,12 +93,15 @@ Navigate to the `onResponseHeaders` method defined near the top of the file. Let
 Your method should look like this:
 
 ```typescript
-  onResponseHeaders(a: u32): FilterHeadersStatusValues {
-    // add the hello: world! response header
-    stream_context.headers.response.add("hello", "world!");
-    // continue execution of the filter chain
-    return FilterHeadersStatusValues.Continue;
-  }
+    onResponseHeaders(a: u32): FilterHeadersStatusValues {
+        const root_context = this.root_context;
+        if (root_context.configuration == "") {
+          stream_context.headers.response.add("hello", "world!");
+        } else {
+          stream_context.headers.response.add("hello", root_context.configuration);
+        }
+        return FilterHeadersStatusValues.Continue;
+      }
 ```
 
 ## Building the filter
@@ -127,9 +143,11 @@ When the build has finished, you'll be able to see the image with `wasme list`:
 wasme list
 ```
 
+You should get output like this:
+
 ```
-NAME                                   SHA      UPDATED             SIZE   TAGS
-webassemblyhub.io/ilackarms/add-header bbfdf674 26 Jan 20 10:45 EST 1.0 MB v0.1
+NAME                                      TAG  SIZE    SHA      UPDATED
+webassemblyhub.io/ilackarms/add-header v0.1 12.6 kB 0295d929 02 Apr 21 13:06 CST
 ```
 
 ## Next Steps
