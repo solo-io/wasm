@@ -146,7 +146,6 @@ spec:
       '@type': type.googleapis.com/google.protobuf.StringValue
       value: world
     image: webassemblyhub.io/sodman/istio-1-7:v0.3
-
 ```
 
 This resource tells wasme to:
@@ -188,17 +187,17 @@ kubectl get filterdeployments.wasme.io -n bookinfo -o yaml bookinfo-custom-filte
 
 Note the `status` of the FilterDeployment
 
-{{< highlight yaml "hl_lines=20-34" >}}
+{{< highlight yaml "hl_lines=20-26" >}}
 apiVersion: wasme.io/v1
 kind: FilterDeployment
 metadata:
-  creationTimestamp: "2021-02-09T21:38:25Z"
+  creationTimestamp: "2021-04-03T14:11:05Z"
   generation: 1
   name: bookinfo-custom-filter
   namespace: bookinfo
-  resourceVersion: "47379"
+  resourceVersion: "7767415"
   selfLink: /apis/wasme.io/v1/namespaces/bookinfo/filterdeployments/bookinfo-custom-filter
-  uid: 6b1ca022-1bef-455e-9fb2-ac411909cda0
+  uid: 64f08103-3492-4e1b-a463-668e398204f6
 spec:
   deployment:
     istio:
@@ -215,17 +214,23 @@ status:
       state: Succeeded
     productpage-v1:
       state: Succeeded
-    ratings-v1:
-      state: Succeeded
-    reviews-v1:
-      state: Succeeded
-    reviews-v2:
-      state: Succeeded
-    reviews-v3:
-      state: Succeeded
 {{< /highlight >}}
 
 The `status` contains the status of the deployment for each selected workload. This means the filter has been deployed to each.
+
+We check whether the corresponding envoyfilter is generated under the bookinfo namespace.
+
+Let's get the envoyfilter in bookinfo namespace: 
+
+```bash
+kubectl get envoyfilter -n bookinfo
+```
+
+```
+NAME                                             AGE
+details-v1-bookinfo-custom-filter.bookinfo       6m13s
+productpage-v1-bookinfo-custom-filter.bookinfo   6m12s
+```
 
 Let's test the filter with a `curl`:
 
@@ -279,8 +284,64 @@ spec:
 EOF
 {{< /highlight >}}
 
-Try the request again:
+You can check that the envoyfilter `productpage-v1-bookinfo-custom-filter.bookinfo` in bookinfo namespace was updated with the new configuration value:
 
+{{< highlight yaml "hl_lines=40" >}}
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  creationTimestamp: "2021-04-03T14:12:16Z"
+  generation: 2
+  name: details-v1-bookinfo-custom-filter.bookinfo
+  namespace: bookinfo
+  ownerReferences:
+  - apiVersion: wasme.io/v1
+    blockOwnerDeletion: true
+    controller: true
+    kind: FilterDeployment
+    name: bookinfo-custom-filter
+    uid: 64f08103-3492-4e1b-a463-668e398204f6
+  resourceVersion: "7768328"
+  selfLink: /apis/networking.istio.io/v1alpha3/namespaces/bookinfo/envoyfilters/details-v1-bookinfo-custom-filter.bookinfo
+  uid: c749b91c-02d6-491c-8314-b7f6faf02f8b
+spec:
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: envoy.http_connection_manager
+            subFilter:
+              name: envoy.router
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.wasm
+        typedConfig:
+          '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+          typeUrl: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+          value:
+            config:
+              configuration:
+                '@type': type.googleapis.com/google.protobuf.StringValue
+                value: goodbye
+              name: bookinfo-custom-filter.bookinfo
+              rootId: add_header_root_id
+              vmConfig:
+                code:
+                  local:
+                    filename: /var/local/lib/wasme-cache/d2bc5bea58499684981fda875101ac18a69923cea4a4153958dad08065aa1e74
+                runtime: envoy.wasm.runtime.v8
+                vmId: bookinfo-custom-filter.bookinfo
+  workloadSelector:
+    labels:
+      app: details
+      version: v1
+{{< /highlight >}}
+
+Try the request again:
 
 ```bash
 kubectl exec -ti -n bookinfo deploy/productpage-v1 -c istio-proxy -- curl -v http://details.bookinfo:9080/details/123
