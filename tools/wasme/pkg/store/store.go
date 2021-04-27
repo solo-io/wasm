@@ -8,11 +8,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/defaults"
-
-	"github.com/pkg/errors"
-
 	"github.com/hashicorp/go-multierror"
+	"github.com/pkg/errors"
+	"github.com/solo-io/wasm/tools/wasme/pkg/defaults"
 	"github.com/solo-io/wasm/tools/wasme/pkg/model"
 )
 

@@ -7,13 +7,11 @@ import (
 	"time"
 
 	"github.com/manifoldco/promptui"
-
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/defaults"
-	"github.com/solo-io/wasm/tools/wasme/pkg/consts"
-
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/auth"
+	"github.com/solo-io/wasm/tools/wasme/pkg/consts"
+	"github.com/solo-io/wasm/tools/wasme/pkg/defaults"
 	"github.com/spf13/cobra"
 )
 
