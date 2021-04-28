@@ -4,26 +4,21 @@ import (
 	"context"
 	"os"
 
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/defaults"
-
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/tag"
-
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/operator"
-
+	ctxo "github.com/deislabs/oras/pkg/context"
 	"github.com/sirupsen/logrus"
-
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/build"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/cache"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/deploy"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/initialize"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/list"
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/version"
-
-	ctxo "github.com/deislabs/oras/pkg/context"
-	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/cache"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/login"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/operator"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/opts"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/pull"
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/push"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/tag"
+	"github.com/solo-io/wasm/tools/wasme/cli/pkg/version"
+	"github.com/solo-io/wasm/tools/wasme/pkg/defaults"
 	"github.com/spf13/cobra"
 )
 

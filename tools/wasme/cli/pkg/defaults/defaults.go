@@ -1,9 +1,6 @@
 package defaults
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/solo-io/wasm/tools/wasme/cli/pkg/cmd/opts"
 	"github.com/solo-io/wasm/tools/wasme/pkg/cache"
 	"github.com/solo-io/wasm/tools/wasme/pkg/pull"
@@ -16,15 +13,4 @@ func NewDefaultCacheWithAuth(opts *opts.AuthOptions) cache.Cache {
 	puller := pull.NewPuller(res)
 
 	return cache.NewCache(puller)
-}
-
-var (
-	WasmeConfigDir       = home() + "/.wasme"
-	WasmeImageDir        = filepath.Join(WasmeConfigDir, "store")
-	WasmeCredentialsFile = filepath.Join(WasmeConfigDir, "credentials.json")
-)
-
-func home() string {
-	dir, _ := os.UserHomeDir()
-	return dir
 }

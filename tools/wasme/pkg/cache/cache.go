@@ -5,14 +5,15 @@ import (
 	"crypto"
 	"encoding/hex"
 	"fmt"
-	"github.com/solo-io/go-utils/contextutils"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"path"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/solo-io/go-utils/contextutils"
+	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
 

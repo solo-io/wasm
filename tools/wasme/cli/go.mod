@@ -1,6 +1,6 @@
 module github.com/solo-io/wasm/tools/wasme/cli
 
-go 1.13
+go 1.15
 
 require (
 	github.com/Masterminds/sprig/v3 v3.1.0 // indirect

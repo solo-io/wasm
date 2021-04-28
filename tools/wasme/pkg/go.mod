@@ -1,6 +1,6 @@
 module github.com/solo-io/wasm/tools/wasme/pkg
 
-go 1.13
+go 1.15
 
 require (
 	github.com/avast/retry-go v2.4.3+incompatible
