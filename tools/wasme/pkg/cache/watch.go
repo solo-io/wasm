@@ -97,10 +97,7 @@ func (f *localImagePuller) addToDirectory(ctx context.Context, digest digest.Dig
 
 	logrus.Infof("writing image to %v", filename)
 
-	err := f.copyToFile(ctx, filename, digest)
-	if err != nil {
-	}
-	return err
+	return f.copyToFile(ctx, filename, digest)
 }
 
 func (f *localImagePuller) copyToFile(ctx context.Context, filename string, digest digest.Digest) error {
