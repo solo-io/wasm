@@ -70,6 +70,12 @@ $ buildah --name mywasm from scratch
 mywasm
 ```
 
+Next, add the annotation described above via `buildah config` command
+
+```
+$ buildah config --annotation "module.wasm.image/variant=compat" mywasm
+```
+
 Then copy the files into that base image by `buildah copy` command to create the layer.
 
 ```
