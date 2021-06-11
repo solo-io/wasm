@@ -20,7 +20,7 @@ The *compat* variant must add the annotation `module.wasm.image/variant=compat` 
 ### Layer
 
 The *compat* variant must consist of exactly one `application/vnd.oci.image.layer.v1.tar+gzip` layer containing the two files:
-- `filter.wasm` - (**Required**) A Wasm binary to be loaded by the runtime.
+- `plugin.wasm` - (**Required**) A Wasm binary to be loaded by the runtime.
 - `runtime-config.json` - (**Optional**) A runtime configuratio specified in [Wasm Artifact Image Specification](README.md).
 
 ### Example
