@@ -3,7 +3,7 @@
 
 ## Introduction:
 
-This document describes a varient of [Wasm Artifact Image Specification](README.md), which leverages the standard media types. Here, we omit definition and terminology explained in [Wasm Artifact Image Specification](README.md). 
+This document describes a varient of [Wasm Artifact Image Specification](README.md), which leverages the standard layer media types. Here, we omit definition and terminology explained in [Wasm Artifact Image Specification](README.md). 
 
 We call this variant "compat", and the spec in [Wasm Artifact Image Specification](README.md) "oci".
 
@@ -11,7 +11,7 @@ We call this variant "compat", and the spec in [Wasm Artifact Image Specificatio
 
 This *compat* variant makes use of standard media type for layers, and is not based on custom OCI Artifcat media types. This way users can oeperate with standard tools such as docker, podman, buildah, etc.
 
-## Format
+## Specification
 
 ### Layer
 
@@ -52,14 +52,6 @@ The following is an example OCI manifest of a *compat* variant image with `appli
 }
 ```
 
-And the contents in the layer consists of two files mentioned above
-
-```
-$ tar tf blobs/sha256/e05c6f7d59f4c5976d9c1be8e12c34f64c49e5541967581e7f052070705191ac
-filter.wasm
-runtime-config.json
-```
-
 ### Example with `application/vnd.docker.image.rootfs.diff.tar.gzip` media type
 
 The following is an example OCI manifest of a *compat* variant image with `application/vnd.docker.image.rootfs.diff.tar.gzip` layer media type on:
@@ -85,7 +77,7 @@ The following is an example OCI manifest of a *compat* variant image with `appli
 
 ## Appendix: build a *compat* image with Buildah
 
-In this section, we demonstrate how to build a compiliant image with Buildah, a standard cli for building OCI images. We use v1.21.0 of Buildah here. Produced images have `application/vnd.oci.image.layer.v1.tar+gzip` layer media type
+We demonstrate how to build a *compat* image with Buildah, a standard cli for building OCI images. We use v1.21.0 of Buildah here. Produced images have `application/vnd.oci.image.layer.v1.tar+gzip` layer media type
 
 We assume that you have a valid Wasm binary named `filter.wasm` and `runtime-config.json` that you want to package as an image.
 
@@ -109,6 +101,8 @@ $ buildah copy mywasm filter.wasm runtime-config.json ./
 af82a227630327c24026d7c6d3057c3d5478b14426b74c547df011ca5f23d271
 ```
 
+**Note: you must execute `buildah copy` exactly once in order to end up having only one layer in produced images**
+
 Now, you can build a *compat* image and push it to your registry via `buildah commit` command
 
 ```
@@ -117,7 +111,7 @@ $ buildah commit mywasm docker://my-remote-registry/mywasm:0.1.0
 
 ## Appendix: build a *compat* image with Docker CLI
 
-In this section, we demonstrate how to build a compiliant image with Docker CLI. Produced images have `application/vnd.docker.image.rootfs.diff.tar.gzip` layer media type.
+We demonstrate how to build a *compat* image with Docker CLI. Produced images have `application/vnd.docker.image.rootfs.diff.tar.gzip` layer media type.
 
 We assume that you have a valid Wasm binary named `filter.wasm` and `runtime-config.json` that you want to package as an image.
 
@@ -130,7 +124,7 @@ FROM scratch
 COPY runtime-config.json plugin.wasm ./
 ```
 
-(**Note: you must have exactly one `COPY` instruction in the Dockerfile in order to end up having only one layer in produced images**)
+**Note: you must have exactly one `COPY` instruction in the Dockerfile in order to end up having only one layer in produced images**
 
 Then, build your image via `docker build` command
 
