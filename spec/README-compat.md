@@ -29,7 +29,7 @@ If the media type equals `application/vnd.oci.image.layer.v1.tar+gzip`, then a *
 
 ### Example with `application/vnd.oci.image.layer.v1.tar+gzip` media type
 
-The following is an example OCI manifest of a *compat* variant image with `application/vnd.oci.image.layer.v1.tar+gzip` layer media type on:
+The following is an example OCI manifest of images with `application/vnd.oci.image.layer.v1.tar+gzip` layer media type:
 
 ```
 {
@@ -54,7 +54,7 @@ The following is an example OCI manifest of a *compat* variant image with `appli
 
 ### Example with `application/vnd.docker.image.rootfs.diff.tar.gzip` media type
 
-The following is an example OCI manifest of a *compat* variant image with `application/vnd.docker.image.rootfs.diff.tar.gzip` layer media type on:
+The following is an example Docker manifest of images with `application/vnd.docker.image.rootfs.diff.tar.gzip` layer media type:
 
 ```
 {
@@ -75,7 +75,7 @@ The following is an example OCI manifest of a *compat* variant image with `appli
 }
 ```
 
-## Appendix: build a *compat* image with Buildah
+## Appendix 1: build a *compat* image with Buildah
 
 We demonstrate how to build a *compat* image with Buildah, a standard cli for building OCI images. We use v1.21.0 of Buildah here. Produced images have `application/vnd.oci.image.layer.v1.tar+gzip` layer media type
 
@@ -109,7 +109,7 @@ Now, you can build a *compat* image and push it to your registry via `buildah co
 $ buildah commit mywasm docker://my-remote-registry/mywasm:0.1.0
 ```
 
-## Appendix: build a *compat* image with Docker CLI
+## Appendix 2: build a *compat* image with Docker CLI
 
 We demonstrate how to build a *compat* image with Docker CLI. Produced images have `application/vnd.docker.image.rootfs.diff.tar.gzip` layer media type.
 
