@@ -113,7 +113,7 @@ $ buildah commit mywasm docker://my-remote-registry/mywasm:0.1.0
 
 We demonstrate how to build a *compat* image with Docker CLI. Produced images have `application/vnd.docker.image.rootfs.diff.tar.gzip` layer media type.
 
-We assume that you have a valid Wasm binary named `filter.wasm` and `runtime-config.json` that you want to package as an image.
+We assume that you have a valid Wasm binary named `plugin.wasm` and `runtime-config.json` that you want to package as an image.
 
 First, we prepare the following Dockerfile:
 
