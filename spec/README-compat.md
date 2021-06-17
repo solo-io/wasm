@@ -9,7 +9,7 @@ We call this variant "compat", and the spec in [Wasm Artifact Image Specificatio
 
 ## Description
 
-This *compat* variant makes use of standard media type for layers, and is not based on custom OCI Artifcat media types. This way users can oeperate with standard tools such as docker, podman, buildah, etc.
+This *compat* variant makes use of standard media type for layers, and is not based on custom OCI Artifact media types. This way users can oeperate with standard tools such as docker, podman, buildah, etc.
 
 ## Specification
 
