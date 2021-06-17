@@ -3,13 +3,13 @@
 
 ## Introduction:
 
-This document describes a varient of [Wasm Artifact Image Specification](README.md), which leverages the standard layer media types. Here, we omit definition and terminology explained in [Wasm Artifact Image Specification](README.md). 
+This document describes a varient of [Wasm Artifact Image Specification](spec.md), which leverages the compatible layer media types. Here, we omit definition and terminology explained in [Wasm Artifact Image Specification](spec.md). 
 
-We call this variant "compat", and the spec in [Wasm Artifact Image Specification](README.md) "oci".
+We call this variant "compat", and the spec in [Wasm Artifact Image Specification](spec.md) "oci".
 
 ## Description
 
-This *compat* variant makes use of standard media type for layers, and is not based on custom OCI Artifact media types. This way users can oeperate with standard tools such as docker, podman, buildah, etc.
+This *compat* variant makes use of compatible media type for layers, and is not based on custom OCI Artifact media types. This way users can oeperate with standard tools such as docker, podman, buildah, etc.
 
 ## Specification
 
@@ -21,7 +21,7 @@ The *compat* variant must consist of exactly one layer whose media type is one o
 
 In addition, the layer must consist of the following two files:
 - `plugin.wasm` - (**Required**) A Wasm binary to be loaded by the runtime.
-- `runtime-config.json` - (**Optional**) A runtime configuratio specified in [Wasm Artifact Image Specification](README.md).
+- `runtime-config.json` - (**Optional**) A runtime configuration specified in [Wasm Artifact Image Specification](spec.md#Format).
 
 ### Annotation
 
