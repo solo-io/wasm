@@ -3,7 +3,7 @@
 ## Overview
 
 Here we have several specifications for how to bundle Wasm modules as container images. 
-They primarily consider the use case of [Envoy] Wasm plugins in [Istio] service mesh.
+They primarily consider the use case of [Envoy] Wasm plugins.
 
 There are two variants of the specification:
 - [spec.md](spec.md)
