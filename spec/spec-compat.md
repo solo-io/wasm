@@ -79,7 +79,7 @@ The following is an example Docker manifest of images with `application/vnd.dock
 
 We demonstrate how to build a *compat* image with Buildah, a standard cli for building OCI images. We use v1.21.0 of Buildah here. Produced images have `application/vnd.oci.image.layer.v1.tar+gzip` layer media type
 
-We assume that you have a valid Wasm binary named `filter.wasm` and `runtime-config.json` that you want to package as an image.
+We assume that you have a valid Wasm binary named `plugin.wasm` and `runtime-config.json` that you want to package as an image.
 
 First, we create a working container from `scratch` base image with `buildah from` command.
 
@@ -97,7 +97,7 @@ $ buildah config --annotation "module.wasm.image/variant=compat" mywasm
 Then copy the files into that base image by `buildah copy` command to create the layer.
 
 ```
-$ buildah copy mywasm filter.wasm runtime-config.json ./
+$ buildah copy mywasm plugin.wasm runtime-config.json ./
 af82a227630327c24026d7c6d3057c3d5478b14426b74c547df011ca5f23d271
 ```
 
