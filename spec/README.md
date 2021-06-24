@@ -1,9 +1,21 @@
 # Wasm Image specifications
 
-## Overview
+## Introduction
+
+The Wasm Image specification defines how to bundle Wasm modules as container images. A compatible Wasm image consists of a Wasm binary file, and runtime metadata for the target Wasm runtime. We primarily consider the use case of [Envoy] as Wasm runtime and its Wasm filter/plugins, although the spec is intended to be generic and to provide a standard mechanism to manage the building and running of Wasm modules on any Wasm runtime.
+
+## Terminology:
+
+| Term                               | Definition                                       |
+|------------------------------------|--------------------------------------------------|
+| Wasm Module                        | The distributable, loadable, and executable unit of code in WebAssembly. 
+| Wasm Image Specification           | The specification for storing Wasm modules as container images.
+| Wasm Runtime                       | The execution environment into which a Wasm Module may be loaded. This refers to the application itself which loads and executes a wasm module. Examples include web browsers, the Open Policy Agent, the Envoy Proxy, or any other application which supports extension via Wasm modules. 
+| Rurntime Configuation              | Configuration or metadata specific to the runtime which consumes a module. 
+
+## Specifications
 
 Here we have several specifications for how to bundle Wasm modules as container images. 
-They primarily consider the use case of [Envoy] Wasm plugins.
 
 There are two variants of the specification:
 - [spec.md](spec.md)
@@ -24,7 +36,7 @@ Not only that, the usage of custom media types on top of [OCI Artifact] requires
 
 ## Wasm image support in [Istio]
 
-Istio's Wasm Plugin API has support for **both of these variants** to deploy your Wasm plugins into Envoy sidecars. 
+Istio's Wasm Plugin API has support for **both of these variants** to deploy your Wasm plugins into Envoy sidecars.
 
 ### Which variant should I use in [Istio]?
 

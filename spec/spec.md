@@ -1,35 +1,18 @@
 
 ## WASM Artifact Image Specification v0.0.0
 
-- [Introduction](#introduction)
 - [Terminology](#terminology)
 - [Description](#description)
-    - [Overview](#overview)
     - [Layers](#layers)
     - [Running OCI Images with Envoy](#running-oci-images-with-envoy)
 - [Format](#format)
 - [Envoy WASM Filter Specification](#envoy-wasm-filter-specification)
     - [Example](#example)
 
-
-### Introduction:
-
-The WASM Artifact Image Specification defines how to bundle WASM modules as OCI images. WASM Artifact Images consist of a WASM binary file, configuration file, and metadata for the target WASM runtime.
-
-The spec is intended to be generic, allowing for any type of WASM module whether it is used to extend any Envoy, OPA, or the browser.
-
-The spec can be considered an extension of the OCI Artifact Spec designed specifically for use by applications which produce and consume WASM modules (as opposed to application containers). It is intended to provide a standard mechanism to manage the building and running of WASM modules. 
-
-This document considers primarily the use case of storing WASM Envoy Filters as OCI Images.
-
 ### Terminology:
 
 | Term                               | Definition                                       |
 |------------------------------------|--------------------------------------------------|
-| WASM Module                        | The distributable, loadable, and executable unit of code in WebAssembly. 
-| WASM OCI Image Specification       | The specification for storing WASM modules as OCI Images.
-| WASM Runtime                       | The execution environment into which a WASM Module may be loaded. This refers to the application itself which loads and executes a wasm module. Examples include web browsers, the Open Policy Agent, the Envoy Proxy, or any other application which supports extension via WASM modules. 
-| Runtime Configuration              | Configuration specific to the runtime which consumes a module. This configuration is stored as JSON and bundled with the module in the image in the specification. 
 | Envoy WASM Filter                  | Custom Filters for the Envoy Proxy built as a WASM module.
 | Envoy WASM OCI Image               | Envoy Filters stored as OCI images according to the specification. 
 | Envoy WASM OCI Artifact Specification | An extension of the WASM OCI Artifact Spec which describes how to bundle and ship Envoy WASM filters as OCI Images. |
@@ -37,8 +20,6 @@ This document considers primarily the use case of storing WASM Envoy Filters as 
 ### Description:
 
 #### Overview:
-
-The WASM OCI Artifact Specification defines a method of storing WASM modules which makes them easy to build, pull, publish, and execute.
 
 Because each execution environment (runtime) for a WASM module may have runtime-specific configuration parameters, a WASM image is composed of both a content layer, for the WASM module itself, as well as a config layer, with metadata describing the module which is relevant to the target runtime.
 

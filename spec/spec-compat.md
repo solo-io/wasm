@@ -21,7 +21,7 @@ The *compat* variant must consist of exactly one layer whose media type is one o
 
 In addition, the layer must consist of the following two files:
 - `plugin.wasm` - (**Required**) A Wasm binary to be loaded by the runtime.
-- `runtime-config.json` - (**Optional**) A runtime configuration specified in [Wasm Artifact Image Specification](spec.md#Format).
+- `runtime-config.json` - (**Optional**) A runtime configuration specified in [Wasm Artifact Image Specification](spec.md#Format). This is mainly used as metadata for the image, depending on the runtime.
 
 ### Annotation
 
@@ -79,7 +79,7 @@ The following is an example Docker manifest of images with `application/vnd.dock
 
 We demonstrate how to build a *compat* image with Buildah, a standard cli for building OCI images. We use v1.21.0 of Buildah here. Produced images have `application/vnd.oci.image.layer.v1.tar+gzip` layer media type
 
-We assume that you have a valid Wasm binary named `plugin.wasm` and `runtime-config.json` that you want to package as an image.
+We assume that you have a valid Wasm binary named `plugin.wasm` and `runtime-config.json` (optional) that you want to package as an image.
 
 First, we create a working container from `scratch` base image with `buildah from` command.
 
@@ -113,7 +113,7 @@ $ buildah commit mywasm docker://my-remote-registry/mywasm:0.1.0
 
 We demonstrate how to build a *compat* image with Docker CLI. Produced images have `application/vnd.docker.image.rootfs.diff.tar.gzip` layer media type.
 
-We assume that you have a valid Wasm binary named `plugin.wasm` and `runtime-config.json` that you want to package as an image.
+We assume that you have a valid Wasm binary named `plugin.wasm` and `runtime-config.json` (optional) that you want to package as an image.
 
 First, we prepare the following Dockerfile:
 
