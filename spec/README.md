@@ -11,7 +11,7 @@ The Wasm Image specification defines how to bundle Wasm modules as container ima
 | Wasm Module                        | The distributable, loadable, and executable unit of code in WebAssembly. 
 | Wasm Image Specification           | The specification for storing Wasm modules as container images.
 | Wasm Runtime                       | The execution environment into which a Wasm Module may be loaded. This refers to the application itself which loads and executes a wasm module. Examples include web browsers, the Open Policy Agent, the Envoy Proxy, or any other application which supports extension via Wasm modules. 
-| Rurntime Configuation              | Configuration or metadata specific to the runtime which consumes a module. 
+| Runtime Configuation              | Configuration or metadata specific to the runtime which consumes a module. 
 
 ## Specifications
 
