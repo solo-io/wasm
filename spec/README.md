@@ -27,7 +27,9 @@ For clarity, we call the variant in [spec.md](spec.md) *oci*, and the one in [sp
 
 ## Difference between variants
 
-The key difference between these two variants is that, the *oci* variant makes use of the custom media types on [OCI Artifact] for image layers while the *compat* variant leverages the standard media types.
+Our goal is to make the *oci* variant the default format for shipping Wasm modules in container images, we acknowledge however that there are toolchains and registries deployed and in use that do not support our custom media types yet. To accomodate those exisiting toolchains, there is the semantically equivalent *compat* variant, which provides the same feature set, but is compatible with existing tooling because it 'looks' very much like a normal container image. Implementations of this spec should support both variants.
+
+With that said, the key difference between these two variants is that, the *oci* variant makes use of the custom media types on [OCI Artifact] for image layers while the *compat* variant leverages the standard media types.
 
 As a consequence, that introduces the difference in tools available for building and pushing images. 
 For example, the only way to build and push *oci* variant images is to use [`wasme`] cli while you can use [`buildah`] or [`docker`] for *compat* variant images.

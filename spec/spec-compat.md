@@ -3,13 +3,13 @@
 
 ## Introduction:
 
-This document describes a varient of [Wasm Artifact Image Specification](spec.md), which leverages the compatible layer media types. Here, we omit definition and terminology explained in [Wasm Artifact Image Specification](spec.md). 
+This document describes a variant of [Wasm Artifact Image Specification](spec.md), which leverages the compatible layer media types. Here, we omit definition and terminology explained in [Wasm Artifact Image Specification](spec.md). 
 
 We call this variant "compat", and the spec in [Wasm Artifact Image Specification](spec.md) "oci".
 
 ## Description
 
-This *compat* variant makes use of compatible media type for layers, and is not based on custom OCI Artifact media types. This way users can oeperate with standard tools such as docker, podman, buildah, etc.
+This *compat* variant makes use of compatible media type for layers, and is not based on custom OCI Artifact media types. This way users can operate with standard tools such as docker, podman, buildah, and standard container registries which don't yet support custom media types as used in [*oci* variant](spec.md).
 
 ## Specification
 
