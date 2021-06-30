@@ -25,7 +25,7 @@ In addition, the layer must consist of the following two files:
 
 ### Annotation
 
-If the media type equals `application/vnd.oci.image.layer.v1.tar+gzip`, then a *compat* variant image must add the annotation `module.wasm.image/variant=compat` in the manifest.
+If the media type equals `application/vnd.oci.image.layer.v1.tar+gzip`, then a *compat* variant image *should* add the annotation `module.wasm.image/variant=compat` in the manifest to make it easy to distinguish this *compat* variant from the *oci* variant. Note that this is **optional**.
 
 ### Example with `application/vnd.oci.image.layer.v1.tar+gzip` media type
 
@@ -81,20 +81,23 @@ We demonstrate how to build a *compat* image with Buildah, a standard cli for bu
 
 We assume that you have a valid Wasm binary named `plugin.wasm` and `runtime-config.json` (optional) that you want to package as an image.
 
-First, we create a working container from `scratch` base image with `buildah from` command.
+1. First, we create a working container from `scratch` base image with `buildah from` command.
 
 ```
 $ buildah --name mywasm from scratch
 mywasm
 ```
 
-Next, add the annotation described above via `buildah config` command
+2. Next, add the annotation described above via `buildah config` command
 
 ```
 $ buildah config --annotation "module.wasm.image/variant=compat" mywasm
 ```
 
-Then copy the files into that base image by `buildah copy` command to create the layer.
+**Note this step is optional. See [Annotation](#annotation) section.**
+
+
+3. Then copy the files into that base image by `buildah copy` command to create the layer.
 
 ```
 $ buildah copy mywasm plugin.wasm runtime-config.json ./
@@ -103,7 +106,7 @@ af82a227630327c24026d7c6d3057c3d5478b14426b74c547df011ca5f23d271
 
 **Note: you must execute `buildah copy` exactly once in order to end up having only one layer in produced images**
 
-Now, you can build a *compat* image and push it to your registry via `buildah commit` command
+4. Now, you can build a *compat* image and push it to your registry via `buildah commit` command
 
 ```
 $ buildah commit mywasm docker://my-remote-registry/mywasm:0.1.0
@@ -115,7 +118,7 @@ We demonstrate how to build a *compat* image with Docker CLI. Produced images ha
 
 We assume that you have a valid Wasm binary named `plugin.wasm` and `runtime-config.json` (optional) that you want to package as an image.
 
-First, we prepare the following Dockerfile:
+1. First, we prepare the following Dockerfile:
 
 ```
 $ cat Dockerfile
@@ -126,13 +129,13 @@ COPY runtime-config.json plugin.wasm ./
 
 **Note: you must have exactly one `COPY` instruction in the Dockerfile in order to end up having only one layer in produced images**
 
-Then, build your image via `docker build` command
+2. Then, build your image via `docker build` command
 
 ```
 $ docker build . -t my-registry/mywasm:0.1.0
 ```
 
-Finally, push the image to your registry via `docker push` command
+3. Finally, push the image to your registry via `docker push` command
 
 ```
 $ docker push my-registry/mywasm:0.1.0
