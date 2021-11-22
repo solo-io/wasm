@@ -1,0 +1,4 @@
+changelog:
+  - type: NEW_FEATURE
+    description: >
+      Add support for cpp, assemblyscript, rust and tinygo filters in Istio 1.10.x And Istio 1.11.x

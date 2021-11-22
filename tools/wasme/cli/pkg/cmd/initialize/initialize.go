@@ -88,6 +88,8 @@ var availableBases = map[string][]filterBase{
 				abi.Istio17,
 				abi.Istio18,
 				abi.Istio19,
+				abi.Istio110,
+				abi.Istio111,
 			},
 			archiveBytes: cppIstio1_7TarBytes,
 		},
@@ -110,6 +112,8 @@ var availableBases = map[string][]filterBase{
 				abi.Istio17,
 				abi.Istio18,
 				abi.Istio19,
+				abi.Istio110,
+				abi.Istio111,
 			},
 			archiveBytes: assemblyscriptTarBytes,
 		},
@@ -124,6 +128,8 @@ var availableBases = map[string][]filterBase{
 				abi.Gloo16,
 				abi.Istio18,
 				abi.Istio19,
+				abi.Istio110,
+				abi.Istio111,
 			},
 			archiveBytes: rustIstio1_7TarBytes,
 		},
@@ -135,6 +141,8 @@ var availableBases = map[string][]filterBase{
 				abi.Gloo16,
 				abi.Istio18,
 				abi.Istio19,
+				abi.Istio110,
+				abi.Istio111,
 			},
 			archiveBytes: tinygoTarBytes,
 		},
@@ -213,7 +221,7 @@ If --language, --platform, or --platform-version are not provided, the CLI will 
 		fmt.Sprintf("The name of the target platform against which to build. Supported platforms are: %v", []string{"gloo", "istio"}))
 
 	cmd.PersistentFlags().StringVar(&opts.platform.Version, "platform-version", "",
-		fmt.Sprintf("The version of the target platform against which to build. Supported Istio versions are: %v. Supported Gloo versions are: %v", []string{abi.Version15x, abi.Version16x, abi.Version17x, abi.Version18x, abi.Version19x}, []string{abi.Version13x, abi.Version15x, abi.Version16x}))
+		fmt.Sprintf("The version of the target platform against which to build. Supported Istio versions are: %v. Supported Gloo versions are: %v", []string{abi.Version15x, abi.Version16x, abi.Version17x, abi.Version18x, abi.Version19x, abi.Version110x, abi.Version111x}, []string{abi.Version13x, abi.Version15x, abi.Version16x}))
 
 	cmd.PersistentFlags().BoolVar(&opts.disablePrompt, "disable-prompt", false,
 		"Disable the interactive prompt if a required parameter is not passed. If set to true and one of the required flags is not provided, wasme CLI will return an error.")
