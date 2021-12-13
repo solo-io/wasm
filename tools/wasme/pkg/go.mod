@@ -2,6 +2,8 @@ module github.com/solo-io/wasm/tools/wasme/pkg
 
 go 1.15
 
+// noop code change
+
 require (
 	github.com/avast/retry-go v2.4.3+incompatible
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
