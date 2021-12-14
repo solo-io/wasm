@@ -126,11 +126,11 @@ jobs:
             istio-binary: 'https://github.com/istio/istio/releases/download/1.9.1/istio-1.9.1-linux-amd64.tar.gz'
             istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
           - istio-version: '1.10.3'
-              istio-binary: 'https://github.com/istio/istio/releases/download/1.10.3/istio-1.10.3-linux-amd64.tar.gz'
-              istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.10.3/istio-1.10.3-linux-amd64.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
           - istio-version: '1.11.4'
-              istio-binary: 'https://github.com/istio/istio/releases/download/1.11.4/istio-1.11.4-linux-amd64.tar.gz'
-              istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.11.4/istio-1.11.4-linux-amd64.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
     steps:
     - uses: actions/checkout@v2
     - name: Set up Go 1.15
