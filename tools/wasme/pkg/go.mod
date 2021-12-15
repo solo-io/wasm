@@ -5,13 +5,13 @@ go 1.15
 require (
 	github.com/avast/retry-go v2.4.3+incompatible
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
-	github.com/containerd/containerd v1.3.2
+	github.com/containerd/containerd v1.4.12
 	github.com/deislabs/oras v0.8.1
-	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
 	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32 // indirect
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/mock v1.4.4
 	github.com/golang/protobuf v1.3.5
@@ -31,12 +31,11 @@ require (
 	github.com/solo-io/go-utils v0.16.4
 	github.com/stretchr/testify v1.6.1 // indirect
 	go.opencensus.io v0.22.2 // indirect
-	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5 // indirect
-	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
-	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
+	go.uber.org/zap v1.9.1
 	google.golang.org/genproto v0.0.0-20191115221424-83cc0476cb11 // indirect
 	google.golang.org/grpc v1.28.1 // indirect
 	gopkg.in/yaml.v2 v2.3.0 // indirect
+	gotest.tools/v3 v3.0.3 // indirect
 )
 
 replace (
