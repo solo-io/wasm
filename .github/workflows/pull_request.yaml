@@ -57,6 +57,7 @@ jobs:
     - uses: engineerd/setup-kind@v0.5.0
       with:
         skipClusterCreation: "true"
+        version: v0.11.1
     - name: Install Protoc
       uses: solo-io/setup-protoc@master
       with:
@@ -132,6 +133,7 @@ jobs:
     - uses: engineerd/setup-kind@v0.5.0
       with:
         skipClusterCreation: "true"
+        version: v0.11.1
     - name: Install Protoc
       uses: solo-io/setup-protoc@master
       with:
