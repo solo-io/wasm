@@ -7,7 +7,6 @@ require (
 	github.com/cespare/xxhash/v2 v2.1.1 // indirect
 	github.com/containerd/containerd v1.3.2
 	github.com/deislabs/oras v0.8.1
-	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
 	github.com/docker/distribution v2.7.1+incompatible
 	github.com/docker/docker v1.13.1 // indirect
 	github.com/docker/go-metrics v0.0.1 // indirect
@@ -24,13 +23,14 @@ require (
 	github.com/onsi/ginkgo v1.12.0
 	github.com/onsi/gomega v1.8.1
 	github.com/opencontainers/go-digest v1.0.0-rc1
-	github.com/opencontainers/image-spec v1.0.1
+	github.com/opencontainers/image-spec v1.0.2
 	github.com/opencontainers/runc v1.0.0-rc9 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.6.0
 	github.com/solo-io/go-utils v0.16.4
 	github.com/stretchr/testify v1.6.1 // indirect
 	go.opencensus.io v0.22.2 // indirect
+	go.uber.org/zap v1.9.1
 	golang.org/x/crypto v0.0.0-20200423211502-4bdfaf469ed5 // indirect
 	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
