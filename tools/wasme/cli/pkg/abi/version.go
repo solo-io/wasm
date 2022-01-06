@@ -16,7 +16,6 @@ const (
 	Version16x = "1.6.x"
 	Version17x = "1.7.x"
 	Version18x = "1.8.x"
-	Version19x = "1.9.x"
 	Version19x  = "1.9.x"
 	Version110x = "1.10.x"
 	Version111x = "1.11.x"
