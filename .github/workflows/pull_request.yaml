@@ -109,7 +109,9 @@ jobs:
           '1.6.6',
           '1.7.1',
           '1.8.4',
-          '1.9.1'
+          '1.9.1',
+          '1.10.0',
+          '1.11.0',
         ]
         include:
           - istio-version: '1.6.6'
@@ -123,6 +125,12 @@ jobs:
             istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
           - istio-version: '1.9.1'
             istio-binary: 'https://github.com/istio/istio/releases/download/1.9.1/istio-1.9.1-linux-amd64.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
+          - istio-version: '1.10.0'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.10.0/istio-1.10.0-linux-amd64.tar.gz'
+            istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
+          - istio-version: '1.11.0'
+            istio-binary: 'https://github.com/istio/istio/releases/download/1.11.0/istio-1.11.0-linux-amd64.tar.gz'
             istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
     steps:
     - uses: actions/checkout@v2
