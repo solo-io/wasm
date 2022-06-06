@@ -18,6 +18,6 @@ jobs:
           label-operator: OR
       - uses: actions/add-to-project@main
         with:
-          project-url: https://github.com/orgs/solo-io/projects/15
+          project-url: https://github.com/orgs/solo-io/projects/24
           github-token: ${{ github.token }}
           labeled: documentation
