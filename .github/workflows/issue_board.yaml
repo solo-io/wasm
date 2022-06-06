@@ -4,6 +4,7 @@ on:
   issues:
     types:
       - opened
+      - labeled
 jobs:
   add-to-project:
     name: Add WASM issue to Gloo Edge project board
@@ -13,3 +14,8 @@ jobs:
         with:
           project-url: https://github.com/orgs/solo-io/projects/22
           github-token: ${{ github.token }}
+      - uses: actions/add-to-project@main
+        with:
+          project-url: https://github.com/orgs/solo-io/projects/15
+          github-token: ${{ github.token }}
+          labeled: "Type: Docs"
