@@ -14,8 +14,10 @@ jobs:
         with:
           project-url: https://github.com/orgs/solo-io/projects/22
           github-token: ${{ github.token }}
+          labeled: enhancement, bug
+          label-operator: OR
       - uses: actions/add-to-project@main
         with:
           project-url: https://github.com/orgs/solo-io/projects/15
           github-token: ${{ github.token }}
-          labeled: "Type: Docs"
+          labeled: documentation
