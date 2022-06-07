@@ -19,5 +19,5 @@ jobs:
       - uses: actions/add-to-project@main
         with:
           project-url: https://github.com/orgs/solo-io/projects/24
-          github-token: ${{ github.token }}
+          github-token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           labeled: documentation
