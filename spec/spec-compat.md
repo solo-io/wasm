@@ -19,7 +19,7 @@ The *compat* variant must have the last layer whose media type is one of the fol
 - `application/vnd.oci.image.layer.v1.tar+gzip`
 - `application/vnd.docker.image.rootfs.diff.tar.gzip`
 
-In addition, the layer must consist of the following two files:
+In addition, such last layer must consist of the following two files:
 - `plugin.wasm` - (**Required**) A Wasm binary to be loaded by the runtime.
 - `runtime-config.json` - (**Optional**) A runtime configuration specified in [Wasm Artifact Image Specification](spec.md#Format). This is mainly used as metadata for the image, depending on the runtime.
 
