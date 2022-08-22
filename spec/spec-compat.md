@@ -15,7 +15,7 @@ This *compat* variant makes use of compatible media type for layers, and is not 
 
 ### Layer
 
-The *compat* variant must have as last layer one whose media type is one of the followings:
+The *compat* variant must have the last layer whose media type is one of the followings:
 - `application/vnd.oci.image.layer.v1.tar+gzip`
 - `application/vnd.docker.image.rootfs.diff.tar.gzip`
 
