@@ -15,11 +15,11 @@ This *compat* variant makes use of compatible media type for layers, and is not 
 
 ### Layer
 
-The *compat* variant must consist of exactly one layer whose media type is one of the followings:
+The *compat* variant must have the last layer whose media type is one of the followings:
 - `application/vnd.oci.image.layer.v1.tar+gzip`
 - `application/vnd.docker.image.rootfs.diff.tar.gzip`
 
-In addition, the layer must consist of the following two files:
+In addition, such last layer must consist of the following two files:
 - `plugin.wasm` - (**Required**) A Wasm binary to be loaded by the runtime.
 - `runtime-config.json` - (**Optional**) A runtime configuration specified in [Wasm Artifact Image Specification](spec.md#Format). This is mainly used as metadata for the image, depending on the runtime.
 
@@ -123,11 +123,11 @@ We assume that you have a valid Wasm binary named `plugin.wasm` and `runtime-con
 ```
 $ cat Dockerfile
 FROM scratch
-
+LABEL org.opencontainers.image.title my-wasm-extension
 COPY runtime-config.json plugin.wasm ./
 ```
 
-**Note: you must have exactly one `COPY` instruction in the Dockerfile in order to end up having only one layer in produced images**
+**Note: you must have exactly one `COPY` instruction in the Dockerfile at the end as only the last layer in produced images is going to be taken into account to obtain the files**
 
 2. Then, build your image via `docker build` command
 
