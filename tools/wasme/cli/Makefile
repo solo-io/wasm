@@ -88,10 +88,20 @@ wasme-linux-amd64: $(OUTDIR)/wasme-linux-amd64
 $(OUTDIR)/wasme-linux-amd64: $(SOURCES)
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ cmd/main.go
 
+.PHONY: wasme-linux-arm64
+wasme-linux-arm64: $(OUTDIR)/wasme-linux-arm64
+$(OUTDIR)/wasme-linux-arm64: $(SOURCES)
+	CGO_ENABLED=0 GOARCH=arm64 GOOS=linux go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ cmd/main.go
+
 .PHONY: wasme-darwin-amd64
 wasme-darwin-amd64: $(OUTDIR)/wasme-darwin-amd64
 $(OUTDIR)/wasme-darwin-amd64: $(SOURCES)
 	CGO_ENABLED=0 GOARCH=amd64 GOOS=darwin go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ cmd/main.go
+
+.PHONY: wasme-darwin-arm64
+wasme-darwin-arm64: $(OUTDIR)/wasme-darwin-arm64
+$(OUTDIR)/wasme-darwin-arm64: $(SOURCES)
+	CGO_ENABLED=0 GOARCH=arm64 GOOS=darwin go build -ldflags=$(LDFLAGS) -gcflags=$(GCFLAGS) -o $@ cmd/main.go
 
 .PHONY: wasme-windows-amd64
 wasme-windows-amd64: $(OUTDIR)/wasme-windows-amd64.exe
@@ -100,7 +110,7 @@ $(OUTDIR)/wasme-windows-amd64.exe: $(SOURCES)
 
 
 .PHONY: build-cli
-build-cli: wasme-linux-amd64 wasme-darwin-amd64 wasme-windows-amd64
+build-cli: wasme-linux-amd64 wasme-linux-arm64 wasme-darwin-amd64 wasme-darwin-arm64 wasme-windows-amd64
 
 .PHONY: install-cli
 install-cli:
