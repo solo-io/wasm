@@ -15,12 +15,10 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/containerd/containerd/reference"
-	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
-	"github.com/deislabs/oras/pkg/content"
-	"github.com/deislabs/oras/pkg/oras"
-	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/solo-io/wasm/tools/wasme/pkg/model"
+	"oras.land/oras-go/pkg/content"
+	"oras.land/oras-go/pkg/oras"
 )
 
 type Image = model.Image
@@ -30,12 +28,12 @@ type Pusher interface {
 }
 
 type pusher struct {
-	resolver   remotes.Resolver
+	registry   content.Registry
 	authorizer docker.Authorizer
 }
 
-func NewPusher(resolver remotes.Resolver, authorizer docker.Authorizer) *pusher {
-	return &pusher{resolver: resolver, authorizer: authorizer}
+func NewPusher(registry content.Registry, authorizer docker.Authorizer) *pusher {
+	return &pusher{registry: registry, authorizer: authorizer}
 }
 
 func (p *pusher) Push(ctx context.Context, image Image) error {
@@ -47,7 +45,7 @@ func (p *pusher) Push(ctx context.Context, image Image) error {
 func (p *pusher) push(ctx context.Context, image Image) error {
 	p.checkAuth(ctx, image.Ref())
 
-	store := content.NewMemoryStore()
+	store := content.NewMemory()
 
 	cfg, err := image.FetchConfig(ctx)
 	if err != nil {
@@ -59,7 +57,10 @@ func (p *pusher) push(ctx context.Context, image Image) error {
 		return err
 	}
 
-	cfgDescriptor := store.Add(model.ConfigFilename, model.ConfigMediaType, cfgBytes)
+	cfgDescriptor, err := store.Add(model.ConfigFilename, model.ConfigMediaType, cfgBytes)
+	if err != nil {
+		return err
+	}
 
 	filter, err := image.FetchFilter(ctx)
 	if err != nil {
@@ -71,16 +72,15 @@ func (p *pusher) push(ctx context.Context, image Image) error {
 		return err
 	}
 
-	filterDescriptor := store.Add(model.CodeFilename, model.ContentMediaType, filterBytes)
-
-	files := []ocispec.Descriptor{
-		cfgDescriptor,
-		filterDescriptor,
+	filterDescriptor, err := store.Add(model.CodeFilename, model.ContentMediaType, filterBytes)
+	if err != nil {
+		return err
 	}
 
 	annotations := ManifestAnnotations(cfg)
 
-	imageDesciptor, err := oras.Push(ctx, p.resolver, image.Ref(), store, files,
+	// TODO: not really sure how to convert push to copy
+	imageDesciptor, err := oras.Copy(ctx, store, image.Ref(), p.registry,
 		oras.WithConfig(cfgDescriptor),
 		oras.WithManifestAnnotations(annotations),
 	)

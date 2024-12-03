@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"net/http"
 
-	auth "github.com/deislabs/oras/pkg/auth/docker"
+	auth "oras.land/oras-go/pkg/auth/docker"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
