@@ -15,23 +15,23 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - name: Cancel Previous Actions
-      uses: styfle/cancel-workflow-action@0.4.1
+      uses: styfle/cancel-workflow-action@43da6c68d1f8edfdd25e3a96440e733723d533f6 # 0.4.1
       with:
         access_token: ${{ github.token }}
     - name: Set up Go 1.15
-      uses: actions/setup-go@v1
+      uses: actions/setup-go@0caeaed6fd66a828038c2da3c0f662a42862658f # v1.1.3
       with:
         go-version: 1.15
       id: go
     - name: Install Protoc
-      uses: solo-io/setup-protoc@master
+      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master
       with:
         version: '3.6.1'
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
       with:
         fetch-depth: 0
-    - uses: actions/cache@v2
+    - uses: actions/cache@8492260343ad570701412c2f464a5877dc76bace # v2
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -49,24 +49,24 @@ jobs:
     name: end-to-end
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
     - name: Set up Go 1.15
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
       with:
         go-version: '1.15.2'
-    - uses: engineerd/setup-kind@v0.5.0
+    - uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
       with:
         skipClusterCreation: "true"
         version: v0.11.1
     - name: Install Protoc
-      uses: solo-io/setup-protoc@master
+      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master
       with:
         version: '3.6.1'
-    - uses: azure/setup-kubectl@v1
+    - uses: azure/setup-kubectl@a625ca209b0faaa8871dac8fb5f50ee4b4d22622 # v1
       id: kubectl
       with:
         version: 'v1.18.0'
-    - uses: actions/cache@v1
+    - uses: actions/cache@f5ce41475b483ad7581884324a6eca9f48f8dcc7 # v1.2.1
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -125,24 +125,24 @@ jobs:
             istio-binary: 'https://github.com/istio/istio/releases/download/1.9.1/istio-1.9.1-linux-amd64.tar.gz'
             istio-filter-image: 'webassemblyhub.io/sodman/istio-1-7:v0.3'
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
     - name: Set up Go 1.15
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
       with:
         go-version: '1.15.2'
-    - uses: engineerd/setup-kind@v0.5.0
+    - uses: engineerd/setup-kind@aa272fe2a7309878ffc2a81c56cfe3ef108ae7d0 # v0.5.0
       with:
         skipClusterCreation: "true"
         version: v0.11.1
     - name: Install Protoc
-      uses: solo-io/setup-protoc@master
+      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master
       with:
         version: '3.6.1'
-    - uses: azure/setup-kubectl@v1
+    - uses: azure/setup-kubectl@a625ca209b0faaa8871dac8fb5f50ee4b4d22622 # v1
       id: kubectl
       with:
         version: 'v1.18.0'
-    - uses: actions/cache@v1
+    - uses: actions/cache@f5ce41475b483ad7581884324a6eca9f48f8dcc7 # v1.2.1
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
