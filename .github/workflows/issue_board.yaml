@@ -10,13 +10,13 @@ jobs:
     name: Add WASM issue to Gloo Edge project board
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/add-to-project@215051e586660a19c6c19f088743beaf1f9635f6 # main
+      - uses: actions/add-to-project@215051e586660a19c6c19f088743beaf1f9635f6 # main (2026-10-16)
         with:
           project-url: https://github.com/orgs/solo-io/projects/22
           github-token: ${{ secrets.ORG_CROSS_REPO }}
           labeled: enhancement, bug
           label-operator: OR
-      - uses: actions/add-to-project@215051e586660a19c6c19f088743beaf1f9635f6 # main
+      - uses: actions/add-to-project@215051e586660a19c6c19f088743beaf1f9635f6 # main (2026-10-16)
         with:
           project-url: https://github.com/orgs/solo-io/projects/24
           github-token: ${{ secrets.ORG_CROSS_REPO }}

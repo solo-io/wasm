@@ -24,7 +24,7 @@ jobs:
         go-version: 1.15
       id: go
     - name: Install Protoc
-      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master
+      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master (2026-10-16)
       with:
         version: '3.6.1'
     - name: Check out code into the Go module directory
@@ -59,7 +59,7 @@ jobs:
         skipClusterCreation: "true"
         version: v0.11.1
     - name: Install Protoc
-      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master
+      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master (2026-10-16)
       with:
         version: '3.6.1'
     - uses: azure/setup-kubectl@a625ca209b0faaa8871dac8fb5f50ee4b4d22622 # v1
@@ -135,7 +135,7 @@ jobs:
         skipClusterCreation: "true"
         version: v0.11.1
     - name: Install Protoc
-      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master
+      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master (2026-10-16)
       with:
         version: '3.6.1'
     - uses: azure/setup-kubectl@a625ca209b0faaa8871dac8fb5f50ee4b4d22622 # v1
