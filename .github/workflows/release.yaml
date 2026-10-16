@@ -12,24 +12,24 @@ jobs:
     name: Build & Release
     runs-on: ubuntu-18.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@0717577d45739eb3c851188b29f50ed6c0b2194e # v2.8.0
     - name: Set up Go 1.15
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@bfdd3570ce990073878bf10f6b2d79082de49492 # v2.2.0
       with:
         go-version: 1.15
     - name: Install Protoc
-      uses: solo-io/setup-protoc@master
+      uses: solo-io/setup-protoc@b8f1915145471975191888c410fdf598d5304036 # master (2026-10-16)
       with:
         version: '3.6.1'
-    - uses: azure/setup-kubectl@v1
+    - uses: azure/setup-kubectl@a625ca209b0faaa8871dac8fb5f50ee4b4d22622 # v1
       id: kubectl
       with:
         version: 'v1.18.0'
     - name: Setup hugo
-      uses: peaceiris/actions-hugo@v2
+      uses: peaceiris/actions-hugo@16361eb4acea8698b220b76c0d4e84e1fd22c61d # v2.6.0
       with:
         hugo-version: "0.69.2"
-    - uses: actions/cache@v1
+    - uses: actions/cache@f5ce41475b483ad7581884324a6eca9f48f8dcc7 # v1.2.1
       with:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -37,7 +37,7 @@ jobs:
           ${{ runner.os }}-go-
     - name: Login to gcloud registry
       id: gcloud
-      uses: elgohr/gcloud-login-action@0.2
+      uses: elgohr/gcloud-login-action@57bdc0c38b4fa77c90801d77b2057d8288c2d0b7 # 0.2
       with:
         account_key: ${{ secrets.GCLOUD_KEY }}
     - name: Release
